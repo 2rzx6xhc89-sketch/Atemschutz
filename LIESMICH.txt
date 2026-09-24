@@ -1,0 +1,22 @@
+Atemschutzüberwachung – Web-App (PWA) für Tablets
+
+Installation
+1. Den Ordner auf einen beliebigen Webserver mit HTTPS legen (z. B. Vereins-Webspace, NAS, interner Server).
+   HTTPS ist Pflicht, sonst funktionieren Offline-Betrieb und Installation nicht.
+2. Die Adresse auf dem Tablet öffnen:
+   - Android/Chrome: Menü > "App installieren" bzw. "Zum Startbildschirm hinzufügen"
+   - iPad/Safari: Teilen > "Zum Home-Bildschirm"
+3. Einmal mit Internet die Kamera-Texterkennung ausprobieren. Danach liegen Erkennung und
+   Sprachdaten im Cache und die App läuft komplett offline.
+
+Daten
+- Alle Einsatzdaten bleiben auf dem Tablet (Browser-Speicher), bis ein neuer Einsatz begonnen wird.
+- Knopf "Einsatzende" (Reiter Einsatzdaten): speichert das Protokoll-PDF und löscht danach alle Einsatzdaten.
+  Sind noch Trupps unter Atemschutz, muss das extra bestätigt werden.
+- Reiter "Protokoll": "PDF öffnen & drucken" erzeugt den Überwachungsbogen als PDF (A4 quer, wie der Papierbogen,
+  plus Seite Geräteerfassung). Das PDF wird direkt im Tablet erzeugt, auch offline.
+- Übergabe an die Fahrzeugverwaltung: im Reiter "Einsatzdaten" die Empfangsadresse eintragen.
+  Gesendet wird der Truppstatus (bereit / im Einsatz / waren im Einsatz, als Trupps und Personen).
+  Format und Anforderungen an den Empfänger: siehe DATENMODELL.md
+
+Lokaler Test am PC:  python3 -m http.server 8080  im Ordner starten, dann http://localhost:8080 öffnen.
