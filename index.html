@@ -182,7 +182,7 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:700;margin:0;letter-spacing:.01em
 .mrow .mp.low{color:var(--red)}
 .mrow .mr{font-family:var(--f-mono);font-size:14px;color:var(--ink-2);text-align:right}
 .mrow.mh span:nth-child(n+3){text-align:right}
-.tl{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding:10px 14px}
+.tl{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:6px;padding:10px 14px}
 .tl-step{appearance:none;min-width:0;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 8px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:1px}
 .tl-step .tl-l{font-family:var(--f-disp);font-weight:600;font-size:14px;line-height:1.1;color:var(--ink-2);display:flex;align-items:flex-start;gap:3px;min-height:2.2em}
 .tl-step .tl-t{font-family:var(--f-mono);font-size:14px;color:var(--ink-3);white-space:nowrap}
@@ -197,6 +197,35 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:700;margin:0;letter-spacing:.01em
 .samebox label{display:flex;gap:10px;align-items:center;font-weight:700}
 .samebox input{width:26px;height:26px;flex:none}
 @media (max-width:640px){ .tl{grid-template-columns:repeat(3,minmax(0,1fr))} .kpis.k3{grid-template-columns:repeat(3,minmax(0,1fr))} .mrow{grid-template-columns:40px minmax(0,1fr) 84px 70px} .mrow .mp{font-size:20px} }
+.banner{border-radius:var(--r);padding:12px 14px;font-weight:700;font-size:16px;margin-bottom:12px}
+.banner.alarm{background:var(--red);color:var(--red-ink)}
+@media (prefers-reduced-motion:no-preference){ .banner.alarm{animation:blink 1.2s steps(2,start) infinite} }
+.stb{display:inline-block;font-family:var(--f-body);font-size:12px;font-weight:700;letter-spacing:.05em;background:var(--blue);color:#fff;border-radius:5px;padding:1px 6px;margin-right:8px;vertical-align:middle}
+.stb.may{background:var(--red);margin-left:6px}
+.maydaybar{appearance:none;border:0;width:100%;text-align:left;background:var(--red);color:var(--red-ink);font-family:var(--f-disp);font-weight:700;font-size:18px;letter-spacing:.03em;padding:10px 14px;cursor:pointer}
+.mrow .rate{font-family:var(--f-mono)} .mrow .rate.hi{color:var(--amber);font-weight:700}
+.mrow.hi .mp{color:var(--amber)}
+.chk{display:flex;gap:10px;align-items:center;font-weight:600;min-height:44px} .chk input{width:24px;height:24px}
+.setlist{display:grid;gap:0;padding:0}
+.set{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,360px);gap:10px 20px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.set:last-child{border-bottom:0}
+.set b{font-size:16px}
+.setctl{display:grid;gap:8px;justify-items:stretch}
+.setctl .chip{font-size:14px;min-height:34px;padding:4px 10px}
+.seg.quad{display:grid;grid-template-columns:repeat(4,1fr);width:100%}
+.seg.quad button{padding-inline:6px}
+.simbadge{background:var(--amber);color:#1a1200;font-weight:700;font-size:13px;letter-spacing:.05em;border-radius:6px;padding:4px 8px;white-space:nowrap}
+.clock.sim{color:var(--amber)}
+dialog.mayday{border-top:8px solid var(--red)}
+.dlg-head.may{background:var(--red);color:var(--red-ink)}
+.dlg-head.may .btn{color:var(--ink);background:var(--panel)}
+.mdlist{display:grid;gap:6px}
+.mditem{appearance:none;display:grid;grid-template-columns:32px 1fr auto;gap:10px;align-items:center;text-align:left;border:1px solid var(--line-2);background:var(--panel);border-radius:8px;padding:10px 12px;min-height:52px;cursor:pointer;font-size:16px;font-weight:600;color:var(--ink)}
+.mditem .box{width:28px;height:28px;border:2px solid var(--ink-3);border-radius:6px;display:grid;place-items:center}
+.mditem.on{background:var(--green-soft);border-color:var(--green)}
+.mditem.on .box{background:var(--green);border-color:var(--green);color:#fff}
+.mditem .tm2{font-family:var(--f-mono);font-size:14px;color:var(--ink-2)}
+@media (max-width:640px){ .set{grid-template-columns:1fr} .simbadge{font-size:11px;padding:3px 6px} }
 .empty{border:2px dashed var(--line-2);border-radius:var(--r);padding:28px;text-align:center;color:var(--ink-2)}
 
 /* Forms */
@@ -371,6 +400,7 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
       <div><h1>Atemschutzüberwachung</h1><small id="artLabel">Einsatz</small></div>
     </div>
     <div class="meta" id="meta"></div>
+    <span class="simbadge" id="simBadge" hidden>ÜBUNG</span>
     <div class="clock" id="clock" aria-label="Uhrzeit">--:--:--</div>
   </div>
   <nav class="tabs" role="tablist">
@@ -401,16 +431,35 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
 'use strict';
 /* ---------- Konstanten ---------- */
 const KEY = 'asue.state.v1';
-const STEPS = [
-  {k:'beginn',   l:'Beginn',        b:'Anschluss / Beginn'},
-  {k:'ziel',     l:'Einsatzort an', b:'Einsatzort erreicht'},
-  {k:'soll',     l:'Rückzug soll',  calc:true},
-  {k:'k10',      l:'Druck 10 min',  b:'Druckabfrage 10 min'},
-  {k:'k20',      l:'Druck 20 min',  b:'Druckabfrage 20 min'},
-  {k:'rueckzug', l:'Rückzug ist',   b:'Rückzug angetreten'},
-  {k:'ende',     l:'Ende',          b:'Ende / Gerät abgelegt'}
+// Druckabfragen sind einstellbar (Einsatzdaten); gespeichert als ev['k'+Minuten]
+function queryMins(t){
+  const set = new Set((S && S.config && S.config.abfragen) || [10,20]);
+  if(t) Object.keys(t.ev).forEach(k=>{ const m=/^k(\d+)$/.exec(k); if(m) set.add(+m[1]); });
+  return [...set].sort((a,b)=>a-b);
+}
+function queries(t){ return queryMins(t).map(m=>({k:'k'+m, min:m, l:m+'-min-Abfrage'})); }
+function steps(t){
+  return [
+    {k:'beginn',   l:'Beginn',        b:'Anschluss / Beginn'},
+    {k:'ziel',     l:'Einsatzort an', b:'Einsatzort erreicht'},
+    {k:'soll',     l:'Rückzug soll',  calc:true},
+    ...queries(t).map(q=>({k:q.k, l:'Druck '+q.min+' min', b:'Druckabfrage '+q.min+' min', q:true, min:q.min})),
+    {k:'rueckzug', l:'Rückzug ist',   b:'Rückzug angetreten'},
+    {k:'ende',     l:'Ende',          b:'Ende / Gerät abgelegt'}
+  ];
+}
+function evSteps(t){ return steps(t).filter(s=>!s.calc); }
+function lastReading(t){ let l=null; Object.values(t.ev).forEach(e=>{ if(e && e.p && (!l || e.t>=l.t)) l=e; }); return l; }
+const MAYDAY_ITEMS = [
+  ['quittiert','Notruf quittiert („Mayday verstanden“)'],
+  ['el','Einsatzleiter informiert'],
+  ['funk','Funkdisziplin angeordnet, Kanal für den Notfall frei'],
+  ['lage','Standort und Lage des Trupps erfragt'],
+  ['st','Sicherheitstrupp eingesetzt'],
+  ['rd','Rettungsdienst / Notarzt verständigt'],
+  ['nach','Neuen Sicherheitstrupp / weitere Kräfte nachgefordert'],
+  ['gerettet','Trupp gerettet / in Sicherheit']
 ];
-const EVSTEPS = STEPS.filter(s=>!s.calc);
 const FIELDS = [
   {k:'name', l:'Name / Vorname'},
   {k:'geraetNr', l:'Geräte-Nr.'},
@@ -425,7 +474,7 @@ const CAM_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 
 /* ---------- Zustand ---------- */
 const uid = () => Math.random().toString(36).slice(2,10);
-const defaultConfig = () => ({maxBar:330, verbrauch:8.3, minRueckzug:50, uebergabeUrl:''});
+const defaultConfig = () => ({maxBar:330, verbrauch:8.3, minRueckzug:50, uebergabeUrl:'', abfragen:[10,20], sprache:false, stPruefung:true, verbrauchWarn:12});
 function blankState(keepConfig){
   return {
     version:1, sample:false,
@@ -441,7 +490,7 @@ function sampleState(){
   s.trupps.push({id:uid(), rufgruppe:'Angriffstrupp', auftrag:'Menschenrettung 1. OG, 1. C-Rohr', bemerkung:'Zugang über Treppenraum Nord',
     mitglieder:[member('Müller, Jan','Truppführer','PA-114','LA-2031','F-0587','M-341',300), member('Schneider, Lea','Truppmann','PA-117','LA-2044','F-0592','M-338',300)],
     ev:{beginn:{t:now-14*min,p:[300,300]}, ziel:{t:now-9*min,p:[270,260]}, k10:{t:now-4*min,p:[230,220]}}, notfall:null});
-  s.trupps.push({id:uid(), rufgruppe:'Wassertrupp', auftrag:'Sicherheitstrupp, Bereitstellung Eingang Nord', bemerkung:'',
+  s.trupps.push({id:uid(), rufgruppe:'Wassertrupp', auftrag:'Sicherheitstrupp, Bereitstellung Eingang Nord', bemerkung:'', st:true,
     mitglieder:[member('Weber, Tom','Truppführer','PA-121','LA-2050','F-0610','M-352',310), member('Fischer, Nina','Truppmann','PA-122','LA-2057','F-0613','M-355',300)],
     ev:{beginn:{t:now-8*min-40000,p:[310,300]}}, notfall:null});
   s.trupps.push({id:uid(), rufgruppe:'Schlauchtrupp', auftrag:'Erkundung Kellergeschoss', bemerkung:'',
@@ -455,7 +504,12 @@ function load(){
   return sampleState();
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-S = load(); save();
+S = load(); S.config = Object.assign(defaultConfig(), S.config||{}); save();
+// Uhr: im Übungsmodus läuft die Zeit beschleunigt (S.clock = {f: Faktor, ar: Echtzeit-Anker, av: virtueller Anker})
+function nowT(){ const c=S.clock; return c ? c.av + (Date.now()-c.ar)*c.f : Date.now(); }
+function setSpeed(f){ const n=nowT(); if(f===1 && S.clock && Math.abs(n-Date.now())<1000){ delete S.clock; } else S.clock={f, ar:Date.now(), av:n}; save(); }
+function resetClock(){ delete S.clock; save(); }
+function speed(){ return S.clock ? S.clock.f : 1; }
 
 /* ---------- Hilfen ---------- */
 const $ = (s,r=document)=>r.querySelector(s);
@@ -470,13 +524,12 @@ function toast(msg){ const d=document.createElement('div'); d.className='toast';
 /* ---------- Berechnung (Faustformel wie Überwachungsbogen) ---------- */
 // Rückzugsdruck = doppelter Verbrauch für den Hinweg, mindestens 50 bar.
 // Rückzug nach Minuten = (Druck am Einsatzort − Rückzugsdruck) / Verbrauch (8,3 bar/min ≙ Tabelle 290→29 min … 210→4 min).
-function calc(t, now=Date.now()){
+function calc(t, now=nowT()){
   const c = S.config, ev = t.ev, n = t.mitglieder.length;
-  const r = {elapsed:null, soll:null, prog:null, lowest:null, lastT:null, status:'idle', alarms:[], warns:[]};
+  const r = {elapsed:null, soll:null, prog:null, lowest:null, lastT:null, status:'idle', alarms:[], warns:[], rates:[], high:[]};
   if(ev.beginn) r.elapsed = (ev.ende ? ev.ende.t : now) - ev.beginn.t;
   // letzte Druckablesung
-  let last = null;
-  for(const s of EVSTEPS){ if(ev[s.k] && (!last || ev[s.k].t >= last.t)) last = ev[s.k]; }
+  const last = lastReading(t);
   if(last){ r.lowest = Math.min(...last.p.filter(x=>x!=null)); r.lastT = last.t; }
   if(ev.beginn && ev.ziel){
     const rd = [], mins = [];
@@ -489,7 +542,7 @@ function calc(t, now=Date.now()){
     const sofort = m < 0.5;
     r.soll = {p:rd, min:sofort?0:Math.round(m), t: ev.ziel.t + (sofort?0:Math.round(m))*60000, sofort};
     // Prognose aus gemessenem Verbrauch (nach Einsatzort an)
-    const later = ['k10','k20'].map(k=>ev[k]).filter(e=>e && e.t > ev.ziel.t + 60000).sort((a,b)=>b.t-a.t)[0];
+    const later = queries(t).map(q=>ev[q.k]).filter(e=>e && e.t > ev.ziel.t + 60000).sort((a,b)=>b.t-a.t)[0];
     if(later){
       let best = Infinity;
       for(let i=0;i<n;i++){
@@ -509,8 +562,7 @@ function calc(t, now=Date.now()){
   if(ev.beginn && !ev.ende){
     const el = now - ev.beginn.t;
     if(!ev.rueckzug){
-      if(el >= 10*60000 && !ev.k10) r.warns.push('Druckabfrage 10 min fällig');
-      if(el >= 20*60000 && !ev.k20) r.warns.push('Druckabfrage 20 min fällig');
+      queries(t).forEach(q=>{ if(el >= q.min*60000 && !ev[q.k]) r.warns.push('Druckabfrage '+q.min+' min fällig'); });
       if(r.soll){
         if(r.soll.sofort) r.alarms.push('Rückzug sofort! Druck reicht nicht für Hin- und Rückweg');
         else if(now >= r.soll.t) r.alarms.push('Rückzugszeit erreicht – Trupp zurückrufen');
@@ -524,6 +576,19 @@ function calc(t, now=Date.now()){
     }
     if(last && r.lowest != null && r.lowest <= c.minRueckzug) r.alarms.push('Druck ≤ '+c.minRueckzug+' bar');
   }
+  // Luftverbrauch je Person (bar/min): Mittel seit Beginn und letzter Abschnitt
+  if(ev.beginn){
+    const rd = Object.values(ev).filter(e=>e && e.p).sort((a,b)=>a.t-b.t);
+    for(let i=0;i<n;i++){
+      let rate=null;
+      const a=rd[0], b=rd[rd.length-1];
+      if(a && b && a!==b && (b.t-a.t)>=3*60000 && a.p[i]!=null && b.p[i]!=null) rate=(a.p[i]-b.p[i])/((b.t-a.t)/60000);
+      if(rd.length>=2){ const x=rd[rd.length-2]; if((b.t-x.t)>=4*60000 && x.p[i]!=null && b.p[i]!=null){ const r2=(x.p[i]-b.p[i])/((b.t-x.t)/60000); rate = rate==null?r2:Math.max(rate,r2); } }
+      r.rates.push(rate);
+      if(rate!=null && c.verbrauchWarn>0 && rate > c.verbrauchWarn){ r.high.push(i); }
+    }
+    if(r.high.length && !ev.ende) r.warns.push('Hoher Luftverbrauch: '+r.high.map(i=>(t.mitglieder[i].name||t.mitglieder[i].funktion)+' '+Math.round(r.rates[i])+' bar/min').join(', '));
+  }
   return r;
 }
 
@@ -532,11 +597,20 @@ function rank(t){ const ev=t.ev; if(ev.ende) return 4; if(!ev.beginn) return 3; 
 function sortedTrupps(){ return S.trupps.map((t,i)=>[t,i]).sort((a,b)=>rank(a[0])-rank(b[0]) || a[1]-b[1]).map(x=>x[0]); }
 
 // Nächste planmäßige Druckabfrage (10 / 20 min nach Beginn)
-const QUERIES = [{k:'k10', min:10, l:'10-min-Abfrage'}, {k:'k20', min:20, l:'20-min-Abfrage'}];
 function nextQuery(t){
   const ev=t.ev; if(!ev.beginn || ev.rueckzug || ev.ende) return null;
-  for(const q of QUERIES){ if(!ev[q.k]) return {k:q.k, l:q.l, t:ev.beginn.t + q.min*60000}; }
+  for(const q of queries(t)){ if(!ev[q.k]) return {k:q.k, l:q.l, min:q.min, t:ev.beginn.t + q.min*60000}; }
   return null;
+}
+// Sicherheitstrupp-Prüfung
+function stCheck(){
+  if(!S.config.stPruefung) return null;
+  const aktiv = S.trupps.filter(t=>!t.st && t.ev.beginn && !t.ev.ende);
+  if(!aktiv.length) return null;
+  const st = S.trupps.filter(t=>t.st && !t.ev.ende);
+  if(st.some(t=>!t.ev.ziel)) return null;
+  if(st.length) return 'Sicherheitstrupp im Einsatz – neuen Sicherheitstrupp bereitstellen!';
+  return 'Kein Sicherheitstrupp bereit – '+aktiv.length+(aktiv.length===1?' Trupp':' Trupps')+' unter Atemschutz';
 }
 
 /* ---------- Kopfzeile ---------- */
@@ -563,8 +637,8 @@ function nextStep(t, r){
   if(!ev.beginn) return 'beginn';
   if(ev.rueckzug) return 'ende';
   const el = r.elapsed;
-  if(el>=20*60000 && !ev.k20) return 'k20';
-  if(el>=10*60000 && !ev.k10) return 'k10';
+  const due = queries(t).find(q=>el>=q.min*60000 && !ev[q.k]);
+  if(due) return due.k;
   if(!ev.ziel) return 'ziel';
   return 'rueckzug';
 }
@@ -574,18 +648,16 @@ function tlStep(t, s, r, nxt){
   if(e) return '<button class="tl-step done" data-act="edit" data-t="'+t.id+'" data-s="'+s.k+'" aria-label="'+s.l+' '+hm(e.t)+' bearbeiten"><span class="tl-l">'+CHECK_SVG+s.l+'</span><span class="tl-t">'+hm(e.t)+'</span></button>';
   const disabled = (s.k!=='beginn' && !ev.beginn) || !!ev.ende;
   let sub='';
-  if(s.k==='k10' && ev.beginn) sub='ab '+hm(ev.beginn.t+10*60000);
-  if(s.k==='k20' && ev.beginn) sub='ab '+hm(ev.beginn.t+20*60000);
-  const due = !disabled && ev.beginn && !ev.rueckzug && ((s.k==='k10' && Date.now()>=ev.beginn.t+600000) || (s.k==='k20' && Date.now()>=ev.beginn.t+1200000));
+  if(s.q && ev.beginn) sub='ab '+hm(ev.beginn.t+s.min*60000);
+  const due = !disabled && s.q && ev.beginn && !ev.rueckzug && nowT()>=ev.beginn.t+s.min*60000;
   return '<button class="tl-step'+(s.k===nxt?' next':'')+(due?' due':'')+'" data-act="step" data-t="'+t.id+'" data-s="'+s.k+'"'+(disabled?' disabled':'')+'><span class="tl-l">'+s.l+'</span><span class="tl-t">'+(sub||'--:--')+'</span></button>';
 }
-function lastReading(t){ let l=null; for(const s of EVSTEPS) if(t.ev[s.k] && (!l||t.ev[s.k].t>=l.t)) l=t.ev[s.k]; return l; }
 function kpiHTML(t, r){
-  const now = Date.now();
+  const now = nowT();
   const k1 = '<div class="kpi"><div class="l">Einsatzzeit</div><div class="v" data-live="el" data-t="'+t.id+'">'+(r.elapsed!=null?dur(r.elapsed):'--:--')+'</div><div class="s">'+(t.ev.beginn?'seit '+hm(t.ev.beginn.t):'noch nicht begonnen')+'</div></div>';
   const nq = nextQuery(t);
   let nqc='', nqv='--:--', nqs = t.ev.beginn ? (t.ev.rueckzug||t.ev.ende ? 'keine weitere' : 'alle erledigt') : 'ab Beginn';
-  if(nq){ const left = nq.t - now; nqc = left<=0?'warn':(left<=10000?'blink':''); nqv = left<=0?'fällig':dur(left); nqs = nq.k.slice(1)+' min · '+hm(nq.t); }
+  if(nq){ const left = nq.t - now; nqc = left<=0?'warn':(left<=10000?'blink':''); nqv = left<=0?'fällig':dur(left); nqs = nq.min+' min · '+hm(nq.t); }
   const k2 = '<div class="kpi '+nqc+'" data-blink="'+t.id+'"><div class="l">Nächste Abfrage</div><div class="v" data-live="nq" data-t="'+t.id+'">'+nqv+'</div><div class="s">'+esc(nqs)+'</div></div>';
   let cls='', v='--:--', s='nach „Einsatzort an“';
   if(t.ev.ende){ v='–'; s='beendet'; }
@@ -603,8 +675,9 @@ function membersHTML(t, r){
     const p = last ? last.p[i] : (m.druck ?? null);
     const rd = r.soll ? r.soll.p[i] : null;
     const low = rd!=null && p!=null && p<=rd;
-    return '<div class="mrow"><span class="mf">'+esc(m.funktion==='Truppführer'?'TF':m.funktion==='Truppmann'?'TM':'TM2')+'</span>'+
-      '<span class="mn">'+esc(m.name||m.funktion)+'<small>'+esc(m.geraetNr||'Gerät –')+'</small></span>'+
+    const rate = r.rates[i], hi = r.high.includes(i);
+    return '<div class="mrow'+(hi?' hi':'')+'"><span class="mf">'+esc(m.funktion==='Truppführer'?'TF':m.funktion==='Truppmann'?'TM':'TM2')+'</span>'+
+      '<span class="mn">'+esc(m.name||m.funktion)+'<small>'+esc(m.geraetNr||'Gerät –')+(rate!=null?' · <span class="rate'+(hi?' hi':'')+'">'+Math.round(rate)+' bar/min</span>':'')+'</small></span>'+
       '<span class="mp'+(low?' low':'')+'">'+(p!=null?p+'<small> bar</small>':'–')+'</span>'+
       '<span class="mr">'+(rd!=null?rd+' bar':'–')+'</span></div>';
   }).join('');
@@ -614,16 +687,18 @@ function cardHTML(t){
   const r = calc(t), nxt = nextStep(t,r);
   const st = r.alarms.length?'st-alarm':(r.warns.length?'st-warn':(r.status==='done'?'st-done':''));
   const alerts = r.alarms.map(a=>'<div class="alert alarm" role="alert">⚠ '+esc(a)+'</div>').join('') + r.warns.map(a=>'<div class="alert warn">'+esc(a)+'</div>').join('');
-  const nstep = nxt && STEPS.find(s=>s.k===nxt);
+  const nstep = nxt && steps(t).find(s=>s.k===nxt);
+  const mcount = t.mayday ? MAYDAY_ITEMS.filter(([k])=>t.mayday.items && t.mayday.items[k]).length : 0;
   return '<article class="card '+st+'" id="card-'+t.id+'">'+
-    '<div class="card-head"><div style="flex:1;min-width:0"><h3>'+esc(t.rufgruppe||'Trupp')+'</h3><div class="auftrag">'+esc(t.auftrag||'Auftrag offen')+'</div></div>'+statusPill(r)+'</div>'+
+    (t.notfall?'<button class="maydaybar" data-act="mayday" data-t="'+t.id+'">MAYDAY seit '+hm(t.notfall)+' · Checkliste '+mcount+'/'+MAYDAY_ITEMS.length+' ›</button>':'')+
+    '<div class="card-head"><div style="flex:1;min-width:0"><h3>'+(t.st?'<span class="stb" title="Sicherheitstrupp">ST</span>':'')+esc(t.rufgruppe||'Trupp')+'</h3><div class="auftrag">'+esc(t.auftrag||'Auftrag offen')+'</div></div>'+statusPill(r)+'</div>'+
     alerts + kpiHTML(t,r) + membersHTML(t,r) +
-    '<div class="tl">'+EVSTEPS.map(s=>tlStep(t,s,r,nxt)).join('')+'</div>'+
+    '<div class="tl">'+evSteps(t).map(s=>tlStep(t,s,r,nxt)).join('')+'</div>'+
     (t.bemerkung?'<div class="note">'+esc(t.bemerkung)+'</div>':'')+
     '<div class="card-foot">'+
       (nstep?'<button class="btn primary nextbtn" data-act="step" data-t="'+t.id+'" data-s="'+nstep.k+'">'+esc(nstep.b)+'</button>':'<span class="note" style="flex:1">Einsatz des Trupps beendet</span>')+
       '<button class="btn small ghost" data-act="trupp" data-t="'+t.id+'">Bearbeiten</button>'+
-      (t.ev.beginn && !t.ev.ende ? '<button class="btn notruf'+(t.notfall?' on':'')+'" data-act="notfall" data-t="'+t.id+'">'+(t.notfall?'Notfall beenden':'MAYDAY')+'</button>' : '')+
+      (t.ev.beginn && !t.ev.ende ? '<button class="btn notruf'+(t.notfall?' on':'')+'" data-act="notfall" data-t="'+t.id+'">'+(t.notfall?'Checkliste':'MAYDAY')+'</button>' : '')+
     '</div></article>';
 }
 
@@ -631,7 +706,7 @@ let detailId = null;
 let ovMode = (()=>{ try{ return sessionStorage.getItem('asue.ov')||'liste'; }catch(e){ return 'liste'; } })();
 const OV_AB = 3;   // ab so vielen Trupps erscheint die Übersicht
 function ovRowHTML(t){
-  const r=calc(t), now=Date.now(), g=rank(t);
+  const r=calc(t), now=nowT(), g=rank(t);
   const st = r.alarms.length?'st-alarm':(r.warns.length?'st-warn':'');
   const nq=nextQuery(t);
   let nqH;
@@ -646,7 +721,7 @@ function ovRowHTML(t){
   const msgs = r.alarms.map(x=>'<div class="alm">⚠ '+esc(x)+'</div>').join('') + (r.alarms.length?'':r.warns.map(x=>'<div class="alm w">'+esc(x)+'</div>').join(''));
   return '<button class="ovrow g'+g+' '+st+'" data-act="detail" data-t="'+t.id+'" aria-label="Detailansicht '+esc(t.rufgruppe)+'">'+
     '<div>'+statusPill(r)+'</div>'+
-    '<div class="rg">'+esc(t.rufgruppe||'Trupp')+'</div>'+
+    '<div class="rg">'+(t.st?'<span class="stb">ST</span>':'')+esc(t.rufgruppe||'Trupp')+(t.notfall?' <span class="stb may">MAYDAY</span>':'')+'</div>'+
     '<div class="au">'+esc(t.auftrag||'–')+'</div>'+
     nqH + rzH + '<div class="chev" aria-hidden="true">›</div>' + msgs + '</button>';
 }
@@ -662,14 +737,17 @@ function renderUeb(){
   } else {
     const useList = S.trupps.length >= OV_AB && ovMode==='liste';
     const toggle = S.trupps.length >= OV_AB ? '<div class="seg" role="group" aria-label="Ansicht"><button data-ov="liste" aria-pressed="'+(ovMode==='liste')+'">Übersicht</button><button data-ov="karten" aria-pressed="'+(ovMode==='karten')+'">Alle Karten</button></div>' : '';
+    const stw = stCheck();
     v.innerHTML = '<div class="toolbar"><h2>'+S.trupps.length+' Trupps · '+active+' unter Atemschutz</h2>'+toggle+
       '<button class="btn primary" data-act="newtrupp">+ Trupp anlegen</button></div>'+
+      (stw?'<div class="banner alarm" role="alert">⚠ '+esc(stw)+'</div>':'')+
       (!S.trupps.length ? '<div class="empty"><p><b>Noch kein Trupp angelegt.</b></p><p>Trupp anlegen, Namen, Gerätenummern und Flaschendruck erfassen, dann die Zeitpunkte per Knopfdruck bestätigen.</p><button class="btn primary" data-act="newtrupp">+ Ersten Trupp anlegen</button></div>' :
        useList ? '<div class="ovlist"><div class="ovhead"><span>Status</span><span>Rufgruppe</span><span>Auftrag</span><span>Nächste Abfrage</span><span>Rückzug um</span><span></span></div>'+list.map(ovRowHTML).join('')+'</div>'
                : '<div class="grid">'+list.map(cardHTML).join('')+'</div>');
   }
-  alarmSig = S.trupps.map(t=>{const r=calc(t);return t.id+':'+r.alarms.join('|')+'/'+r.warns.join('|');}).join(';');
+  alarmSig = sigNow(nowT());
 }
+function sigNow(now){ return S.trupps.map(t=>{const r=calc(t,now);return t.id+':'+r.alarms.join('|')+'/'+r.warns.join('|');}).join(';')+'#'+(stCheck()||''); }
 
 /* ---------- Trupps & Geräte (Blatt 2) ---------- */
 function renderGer(){
@@ -703,6 +781,21 @@ function renderEin(){
     '<label class="f">Überwacher<input class="inp" id="e-ueberwacher" data-e="ueberwacher" value="'+esc(e.ueberwacher)+'"></label>'+
     '<label class="f">2. Überwacher<input class="inp" id="e-ueberwacher2" data-e="ueberwacher2" value="'+esc(e.ueberwacher2||'')+'"></label>'+
   '</div></div>'+
+  '<h2 class="section-title">Überwachung &amp; Warnungen</h2><div class="panel setlist">'+
+    '<div class="set"><div><b>Druckabfragen</b><div class="hint">Minuten nach Beginn, durch Komma getrennt. FwDV 7: nach ⅓ und ⅔ der erwarteten Einsatzzeit (30 min → 10, 20 · 45 min → 15, 30).</div></div>'+
+      '<div class="setctl"><input class="inp mono" id="c-abfragen" data-abfr="1" value="'+esc((c.abfragen||[]).join(', '))+'" inputmode="text">'+
+      '<div class="chips">'+[[10,20],[15,30],[10,20,30,40],[10,20,30,40,50,60]].map(a=>'<button type="button" class="chip" data-preset="'+a.join(',')+'">'+a.join(' / ')+'</button>').join('')+'</div></div></div>'+
+    '<div class="set"><div><b>Sprachansage</b><div class="hint">Warnungen und fällige Abfragen werden angesagt, z. B. „Angriffstrupp. Druckabfrage 10 Minuten“.</div></div>'+
+      '<div class="setctl"><div class="seg half" role="group"><button data-cfg="sprache" data-v="1" aria-pressed="'+!!c.sprache+'">Ein</button><button data-cfg="sprache" data-v="0" aria-pressed="'+!c.sprache+'">Aus</button></div>'+
+      '<button type="button" class="btn small" data-act="speaktest"'+(('speechSynthesis' in window)?'':' disabled')+'>Test-Ansage</button></div></div>'+
+    '<div class="set"><div><b>Sicherheitstrupp-Prüfung</b><div class="hint">Warnt, wenn Trupps unter Atemschutz sind und kein Sicherheitstrupp bereitsteht. Sicherheitstrupp im Fenster „Trupp anlegen“ ankreuzen.</div></div>'+
+      '<div class="setctl"><div class="seg half" role="group"><button data-cfg="stPruefung" data-v="1" aria-pressed="'+!!c.stPruefung+'">Ein</button><button data-cfg="stPruefung" data-v="0" aria-pressed="'+!c.stPruefung+'">Aus</button></div></div></div>'+
+    '<div class="set"><div><b>Warnung bei hohem Luftverbrauch</b><div class="hint">Ab diesem Verbrauch je Person (bar/min). Faustformel: '+String(c.verbrauch).replace('.',',')+' bar/min. 0 = aus.</div></div>'+
+      '<div class="setctl"><input class="inp mono" id="c-verbrauchWarn" data-c="verbrauchWarn" inputmode="decimal" value="'+String(c.verbrauchWarn).replace('.',',')+'"></div></div>'+
+    '<div class="set"><div><b>Übungsmodus (Zeitraffer)</b><div class="hint">Die Uhr der App läuft schneller, damit Abfragen und Rückzug in der Ausbildung schneller kommen. Nur für Übungen – im Einsatz immer „Echtzeit“.'+(S.clock?' <b>Aktuelle App-Uhr: '+hms(nowT())+'</b>':'')+'</div></div>'+
+      '<div class="setctl"><div class="seg quad" role="group">'+[1,2,5,10].map(f=>'<button data-speed="'+f+'" aria-pressed="'+(speed()===f)+'">'+(f===1?'Echtzeit':'×'+f)+'</button>').join('')+'</div>'+
+      (S.clock?'<button type="button" class="btn small" data-act="clockreset">Uhr auf Echtzeit zurücksetzen</button>':'')+'</div></div>'+
+  '</div>'+
   '<h2 class="section-title">Berechnungsgrundlage</h2><div class="panel"><div class="fgrid">'+
     '<label class="f">Maximaler Flaschendruck (bar)<input class="inp mono" id="c-maxBar" inputmode="numeric" data-c="maxBar" value="'+c.maxBar+'"></label>'+
     '<label class="f">Verbrauch Faustformel (bar/min)<input class="inp mono" id="c-verbrauch" inputmode="decimal" data-c="verbrauch" value="'+String(c.verbrauch).replace('.',',')+'"></label>'+
@@ -756,12 +849,12 @@ function sendStatus(final){
   const url=(S.config.uebergabeUrl||'').trim();
   if(!url || !canSend() || (sendState.busy && !final)) return Promise.resolve(false);
   const body=JSON.stringify(statusPayload(final));
-  sendState.busy=true; sendState.tried=Date.now();
+  sendState.busy=true; sendState.tried=nowT();
   const sig=JSON.stringify(truppStatus())+S.einsatz.id;
   return fetch(url,{method:'POST', headers:{'Content-Type':'application/json'}, body, keepalive:true, cache:'no-store'})
     .then(r=>{ sendState.ok=r.ok; if(r.ok) sendState.sig=sig; })
     .catch(()=>{ sendState.ok=false; })
-    .then(()=>{ sendState.busy=false; sendState.at=Date.now(); if(view==='ein'){ refreshStrip(); renderSendInfo(); } return sendState.ok; });
+    .then(()=>{ sendState.busy=false; sendState.at=nowT(); if(view==='ein'){ refreshStrip(); renderSendInfo(); } return sendState.ok; });
 }
 function refreshStrip(){ const w=$('#statusWrap'); if(w) w.innerHTML=statusStripHTML(); }
 function sendTick(now){
@@ -780,9 +873,32 @@ function renderSendInfo(){
     sendState.ok ? 'Zuletzt erfolgreich gesendet um '+hms(sendState.at)+'.' : 'Wird bei der nächsten Statusänderung gesendet.';
 }
 
+function noteText(t, pdf){
+  const parts=[];
+  if(t.bemerkung) parts.push(t.bemerkung);
+  if(t.st) parts.push('Sicherheitstrupp');
+  if(pdf){ // Abfragen, die nicht in die zwei Spalten des Bogens passen
+    const qs=queries(t).filter(q=>t.ev[q.k]).slice(2);
+    qs.forEach(q=>parts.push('Druck '+q.min+' min: '+t.ev[q.k].p.join('/')+' bar ('+hm(t.ev[q.k].t)+')'));
+  }
+  const nf = t.notfall || (t.mayday && t.mayday.start);
+  if(nf){
+    let x='MAYDAY '+hm(nf);
+    if(t.mayday){
+      const done=MAYDAY_ITEMS.filter(([k])=>t.mayday.items&&t.mayday.items[k]).map(([k,l])=>l.split(' (')[0].split(' /')[0]+' '+hm(t.mayday.items[k]));
+      if(done.length) x+=': '+done.join(', ');
+      if(t.mayday.standort) x+=' · Lage: '+t.mayday.standort;
+      if(t.mayday.ende) x+=' · beendet '+hm(t.mayday.ende);
+    }
+    parts.push(x);
+  }
+  if(t.ev.beginn && t.ev.ende) parts.push('Einsatzdauer '+Math.round((t.ev.ende.t-t.ev.beginn.t)/60000)+' min');
+  return parts.join(' · ');
+}
 function renderPro(){
   const v=$('#view-pro');
-  const cols = ['beginn','ziel','soll','k10','k20','rueckzug','ende'];
+  const qm = [...new Set(S.trupps.flatMap(t=>queryMins(t)))].sort((a,b)=>a-b);
+  const cols = ['beginn','ziel','soll',...qm.map(m=>'k'+m),'rueckzug','ende'];
   let body='';
   sortedTrupps().forEach(t=>{
     const r=calc(t);
@@ -792,14 +908,15 @@ function renderPro(){
         cols.map(k=>{
           if(k==='soll') return r.soll?'<td class="num">'+r.soll.p[i]+'</td>'+(i===0?'<td class="num" rowspan="'+t.mitglieder.length+'">'+(r.soll.sofort?'sofort':hm(r.soll.t))+'</td>':''):'<td class="num">–</td>'+(i===0?'<td class="num" rowspan="'+t.mitglieder.length+'">–</td>':'');
           const e=t.ev[k];
-          if(k==='k10'||k==='k20') return '<td class="num">'+(e?e.p[i]:'–')+'</td>';
+          if(/^k\d+$/.test(k)) return '<td class="num">'+(e?e.p[i]:'–')+'</td>';
           return '<td class="num">'+(e?e.p[i]:'–')+'</td>'+(i===0?'<td class="num" rowspan="'+t.mitglieder.length+'">'+(e?hm(e.t):'–')+'</td>':'');
         }).join('')+'</tr>';
     });
-    if(t.bemerkung||t.notfall) body+='<tr><td colspan="14" class="hint">Zusatz/Bemerkung: '+esc(t.bemerkung||'')+(t.notfall?' · Atemschutznotfall gemeldet '+hm(t.notfall):'')+'</td></tr>';
+    const note = noteText(t, false);
+    if(note) body+='<tr><td colspan="'+(12+qm.length)+'" class="hint">Zusatz/Bemerkung: '+esc(note)+'</td></tr>';
   });
-  const head = '<tr><th rowspan="2">Rufgruppe / Auftrag</th><th rowspan="2">Name</th><th colspan="2">Beginn</th><th colspan="2">Einsatzort an</th><th colspan="2">Rückzug soll</th><th colspan="2">Druck bei</th><th colspan="2">Rückzug ist</th><th colspan="2">Ende</th></tr>'+
-    '<tr>'+['Druck','Zeit','Druck','Zeit','Druck','Zeit','10 min','20 min','Druck','Zeit','Druck','Zeit'].map(x=>'<th class="num">'+x+'</th>').join('')+'</tr>';
+  const head = '<tr><th rowspan="2">Rufgruppe / Auftrag</th><th rowspan="2">Name</th><th colspan="2">Beginn</th><th colspan="2">Einsatzort an</th><th colspan="2">Rückzug soll</th><th colspan="'+qm.length+'">Druck bei</th><th colspan="2">Rückzug ist</th><th colspan="2">Ende</th></tr>'+
+    '<tr>'+['Druck','Zeit','Druck','Zeit','Druck','Zeit',...qm.map(m=>m+' min'),'Druck','Zeit','Druck','Zeit'].map(x=>'<th class="num">'+x+'</th>').join('')+'</tr>';
   let actions;
   if(pdfMode==='open') actions = '<button class="btn primary" data-act="pdf" data-how="open">PDF öffnen &amp; drucken</button><button class="btn" data-act="pdf" data-how="save">PDF speichern</button>';
   else if(pdfMode==='claude') actions = '<button class="btn primary" data-act="pdf" data-how="claude">PDF speichern</button><span class="hint">Die gespeicherte Datei im PDF-Programm öffnen und drucken.</span>';
@@ -889,7 +1006,8 @@ function buildProtokollPDF(){
   const cA=52, cN=44, cw=(W-cA-cN)/12;
   const X = i => M+cA+cN+i*cw;
   const groupsHdr=[['Beginn',0],['Einsatzort an',2],['Rückzug soll',4],['Druck bei',6],['Rückzug ist',8],['Ende',10]];
-  const sub=['Druck','Zeit','Druck','Zeit','Druck','Zeit','10min','20min','Druck','Zeit','Druck','Zeit'];
+  const qm2 = queryMins(null).slice(0,2); while(qm2.length<2) qm2.push(qm2.length?qm2[0]+10:10);
+  const sub=['Druck','Zeit','Druck','Zeit','Druck','Zeit',qm2[0]+'min',qm2[1]+'min','Druck','Zeit','Druck','Zeit'];
   const cellT=(str,x,y,w,h,o={})=>{ const size=o.size||8; d.text(d.fit(str,size,o.bold,w-1.6), o.align==='left'?x+1:x+w/2, y+h/2+size*0.125, {size, bold:o.bold, align:o.align==='left'?'left':'center', color:o.color}); };
   const block=(t,y)=>{
     const h1=5, h2=4.5, rh=7, rows=3, hb=8, top=y;
@@ -916,7 +1034,7 @@ function buildProtokollPDF(){
       [0,2,4,6,7,8,10].forEach(ci=>{
         d.rect(X(ci),ry,cw,rh);
         if(!m) return;
-        const key={0:'beginn',2:'ziel',6:'k10',7:'k20',8:'rueckzug',10:'ende'}[ci];
+        const tq=queries(t).map(q=>q.k); const key={0:'beginn',2:'ziel',6:tq[0],7:tq[1],8:'rueckzug',10:'ende'}[ci];
         let val='';
         if(ci===4){ if(r&&r.soll) val=String(r.soll.p[i]); }
         else if(t.ev[key] && t.ev[key].p[i]!=null) val=String(t.ev[key].p[i]);
@@ -936,10 +1054,8 @@ function buildProtokollPDF(){
     d.rect(M,y,W,hb);
     d.text('Zusatz / Bemerkung:', M+1, y+3.2, {size:7.5, bold:true});
     if(t){
-      let note=t.bemerkung||'';
-      if(t.notfall) note=(note?note+' · ':'')+'Atemschutznotfall gemeldet '+hm(t.notfall);
-      if(t.ev.beginn && t.ev.ende) note=(note?note+' · ':'')+'Einsatzdauer '+Math.round((t.ev.ende.t-t.ev.beginn.t)/60000)+' min';
-      d.wrap(note,7.5,false,W-32).slice(0,2).forEach((l,i)=>d.text(l, M+30, y+3.2+i*3.3, {size:7.5}));
+      const note=noteText(t, true);
+      d.wrap(note,7,false,W-32).slice(0,2).forEach((l,i)=>d.text(l, M+30, y+3.2+i*3.2, {size:7}));
     }
     d.rect(M,top,W,y+hb-top,{lw:0.5});
     return y+hb;
@@ -1027,6 +1143,34 @@ function openEnde(){
   });
 }
 
+/* ---------- MAYDAY-Checkliste ---------- */
+function openMayday(tid){
+  const t=S.trupps.find(x=>x.id===tid); if(!t) return;
+  if(!t.mayday) t.mayday={start:t.notfall||nowT(), items:{}, standort:''};
+  const md=t.mayday;
+  const draw=(confirmEnd)=>{
+    const done=MAYDAY_ITEMS.filter(([k])=>md.items[k]).length;
+    openDlg('<div class="dlg-head may"><h2>MAYDAY · '+esc(t.rufgruppe)+'</h2><button type="button" class="btn small" data-md="close">Schließen</button></div>'+
+      '<div class="dlg-body">'+
+        '<div class="row" style="align-items:baseline"><span class="prompt-big" id="mdTime">'+dur(nowT()-md.start)+'</span><span class="hint">seit '+hm(md.start)+' · '+done+' von '+MAYDAY_ITEMS.length+' erledigt</span></div>'+
+        '<div class="mdlist">'+MAYDAY_ITEMS.map(([k,l])=>'<button type="button" class="mditem'+(md.items[k]?' on':'')+'" data-md="item" data-k="'+k+'"><span class="box">'+(md.items[k]?CHECK_SVG.replace(/width="14" height="14"/,'width="20" height="20"'):'')+'</span><span class="tx">'+esc(l)+'</span><span class="tm2">'+(md.items[k]?hm(md.items[k]):'')+'</span></button>').join('')+'</div>'+
+        '<label class="f">Standort / Lage des Trupps<input class="inp" id="mdStandort" value="'+esc(md.standort||'')+'" placeholder="z. B. 1. OG, hinterer Raum links, TM eingeklemmt"></label>'+
+        (confirmEnd?'<div class="samebox"><b>Notfall wirklich beenden?</b><div class="row"><button type="button" class="btn" data-md="no">Nein</button><button type="button" class="btn primary" data-md="yes">Ja, Notfall beenden</button></div></div>':'')+
+      '</div><div class="dlg-foot"><button type="button" class="btn danger" data-md="end">Notfall beenden</button><span class="spacer"></span><button type="button" class="btn primary" data-md="close">Schließen</button></div>', 'mayday');
+    $('#mdStandort').addEventListener('input', e=>{ md.standort=e.target.value; save(); });
+  };
+  dlg.onclick = e => {
+    const b=e.target.closest('[data-md]'); if(!b) return;
+    const a=b.dataset.md;
+    if(a==='item'){ const k=b.dataset.k; if(md.items[k]) delete md.items[k]; else md.items[k]=nowT(); save(); draw(); }
+    if(a==='close'){ dlg.onclick=null; closeDlg(); renderAll(); }
+    if(a==='end') draw(true);
+    if(a==='no') draw();
+    if(a==='yes'){ md.ende=nowT(); t.notfall=null; save(); dlg.onclick=null; closeDlg(); renderAll(); toast('Notfall beendet '+hm(md.ende)); }
+  };
+  draw();
+}
+
 /* ---------- Views ---------- */
 let view='ueb';
 function renderAll(){ renderMeta(); ({ueb:renderUeb, ger:renderGer, ein:renderEin, pro:renderPro})[view](); }
@@ -1051,8 +1195,8 @@ function parseTime(str, ref){
   return d.getTime();
 }
 function prevReading(t, k, i){
-  let prev=null;
-  for(const s of EVSTEPS){ if(s.k===k) break; if(t.ev[s.k]) prev=t.ev[s.k]; }
+  const cur=t.ev[k]; let prev=null;
+  Object.entries(t.ev).forEach(([kk,e])=>{ if(kk===k || !e || !e.p) return; if(cur && e.t>=cur.t) return; if(!prev || e.t>prev.t) prev=e; });
   return prev ? prev.p[i] : null;
 }
 function pressureSelect(i, val, m, attrs){
@@ -1066,9 +1210,9 @@ function pressureSelect(i, val, m, attrs){
 }
 function openStep(tid, k, edit){
   const t = S.trupps.find(x=>x.id===tid); if(!t) return;
-  const s = STEPS.find(x=>x.k===k);
+  const s = steps(t).find(x=>x.k===k);
   const e = t.ev[k];
-  const now = Date.now();
+  const now = nowT();
   const rows = t.mitglieder.map((m,i)=>{
     const pv = prevReading(t,k,i);
     // vorbelegt: beim Beginn mit dem beim Anlegen erfassten Flaschendruck, sonst mit der letzten Ablesung
@@ -1143,6 +1287,7 @@ function openTrupp(tid){
       '<div class="dlg-body">'+
         '<div class="fgrid"><label class="f">Rufgruppe / Trupp<input class="inp" id="t-rufgruppe" list="rgList" value="'+esc(t.rufgruppe)+'" required></label>'+
         '<label class="f">Auftrag<input class="inp" id="t-auftrag" value="'+esc(t.auftrag)+'"></label></div>'+
+        '<label class="chk"><input type="checkbox" id="t-st"'+(t.st?' checked':'')+'> Sicherheitstrupp</label>'+
         '<datalist id="rgList"><option>Angriffstrupp</option><option>Wassertrupp</option><option>Schlauchtrupp</option><option>Sicherheitstrupp</option><option>Trupp 1</option><option>Trupp 2</option><option>Trupp 3</option></datalist>'+
         mem +
         (t.mitglieder.length<3?'<button type="button" class="btn" data-act="add-mem">+ Dritte Person</button>':'')+
@@ -1154,7 +1299,8 @@ function openTrupp(tid){
     f.addEventListener('input', e=>{
       const el=e.target;
       if(el.dataset.f) t.mitglieder[+el.dataset.i][el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value;
-      else if(el.id==='t-rufgruppe') t.rufgruppe=el.value;
+      else if(el.id==='t-rufgruppe'){ t.rufgruppe=el.value; if(isNew && /sicherheit/i.test(el.value) && !t.stTouched){ t.st=true; const c=$('#t-st'); if(c) c.checked=true; } }
+      else if(el.id==='t-st'){ t.st=el.checked; t.stTouched=true; }
       else if(el.id==='t-auftrag') t.auftrag=el.value;
       else if(el.id==='t-bemerkung') t.bemerkung=el.value;
     });
@@ -1380,7 +1526,31 @@ function openScan(m, onDone){
 
 /* ---------- Audio / Vibration / Wachhalten ---------- */
 let actx=null, wake=null;
+let speechReady=false;
+function speak(txt){
+  if(!S.config.sprache || !('speechSynthesis' in window) || !txt) return;
+  try{
+    const u=new SpeechSynthesisUtterance(txt); u.lang='de-DE'; u.rate=1.05;
+    const v=speechSynthesis.getVoices().find(v=>/^de/i.test(v.lang)); if(v) u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+const spoken=new Set(); let announceReady=false;
+function announce(now){
+  if(!S.config.sprache) return;
+  const cur=new Map();
+  S.trupps.forEach(t=>{
+    const r=calc(t,now);
+    r.alarms.forEach(a=>{ if(!/^(ATEMSCHUTZNOTFALL|Rückzugszeit erreicht|Rückzug sofort)/.test(a)) cur.set(t.id+'|'+a, t.rufgruppe+'. '+a.replace(/ – .*$/,'').replace(/!/g,'')); });
+    r.warns.forEach(w=>{ if(!/^Druckabfrage/.test(w)) cur.set(t.id+'|'+w.replace(/\d+ bar\/min/g,''), t.rufgruppe+'. '+w.replace(/ \d+ bar\/min/g,'')); });
+  });
+  const st=stCheck(); if(st) cur.set('st|'+st, st.replace(/ – .*$/,'').replace(/!/g,''));
+  cur.forEach((txt,key)=>{ if(!spoken.has(key)){ spoken.add(key); if(announceReady) speak(txt); } });
+  announceReady=true;
+  [...spoken].forEach(k=>{ if(!cur.has(k)) spoken.delete(k); });
+}
 function unlockAudio(){
+  if(!speechReady && S.config.sprache && 'speechSynthesis' in window){ try{ const u=new SpeechSynthesisUtterance(''); u.volume=0; speechSynthesis.speak(u); speechReady=true; }catch(e){} }
   try{ if(!actx){ const AC=window.AudioContext||window.webkitAudioContext; if(AC) actx=new AC(); } if(actx && actx.state==='suspended') actx.resume(); }catch(e){}
   if(!wake && navigator.wakeLock){ navigator.wakeLock.request('screen').then(w=>{wake=w; w.addEventListener('release',()=>wake=null);}).catch(()=>{}); }
 }
@@ -1404,6 +1574,9 @@ document.addEventListener('click', e=>{
   if(e.target.closest('[data-close]')){ closeDlg(); return; }
   if(e.target.id==='btnClearSample'){ S=blankState(S.config); save(); renderAll(); toast('Leerer Einsatz angelegt'); return; }
   const art=e.target.closest('[data-art]'); if(art){ S.einsatz.art=art.dataset.art; save(); renderAll(); return; }
+  const cfg=e.target.closest('[data-cfg]'); if(cfg){ S.config[cfg.dataset.cfg]=cfg.dataset.v==='1'; save(); if(cfg.dataset.cfg==='sprache' && S.config.sprache){ speechReady=false; unlockAudio(); speak('Sprachansage eingeschaltet'); } renderAll(); return; }
+  const pre=e.target.closest('[data-preset]'); if(pre){ S.config.abfragen=pre.dataset.preset.split(',').map(Number); save(); renderAll(); toast('Abfragen: '+S.config.abfragen.join(' / ')+' min'); return; }
+  const spd=e.target.closest('[data-speed]'); if(spd){ const f=+spd.dataset.speed; setSpeed(f); if(f>1 && S.einsatz.art!=='Übung'){ S.einsatz.art='Übung'; save(); toast('Art auf „Übung“ gesetzt'); } renderAll(); return; }
   const b=e.target.closest('[data-act]'); if(!b || dlg.contains(b) && ['scan-dlg','add-mem','rm-mem','del-trupp','del-no','del-yes'].includes(b.dataset.act)) return;
   const a=b.dataset.act, tid=b.dataset.t;
   if(a==='step') openStep(tid, b.dataset.s, false);
@@ -1411,12 +1584,18 @@ document.addEventListener('click', e=>{
   else if(a==='delstep'){ const t=S.trupps.find(x=>x.id===tid); delete t.ev[b.dataset.s]; save(); closeDlg(); renderAll(); toast('Eintrag gelöscht'); }
   else if(a==='newtrupp') openTrupp(null);
   else if(a==='trupp') openTrupp(tid);
-  else if(a==='notfall'){ const t=S.trupps.find(x=>x.id===tid); t.notfall = t.notfall?null:Date.now(); if(t.notfall){ t.bemerkung = (t.bemerkung?t.bemerkung+' · ':'')+'MAYDAY '+hm(t.notfall); } save(); renderAll(); if(t.notfall) beep(true); }
+  else if(a==='notfall' || a==='mayday'){
+    const t=S.trupps.find(x=>x.id===tid);
+    if(!t.notfall){ t.notfall=nowT(); t.mayday={start:t.notfall, items:{}, standort:''}; save(); renderAll(); beep(true); speak('Atemschutznotfall! '+t.rufgruppe); }
+    openMayday(tid);
+  }
   else if(a==='scan'){ const t=S.trupps.find(x=>x.id===tid); const m=t.mitglieder.find(x=>x.id===b.dataset.m); openScan(m, null); }
   else if(a==='pdf') doPdf(b.dataset.how);
   else if(a==='ende') openEnde();
   else if(a==='detail'){ detailId=tid; renderUeb(); window.scrollTo({top:0}); }
   else if(a==='back'){ detailId=null; renderUeb(); }
+  else if(a==='speaktest'){ const was=S.config.sprache; S.config.sprache=true; speechReady=false; unlockAudio(); speak('Angriffstrupp. Druckabfrage 10 Minuten'); S.config.sprache=was; }
+  else if(a==='clockreset'){ resetClock(); renderAll(); toast('Uhr läuft wieder in Echtzeit'); }
   else if(a==='sendnow'){ sendStatus(false).then(ok=>toast(ok?'Status gesendet':'Senden fehlgeschlagen')); }
 });
 document.addEventListener('input', e=>{
@@ -1424,10 +1603,12 @@ document.addEventListener('input', e=>{
   if(dlg.contains(el)) return;
   if(el.dataset.e){ S.einsatz[el.dataset.e]=el.value; S.sample=false; save(); renderMeta(); }
   else if(el.dataset.url){ S.config.uebergabeUrl=el.value.trim(); sendState.sig=''; sendState.ok=null; save(); const b=$('[data-act="sendnow"]'); if(b) b.disabled=!(S.config.uebergabeUrl&&canSend()); renderSendInfo(); }
+  else if(el.dataset.abfr){ const arr=[...new Set(el.value.split(/[^0-9]+/).map(Number).filter(n=>n>0&&n<=180))].sort((a,b)=>a-b).slice(0,8); if(arr.length){ S.config.abfragen=arr; save(); } }
+  else if(el.dataset.c==='verbrauchWarn'){ const v=parseFloat(el.value.replace(',','.')); if(!isNaN(v)&&v>=0){ S.config.verbrauchWarn=v; save(); } }
   else if(el.dataset.c){ const v=parseFloat(el.value.replace(',','.')); if(!isNaN(v)&&v>0){ S.config[el.dataset.c]= el.dataset.c==='maxBar'?Math.min(400,Math.round(v)):v; save(); } }
   else if(el.dataset.m && el.dataset.f){ const t=S.trupps.find(x=>x.id===el.dataset.t); const m=t&&t.mitglieder.find(x=>x.id===el.dataset.m); if(m){ m[el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; S.sample=false; save(); } }
 });
-document.addEventListener('change', e=>{ if(e.target.dataset.c && view==='ein') renderEin(); });
+document.addEventListener('change', e=>{ if((e.target.dataset.c || e.target.dataset.abfr) && view==='ein') renderEin(); });
 dlg.addEventListener('close', ()=>{ dlg.onclick=null; });
 
 /* ---------- Takt ---------- */
@@ -1438,7 +1619,7 @@ function duePrompts(now){
   const list=[];
   S.trupps.forEach(t=>{
     const ev=t.ev; if(!ev.beginn || ev.rueckzug || ev.ende) return;
-    QUERIES.forEach(q=>{ const due=ev.beginn.t+q.min*60000; if(!ev[q.k] && now>=due) list.push({key:t.id+':'+q.k, t, k:q.k, due, kind:'abfrage', l:q.l}); });
+    queries(t).forEach(q=>{ const due=ev.beginn.t+q.min*60000; if(!ev[q.k] && now>=due) list.push({key:t.id+':'+q.k, t, k:q.k, due, kind:'abfrage', l:q.l}); });
     const r=calc(t,now);
     if(r.soll && (r.soll.sofort || now>=r.soll.t)) list.push({key:t.id+':rz', t, k:'rueckzug', due:r.soll.t, kind:'rueckzug', l:r.soll.sofort?'Rückzug sofort':'Rückzugszeit erreicht'});
   });
@@ -1447,7 +1628,7 @@ function duePrompts(now){
 function showPrompt(p, now){
   promptKey = p.key;
   const t=p.t, isRz = p.kind==='rueckzug';
-  const last = (()=>{ let l=null; for(const s of EVSTEPS) if(t.ev[s.k] && (!l||t.ev[s.k].t>=l.t)) l=t.ev[s.k]; return l; })();
+  const last = lastReading(t);
   const mem = t.mitglieder.map((m,i)=>'<div><span>'+esc(m.name||m.funktion)+'</span><span class="mono">'+(last&&last.p[i]!=null?'zuletzt '+last.p[i]+' bar':'–')+'</span></div>').join('');
   openDlg('<div class="dlg-head"><h2>'+(isRz?'⚠ '+esc(p.l):'Druckabfrage fällig')+'</h2></div>'+
     '<div class="dlg-body">'+
@@ -1459,16 +1640,20 @@ function showPrompt(p, now){
       '<button class="btn primary" data-pr="go" style="min-width:200px">'+(isRz?'Rückzug erfassen':'Druck jetzt erfassen')+'</button></div>', 'prompt'+(isRz?' alarm':''));
   dlg.onclick = e => {
     const b=e.target.closest('[data-pr]'); if(!b) return;
-    snooze[p.key] = Date.now()+60000; promptKey=null; dlg.onclick=null;
+    snooze[p.key] = nowT()+60000; promptKey=null; dlg.onclick=null;
     if(b.dataset.pr==='go') openStep(t.id, p.k, false); else closeDlg();
   };
   beep(isRz);
+  speak(t.rufgruppe+'. '+(isRz ? p.l : 'Druckabfrage '+p.k.slice(1)+' Minuten'));
 }
-dlg.addEventListener('cancel', ()=>{ if(promptKey){ snooze[promptKey]=Date.now()+60000; promptKey=null; } });
+dlg.addEventListener('cancel', ()=>{ if(promptKey){ snooze[promptKey]=nowT()+60000; promptKey=null; } });
 
 function tick(){
-  const now=Date.now();
+  const now=nowT();
   $('#clock').textContent = hms(now);
+  const sp=speed(); $('#simBadge').hidden = !S.clock; $('#simBadge').textContent = sp>1 ? 'ÜBUNG ×'+sp : 'ÜBUNGSZEIT'; $('#clock').classList.toggle('sim', !!S.clock);
+  const mdT=$('#mdTime'); if(mdT){ const t=S.trupps.find(x=>x.mayday && x.notfall); if(t) mdT.textContent=dur(now-t.mayday.start); }
+  announce(now);
   if(promptKey){
     const el=$('#promptOver'); const p=duePrompts(now).find(x=>x.key===promptKey) || null;
     if(el && p) el.textContent = dur(now-p.due);
@@ -1478,7 +1663,7 @@ function tick(){
   }
   sendTick(now);
   if(view!=='ueb') return;
-  const sig = S.trupps.map(t=>{const r=calc(t,now);return t.id+':'+r.alarms.join('|')+'/'+r.warns.join('|');}).join(';');
+  const sig = sigNow(now);
   if(sig!==alarmSig){
     const newAlarm = sig.split(';').some(x=>!alarmSig.includes(x) && /:[^\/]+\//.test(x));
     const newWarn = sig.split(';').some(x=>!alarmSig.includes(x) && /\/.+$/.test(x));
@@ -1500,7 +1685,7 @@ function tick(){
 /* ---------- Start ---------- */
 try{ const v=sessionStorage.getItem('asue.view'); if(v && ['ueb','ger','ein','pro'].includes(v)) view=v; }catch(e){}
 setView(view);
-tick(); setInterval(tick, 1000);
+tick(); setInterval(tick, 250);
 try{
   const top = window.self===window.top;
   if(top && 'serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});

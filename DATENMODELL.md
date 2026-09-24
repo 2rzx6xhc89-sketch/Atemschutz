@@ -56,7 +56,10 @@ Jede Nachricht enthält den vollständigen aktuellen Stand. Die Fahrzeugverwaltu
 ## Weitere Regeln der App
 
 - Maximaler Flaschendruck: 330 bar; Druckauswahl per Dropdown 0–330 bar in 10er-Schritten.
-- Fällige Druckabfragen (10/20 min) und erreichte Rückzugszeit öffnen automatisch eine Meldung.
+- Druckabfragen einstellbar unter Einsatzdaten (Standard 10/20 min, z. B. 10/20/30/40 oder ⅓ + ⅔ der erwarteten Einsatzzeit); fällige Abfragen und erreichte Rückzugszeit öffnen automatisch eine Meldung.
+- Optional Sprachansage der Warnungen; Sicherheitstrupp-Prüfung; Warnung bei hohem Luftverbrauch (Standard ab 12 bar/min je Person).
+- MAYDAY-Checkliste mit Zeitstempeln; Einträge erscheinen im Protokoll.
+- Übungsmodus mit Zeitraffer (×2/×5/×10) für die Ausbildung.
 - Rückzugsdruck = max(50 bar, 2 × (Druck Beginn − Druck am Einsatzort)); Rückzugszeit = Einsatzort-an + (Druck am Einsatzort − Rückzugsdruck) ÷ 8,3 bar/min (entspricht der Richtwerttabelle des Papierbogens).
 
 ## Offen
