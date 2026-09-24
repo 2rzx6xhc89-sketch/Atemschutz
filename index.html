@@ -137,7 +137,7 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:700;margin:0;letter-spacing:.01em
 .sttile .n span{font-size:14px;color:var(--ink-2)}
 .sendline{font-size:13px;color:var(--ink-3);margin:-6px 0 12px}
 .sendline.bad{color:var(--red);font-weight:600}
-@media (max-width:640px){ .statusbar{grid-template-columns:1fr} }
+
 .ovlist{display:grid;gap:8px}
 .ovhead,.ovrow{display:grid;grid-template-columns:196px minmax(0,1.3fr) minmax(0,2fr) 150px 170px 24px;gap:12px;align-items:center;padding:10px 14px}
 .ovhead{font-size:12px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:var(--ink-3);padding-block:0}
@@ -272,12 +272,92 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:8px;font-weight:600;z-index:100;max-width:calc(100vw - 32px)}
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px}
 
+.tab .sm{display:none}
+.clock{margin-left:auto}
+.top[data-view="ueb"] .meta,.top[data-view="ueb"] #artLabel{display:none}
 @media (max-width:640px){
   .rail{grid-template-columns:repeat(4,minmax(0,1fr))}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi{padding:8px 10px}
   .kpi .v{font-size:21px}
-  .p-row{grid-template-columns:1fr 160px}
-  .clock{font-size:22px}
+  .kpi .l{font-size:10.5px;letter-spacing:.04em}
+  .kpi .s{font-size:12px}
+  .p-row{grid-template-columns:1fr 150px}
+  .p-inp{font-size:22px}
+  /* Kopfzeile kompakt */
+  .top{padding-top:8px}
+  .top-row{gap:4px 10px;flex-wrap:nowrap}
+  .brand{min-width:0;flex:1}
+  .brand > div{min-width:0}
+  .brand h1{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wappen{width:24px;height:31px}
+  .clock{font-size:20px;flex:none}
+  .meta{display:none}
+  .top[data-view="ein"] .meta{display:none}
+  /* Reiter als Leiste unten */
+  body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;background:var(--panel);border-top:1px solid var(--line-2);display:grid;grid-template-columns:repeat(4,1fr);gap:0;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+  .tab{font-size:15px;padding:14px 4px 12px;border-bottom:0;border-top:3px solid transparent;text-align:center}
+  .tab[aria-selected="true"]{border-top-color:var(--red);color:var(--red)}
+  .tab .lg{display:none} .tab .sm{display:inline}
+  .top{border-bottom:1px solid var(--line);padding-bottom:8px}
+  .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  /* Werkzeugleiste */
+  .toolbar{gap:8px}
+  .toolbar h2{font-size:18px;width:100%}
+  .toolbar .seg{flex:1}
+  .toolbar .seg button{flex:1;padding-inline:8px;white-space:nowrap;font-size:15px}
+  .toolbar > .btn.primary{padding-inline:12px}
+  .sample-note{font-size:13px}
+  /* Übersichtsliste */
+  .ovrow{grid-template-columns:1fr 1fr;grid-template-areas:"rg pill" "au au" "nq rz" "alm alm";gap:4px 12px;padding:10px 12px}
+  .ovrow > div:nth-child(1){grid-area:pill;justify-self:end}
+  .ovrow .rg{grid-area:rg;font-size:20px}
+  .ovrow .au{grid-area:au;font-size:14px}
+  .ovrow > .tm:nth-of-type(4){grid-area:nq}
+  .ovrow > .tm:nth-of-type(5){grid-area:rz}
+  .ovrow .alm{grid-area:auto;grid-column:1/-1}
+  .ovrow .tm::before{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--ink-3);font-family:var(--f-body)}
+  .ovrow > .tm:nth-of-type(4)::before{content:"Nächste Abfrage"}
+  .ovrow > .tm:nth-of-type(5)::before{content:"Rückzug um"}
+  /* Karte */
+  .card-head{padding:10px 12px}
+  .card-head h3{font-size:21px}
+  .mtable{padding:2px 12px 6px}
+  .tl{padding:8px 12px}
+  .card-foot{padding:10px 12px}
+  .nextbtn{flex-basis:100%;order:-1}
+  .card-foot .btn.small,.card-foot .notruf{flex:1}
+  /* Dialoge vollflächig */
+  dialog{width:100vw;max-width:100vw;max-height:100dvh;height:100dvh;border-radius:0;margin:0}
+  dialog.prompt{height:auto;max-height:100dvh;margin:auto 0 0;border-radius:14px 14px 0 0}
+  .dlg-head{padding:12px 16px} .dlg-head h2{font-size:21px}
+  .dlg-body{padding:14px 16px}
+  .dlg-foot{padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+  .dlg-foot .btn.primary{flex:1}
+  .prompt-big{font-size:36px}
+  /* Geräteerfassung als Karten statt breiter Tabelle */
+  #view-ger .table-wrap{border:0;background:none;overflow:visible}
+  #view-ger table,#view-ger tbody{display:block}
+  #view-ger thead{display:none}
+  #view-ger tr.grp{display:block;margin-top:14px}
+  #view-ger tr.grp td{display:block;background:none;border:0;padding:0 2px 6px}
+  #view-ger tr.mem{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-bottom:8px}
+  #view-ger tr.mem td{display:block;border:0;padding:0}
+  #view-ger td.fn{font-family:var(--f-disp);font-weight:700;font-size:17px;align-self:center}
+  #view-ger td.camc{justify-self:end;grid-column:2;grid-row:1}
+  #view-ger td[data-l="Name / Vorname"]{grid-column:1/-1}
+  #view-ger td[data-l]::before{content:attr(data-l);display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--ink-3);margin-bottom:2px}
+  #view-ger .cell-inp{min-width:0}
+  #view-ger select.p-inp{min-width:0!important;width:100%}
+  /* Truppstatus kompakt nebeneinander */
+  .statusbar{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .sttile{padding:8px 10px}
+  .sttile .l{font-size:10.5px;letter-spacing:.04em}
+  .sttile .n{display:grid;grid-template-columns:auto 1fr;gap:0 6px}
+  .sttile .n b{font-size:22px}
+  .sttile .n span{font-size:12px;align-self:center}
+  .scanbtns{grid-template-columns:1fr}
 }
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
@@ -294,10 +374,10 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
     <div class="clock" id="clock" aria-label="Uhrzeit">--:--:--</div>
   </div>
   <nav class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tab-ueb" aria-selected="true" data-view="ueb">Überwachung</button>
-    <button class="tab" role="tab" id="tab-ger" aria-selected="false" data-view="ger">Trupps &amp; Geräte</button>
-    <button class="tab" role="tab" id="tab-ein" aria-selected="false" data-view="ein">Einsatzdaten</button>
-    <button class="tab" role="tab" id="tab-pro" aria-selected="false" data-view="pro">Protokoll</button>
+    <button class="tab" role="tab" id="tab-ueb" aria-selected="true" data-view="ueb"><span class="lg">Überwachung</span><span class="sm">Überwachung</span></button>
+    <button class="tab" role="tab" id="tab-ger" aria-selected="false" data-view="ger"><span class="lg">Trupps &amp; Geräte</span><span class="sm">Trupps</span></button>
+    <button class="tab" role="tab" id="tab-ein" aria-selected="false" data-view="ein"><span class="lg">Einsatzdaten</span><span class="sm">Einsatz</span></button>
+    <button class="tab" role="tab" id="tab-pro" aria-selected="false" data-view="pro"><span class="lg">Protokoll</span><span class="sm">Protokoll</span></button>
   </nav>
 </header>
 
@@ -598,10 +678,10 @@ function renderGer(){
   sortedTrupps().forEach((t,ti)=>{
     rows += '<tr class="grp"><td colspan="8">'+(ti+1)+' · '+esc(t.rufgruppe||'Trupp')+' <span style="font-weight:500;font-family:var(--f-body);font-size:14px;color:var(--ink-2)">'+esc(t.auftrag||'')+'</span></td></tr>';
     t.mitglieder.forEach(m=>{
-      rows += '<tr><td style="white-space:nowrap">'+esc(m.funktion)+'</td>'+
-        FIELDS.map(f=>'<td><input class="inp cell-inp'+(f.k==='name'?'':' mono')+'" id="g-'+m.id+'-'+f.k+'" data-m="'+m.id+'" data-t="'+t.id+'" data-f="'+f.k+'" value="'+esc(m[f.k])+'" aria-label="'+f.l+' '+esc(m.funktion)+'"></td>').join('')+
-        '<td>'+pressureSelect('g-'+m.id+'-druck', m.druck, m, 'data-m="'+m.id+'" data-t="'+t.id+'" data-f="druck" style="min-width:130px;font-size:18px;min-height:44px"')+'</td>'+
-        '<td><button class="cam" data-act="scan" data-t="'+t.id+'" data-m="'+m.id+'" aria-label="Mit Kamera einlesen" title="Mit Kamera einlesen">'+CAM_SVG+'</button></td></tr>';
+      rows += '<tr class="mem"><td class="fn" style="white-space:nowrap">'+esc(m.funktion)+'</td>'+
+        FIELDS.map(f=>'<td data-l="'+f.l+'"><input class="inp cell-inp'+(f.k==='name'?'':' mono')+'" id="g-'+m.id+'-'+f.k+'" data-m="'+m.id+'" data-t="'+t.id+'" data-f="'+f.k+'" value="'+esc(m[f.k])+'" aria-label="'+f.l+' '+esc(m.funktion)+'"></td>').join('')+
+        '<td data-l="Flaschendruck">'+pressureSelect('g-'+m.id+'-druck', m.druck, m, 'data-m="'+m.id+'" data-t="'+t.id+'" data-f="druck" style="min-width:130px;font-size:18px;min-height:44px"')+'</td>'+
+        '<td class="camc"><button class="cam" data-act="scan" data-t="'+t.id+'" data-m="'+m.id+'" aria-label="Mit Kamera einlesen" title="Mit Kamera einlesen">'+CAM_SVG+'</button></td></tr>';
     });
   });
   v.innerHTML = '<div class="toolbar"><h2>Geräteerfassung</h2><button class="btn primary" data-act="newtrupp">+ Trupp anlegen</button></div>'+
@@ -952,6 +1032,7 @@ let view='ueb';
 function renderAll(){ renderMeta(); ({ueb:renderUeb, ger:renderGer, ein:renderEin, pro:renderPro})[view](); }
 function setView(v){
   view=v;
+  $('.top').dataset.view=v;
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.view===v)));
   ['ueb','ger','ein','pro'].forEach(k=>$('#view-'+k).hidden = k!==v);
   try{ sessionStorage.setItem('asue.view',v); }catch(e){}
