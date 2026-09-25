@@ -56,8 +56,8 @@ Jede Nachricht enthält den vollständigen aktuellen Stand. Die Fahrzeugverwaltu
 ## Weitere Regeln der App
 
 - Maximaler Flaschendruck: 330 bar; Druckauswahl per Dropdown 0–330 bar in 10er-Schritten.
-- Druck bei Beginn je Person; ab „Einsatzort an“ (Abfragen, Rückzug, Ende) wahlweise nur der niedrigste Druck des Trupps (Standard) oder jede Person einzeln – einstellbar unter Einsatzdaten. Rückzugsdruck dann konservativ: max(50 bar, 2 × (höchster Beginndruck − niedrigster Druck am Einsatzort)).
-- Druckabfragen (Einsatzdaten): Standard „⅓ + ⅔“ – nach ⅓ und ⅔ der Zeit von Beginn bis Rückzug soll; vor „Einsatzort an“ geschätzt aus dem niedrigsten Beginndruck ((Druck − 50 bar) ÷ 8,3 bar/min), danach aus Rückzug soll neu berechnet; erste Abfrage spätestens nach 10 min (einstellbar). Alternativ feste Minuten (z. B. 10/20/30/40). Fällige Abfragen und erreichte Rückzugszeit öffnen automatisch eine Meldung. Gespeichert als ev.q1 / ev.q2 bzw. ev.k<Minuten>.
+- Druck bei Beginn je Person; ab „Einsatzort an“ (Abfragen, Rückzug, Ende) wahlweise nur der niedrigste Druck des Trupps (Standard) oder jede Person einzeln – einstellbar unter Einstellungen. Rückzugsdruck dann konservativ: max(50 bar, 2 × (höchster Beginndruck − niedrigster Druck am Einsatzort)).
+- Druckabfragen (Einstellungen): Standard „⅓ + ⅔“ – nach ⅓ und ⅔ der Zeit von Beginn bis Rückzug soll; vor „Einsatzort an“ geschätzt aus dem niedrigsten Beginndruck ((Druck − 50 bar) ÷ 8,3 bar/min), danach aus Rückzug soll neu berechnet; erste Abfrage spätestens nach 10 min (einstellbar). Alternativ feste Minuten (z. B. 10/20/30/40). Fällige Abfragen und erreichte Rückzugszeit öffnen automatisch eine Meldung. Gespeichert als ev.q1 / ev.q2 bzw. ev.k<Minuten>.
 - Optional Sprachansage der Warnungen; Sicherheitstrupp-Prüfung; Warnung bei hohem Luftverbrauch (Standard ab 12 bar/min je Person).
 - MAYDAY-Checkliste mit Zeitstempeln; Einträge erscheinen im Protokoll.
 - Übungsmodus mit Zeitraffer (×2/×5/×10) für die Ausbildung.

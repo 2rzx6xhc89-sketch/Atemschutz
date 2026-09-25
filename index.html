@@ -240,6 +240,7 @@ dialog.qrdlg .dlg-body{justify-items:stretch}
 .syncbadge.bad{background:var(--red);border-color:var(--red);color:var(--red-ink)}
 .synccode{display:flex;align-items:baseline;gap:12px}
 .synccode b{font-size:32px;letter-spacing:.12em}
+.sticky-tb{position:sticky;top:var(--toph,0px);z-index:15;background:var(--ground);margin-inline:-16px;padding:10px 16px;margin-block:6px 10px;border-bottom:1px solid var(--line)}
 .empty{border:2px dashed var(--line-2);border-radius:var(--r);padding:28px;text-align:center;color:var(--ink-2)}
 
 /* Forms */
@@ -339,8 +340,8 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
   .top[data-view="ein"] .meta{display:none}
   /* Reiter als Leiste unten */
   body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;background:var(--panel);border-top:1px solid var(--line-2);display:grid;grid-template-columns:repeat(4,1fr);gap:0;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -4px 16px rgba(0,0,0,.08)}
-  .tab{font-size:15px;padding:14px 4px 12px;border-bottom:0;border-top:3px solid transparent;text-align:center}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;background:var(--panel);border-top:1px solid var(--line-2);display:grid;grid-template-columns:repeat(5,1fr);gap:0;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+  .tab{font-size:13px;padding:14px 2px 12px;border-bottom:0;border-top:3px solid transparent;text-align:center}
   .tab[aria-selected="true"]{border-top-color:var(--red);color:var(--red)}
   .tab .lg{display:none} .tab .sm{display:inline}
   .top{border-bottom:1px solid var(--line);padding-bottom:8px}
@@ -348,6 +349,12 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
   /* Werkzeugleiste */
   .toolbar{gap:8px}
   .toolbar h2{font-size:18px;width:100%}
+  .sticky-tb{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-block:8px}
+  .sticky-tb h2{grid-column:1/-1;font-size:15px}
+  .sticky-tb .seg{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}
+  .sticky-tb .btn{min-height:40px;padding-inline:6px;font-size:14px;white-space:nowrap;gap:5px}
+  .backbar.sticky-tb .spacer{display:none}
+  .backbar.sticky-tb > .btn:first-child{grid-column:1/-1}
   .toolbar .seg{flex:1}
   .toolbar .seg button{flex:1;padding-inline:8px;white-space:nowrap;font-size:15px}
   .toolbar > .btn.primary{padding-inline:12px}
@@ -423,6 +430,7 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
     <button class="tab" role="tab" id="tab-ger" aria-selected="false" data-view="ger"><span class="lg">Trupps &amp; Geräte</span><span class="sm">Trupps</span></button>
     <button class="tab" role="tab" id="tab-ein" aria-selected="false" data-view="ein"><span class="lg">Einsatzdaten</span><span class="sm">Einsatz</span></button>
     <button class="tab" role="tab" id="tab-pro" aria-selected="false" data-view="pro"><span class="lg">Protokoll</span><span class="sm">Protokoll</span></button>
+    <button class="tab" role="tab" id="tab-set" aria-selected="false" data-view="set"><span class="lg">Einstellungen</span><span class="sm">Optionen</span></button>
   </nav>
 </header>
 
@@ -436,6 +444,7 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
   <section id="view-ger" hidden></section>
   <section id="view-ein" hidden></section>
   <section id="view-pro" hidden></section>
+  <section id="view-set" hidden></section>
 </main>
 
 <dialog id="dlg"></dialog>
@@ -802,13 +811,13 @@ function renderUeb(){
   const det = detailId && S.trupps.find(t=>t.id===detailId);
   if(detailId && !det) detailId=null;
   if(det){
-    v.innerHTML = '<div class="backbar"><button class="btn" data-act="back">‹ Zur Übersicht</button><span class="spacer"></span><button class="btn primary" data-act="newtrupp">+ Trupp anlegen</button></div>'+
+    v.innerHTML = '<div class="backbar sticky-tb"><button class="btn" data-act="back">‹ Zur Übersicht</button><span class="spacer"></span><button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn primary" data-act="newtrupp">+ Trupp anlegen</button></div>'+
       '<div class="grid single">'+cardHTML(det)+'</div>';
   } else {
     const useList = S.trupps.length >= OV_AB && ovMode==='liste';
     const toggle = S.trupps.length >= OV_AB ? '<div class="seg" role="group" aria-label="Ansicht"><button data-ov="liste" aria-pressed="'+(ovMode==='liste')+'">Übersicht</button><button data-ov="karten" aria-pressed="'+(ovMode==='karten')+'">Alle Karten</button></div>' : '';
     const stw = stCheck();
-    v.innerHTML = '<div class="toolbar"><h2>'+S.trupps.length+' Trupps · '+active+' unter Atemschutz</h2>'+toggle+
+    v.innerHTML = '<div class="toolbar sticky-tb"><h2>'+S.trupps.length+' Trupps · '+active+' unter Atemschutz</h2>'+toggle+
       '<button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn primary" data-act="newtrupp">+ Trupp anlegen</button></div>'+
       (stw?'<div class="banner alarm" role="alert">⚠ '+esc(stw)+'</div>':'')+
       (!S.trupps.length ? '<div class="empty"><p><b>Noch kein Trupp angelegt.</b></p><p>Trupp anlegen, Namen, Gerätenummern und Flaschendruck erfassen, dann die Zeitpunkte per Knopfdruck bestätigen.</p><button class="btn primary" data-act="newtrupp">+ Ersten Trupp anlegen</button></div>' :
@@ -851,6 +860,13 @@ function renderEin(){
     '<label class="f">Überwacher<input class="inp" id="e-ueberwacher" data-e="ueberwacher" value="'+esc(e.ueberwacher)+'"></label>'+
     '<label class="f">2. Überwacher<input class="inp" id="e-ueberwacher2" data-e="ueberwacher2" value="'+esc(e.ueberwacher2||'')+'"></label>'+
   '</div></div>'+
+  syncPanelHTML()+
+  '<h2 class="section-title">Einsatz abschließen</h2><div class="panel"><div class="row"><button class="btn danger" data-act="ende">Einsatzende</button><span class="hint">Speichert das Protokoll als PDF, meldet den Abschluss an die Fahrzeugverwaltung und löscht danach alle Einsatzdaten auf diesem Gerät.</span></div></div>';
+  renderSyncInfo();
+}
+function renderSet(){
+  const c = S.config;
+  $('#view-set').innerHTML =
   '<h2 class="section-title">Überwachung &amp; Warnungen</h2><div class="panel setlist">'+
     '<div class="set"><div><b>Druckabfragen</b><div class="hint">'+(c.abfrageModus==='drittel'
         ? '<b>⅓ und ⅔ der Zeit bis zum Rückzug</b> (FwDV 7). Bis „Einsatzort an“ schätzt die App die Zeit aus dem Flaschendruck, danach rechnet sie mit „Rückzug soll“ neu. Beispiel: Rückzug soll 14 min nach Beginn → Abfragen nach ca. 4:40 und 9:20 min. Die erste Abfrage kommt spätestens nach der eingestellten Zeit.'
@@ -883,13 +899,11 @@ function renderEin(){
   '</div><p class="hint">Rückzugsdruck = doppelter Verbrauch bis zum Einsatzort, mindestens '+c.minRueckzug+' bar. Rückzugszeit = (Druck am Einsatzort − Rückzugsdruck) ÷ '+String(c.verbrauch).replace('.',',')+' bar/min. Maßgeblich ist das Truppmitglied mit der kürzesten Zeit. Mit 8,3 bar/min entspricht das genau der Richtwerttabelle auf dem Papierbogen.</p>'+
   refTable()+'</div>'+
   '<h2 class="section-title">Übergabe an Fahrzeugverwaltung</h2><div class="panel" style="display:grid;gap:12px">'+
-    '<p class="hint" style="margin:0">Gesendet wird der Truppstatus als Anzahl Trupps und Personen: <b>bereit</b>, <b>im Einsatz</b> und <b>waren im Einsatz</b> (siehe Truppstatus oben). Das passiert bei jeder Änderung, alle 5 Minuten als Lebenszeichen und einmal zum Einsatzende.</p>'+
+    '<p class="hint" style="margin:0">Gesendet wird der Truppstatus als Anzahl Trupps und Personen: <b>bereit</b>, <b>im Einsatz</b> und <b>waren im Einsatz</b> (siehe Truppstatus unter Einsatzdaten). Das passiert bei jeder Änderung, alle 5 Minuten als Lebenszeichen und einmal zum Einsatzende.</p>'+
     '<label class="f">Empfangsadresse der Fahrzeugverwaltung (URL)<input class="inp mono" id="c-uebergabeUrl" data-url="1" inputmode="url" placeholder="https://fahrzeugverwaltung.example/api/atemschutz" value="'+esc(c.uebergabeUrl||'')+'"></label>'+
     '<div class="row"><button class="btn" data-act="sendnow"'+(c.uebergabeUrl&&canSend()?'':' disabled')+'>Jetzt senden</button><span id="sendInfo" class="hint"></span></div>'+
-  '</div>'+
-  syncPanelHTML()+
-  '<h2 class="section-title">Einsatz abschließen</h2><div class="panel"><div class="row"><button class="btn danger" data-act="ende">Einsatzende</button><span class="hint">Speichert das Protokoll als PDF, meldet den Abschluss an die Fahrzeugverwaltung und löscht danach alle Einsatzdaten auf diesem Gerät.</span></div></div>';
-  renderSendInfo(); renderSyncInfo();
+  '</div>';
+  renderSendInfo();
 }
 function refTable(){
   const c=S.config, start=300, zs=[290,280,270,260,250,240,230,220,210,200];
@@ -935,7 +949,7 @@ function sendStatus(final){
   return fetch(url,{method:'POST', headers:{'Content-Type':'application/json'}, body, keepalive:true, cache:'no-store'})
     .then(r=>{ sendState.ok=r.ok; if(r.ok) sendState.sig=sig; })
     .catch(()=>{ sendState.ok=false; })
-    .then(()=>{ sendState.busy=false; sendState.at=nowT(); if(view==='ein'){ refreshStrip(); renderSendInfo(); } return sendState.ok; });
+    .then(()=>{ sendState.busy=false; sendState.at=nowT(); if(view==='ein') refreshStrip(); if(view==='set') renderSendInfo(); return sendState.ok; });
 }
 function refreshStrip(){ const w=$('#statusWrap'); if(w) w.innerHTML=statusStripHTML(); }
 function sendTick(now){
@@ -1268,14 +1282,14 @@ function openMayday(tid){
 
 /* ---------- Views ---------- */
 let view='ueb';
-function renderAll(){ renderMeta(); ({ueb:renderUeb, ger:renderGer, ein:renderEin, pro:renderPro})[view](); }
+function renderAll(){ renderMeta(); ({ueb:renderUeb, ger:renderGer, ein:renderEin, pro:renderPro, set:renderSet})[view](); }
 function setView(v){
   view=v;
   $('.top').dataset.view=v;
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.view===v)));
-  ['ueb','ger','ein','pro'].forEach(k=>$('#view-'+k).hidden = k!==v);
+  ['ueb','ger','ein','pro','set'].forEach(k=>$('#view-'+k).hidden = k!==v);
   try{ sessionStorage.setItem('asue.view',v); }catch(e){}
-  renderAll();
+  renderAll(); try{ setTopH(); }catch(e){}
 }
 
 /* ---------- Dialog: Druck erfassen ---------- */
@@ -2069,7 +2083,7 @@ document.addEventListener('input', e=>{
   else if(el.dataset.c){ const v=parseFloat(el.value.replace(',','.')); if(!isNaN(v)&&v>0){ S.config[el.dataset.c]= el.dataset.c==='maxBar'?Math.min(400,Math.round(v)):v; save(); } }
   else if(el.dataset.m && el.dataset.f){ const t=S.trupps.find(x=>x.id===el.dataset.t); const m=t&&t.mitglieder.find(x=>x.id===el.dataset.m); if(m){ m[el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; S.sample=false; save(); } }
 });
-document.addEventListener('change', e=>{ if((e.target.dataset.c || e.target.dataset.abfr) && view==='ein') renderEin(); });
+document.addEventListener('change', e=>{ if((e.target.dataset.c || e.target.dataset.abfr) && view==='set') renderSet(); });
 dlg.addEventListener('close', ()=>{ dlg.onclick=null; });
 document.addEventListener('keydown', e=>{
   if(e.key!=='Enter' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
@@ -2157,7 +2171,9 @@ function tick(){
 }
 
 /* ---------- Start ---------- */
-try{ const v=sessionStorage.getItem('asue.view'); if(v && ['ueb','ger','ein','pro'].includes(v)) view=v; }catch(e){}
+function setTopH(){ const t=$('.top'); if(t) document.documentElement.style.setProperty('--toph', (window.matchMedia('(max-width:640px)').matches ? t.getBoundingClientRect().height : t.getBoundingClientRect().height)+'px'); }
+window.addEventListener('resize', setTopH); setTimeout(setTopH, 50); setTimeout(setTopH, 800);
+try{ const v=sessionStorage.getItem('asue.view'); if(v && ['ueb','ger','ein','pro','set'].includes(v)) view=v; }catch(e){}
 setView(view);
 tick(); setInterval(tick, 250);
 try{
