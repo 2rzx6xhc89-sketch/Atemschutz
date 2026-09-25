@@ -56,11 +56,21 @@ Jede Nachricht enthält den vollständigen aktuellen Stand. Die Fahrzeugverwaltu
 ## Weitere Regeln der App
 
 - Maximaler Flaschendruck: 330 bar; Druckauswahl per Dropdown 0–330 bar in 10er-Schritten.
-- Druckabfragen einstellbar unter Einsatzdaten (Standard 10/20 min, z. B. 10/20/30/40 oder ⅓ + ⅔ der erwarteten Einsatzzeit); fällige Abfragen und erreichte Rückzugszeit öffnen automatisch eine Meldung.
+- Druck bei Beginn je Person; ab „Einsatzort an“ (Abfragen, Rückzug, Ende) wahlweise nur der niedrigste Druck des Trupps (Standard) oder jede Person einzeln – einstellbar unter Einsatzdaten. Rückzugsdruck dann konservativ: max(50 bar, 2 × (höchster Beginndruck − niedrigster Druck am Einsatzort)).
+- Druckabfragen (Einsatzdaten): Standard „⅓ + ⅔“ – nach ⅓ und ⅔ der Zeit von Beginn bis Rückzug soll; vor „Einsatzort an“ geschätzt aus dem niedrigsten Beginndruck ((Druck − 50 bar) ÷ 8,3 bar/min), danach aus Rückzug soll neu berechnet; erste Abfrage spätestens nach 10 min (einstellbar). Alternativ feste Minuten (z. B. 10/20/30/40). Fällige Abfragen und erreichte Rückzugszeit öffnen automatisch eine Meldung. Gespeichert als ev.q1 / ev.q2 bzw. ev.k<Minuten>.
 - Optional Sprachansage der Warnungen; Sicherheitstrupp-Prüfung; Warnung bei hohem Luftverbrauch (Standard ab 12 bar/min je Person).
 - MAYDAY-Checkliste mit Zeitstempeln; Einträge erscheinen im Protokoll.
 - Übungsmodus mit Zeitraffer (×2/×5/×10) für die Ausbildung.
 - Rückzugsdruck = max(50 bar, 2 × (Druck Beginn − Druck am Einsatzort)); Rückzugszeit = Einsatzort-an + (Druck am Einsatzort − Rückzugsdruck) ÷ 8,3 bar/min (entspricht der Richtwerttabelle des Papierbogens).
+
+## Trupp-Übergabe zwischen Geräten (QR-Code)
+
+Ein Gerät (z. B. Handy) erfasst den Trupp und zeigt ihn als QR-Code; das Überwachungs-Tablet scannt ihn („QR übernehmen“). Ohne Server und Internet.
+Inhalt: `ASUE1:` + JSON `{v, id, r: Rufgruppe, a: Auftrag, s: Sicherheitstrupp, b: Bemerkung, m: [[Name, Geräte-Nr, LA-Nr, Flaschen-Nr, Masken-Nr, Flaschendruck], …], e: [Beginn-Zeit, [Drücke]]}` (nur ASCII, Umlaute als \uXXXX). Erneutes Scannen desselben Trupps aktualisiert ihn statt ihn doppelt anzulegen.
+
+## Mehrere Geräte über Server (Raspberry Pi)
+
+Unter Einsatzdaten → „Mehrere Geräte“: Server-Adresse und Wehr-Schlüssel eintragen, am Tablet „Diesen Einsatz freigeben“, an den Handys mit Code oder Beitritts-QR beitreten. Schnittstelle: siehe SERVER_API.md (im Server-Paket).
 
 ## Offen
 

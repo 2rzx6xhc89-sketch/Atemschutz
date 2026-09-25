@@ -203,6 +203,10 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:700;margin:0;letter-spacing:.01em
 .stb{display:inline-block;font-family:var(--f-body);font-size:12px;font-weight:700;letter-spacing:.05em;background:var(--blue);color:#fff;border-radius:5px;padding:1px 6px;margin-right:8px;vertical-align:middle}
 .stb.may{background:var(--red);margin-left:6px}
 .maydaybar{appearance:none;border:0;width:100%;text-align:left;background:var(--red);color:var(--red-ink);font-family:var(--f-disp);font-weight:700;font-size:18px;letter-spacing:.03em;padding:10px 14px;cursor:pointer}
+.mrow.tsum{background:var(--panel-2);margin-inline:-14px;padding-inline:14px;border-bottom:1px solid var(--line)}
+.mrow.tsum .mf{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.mrow.sub{padding-block:4px}
+.mrow.sub .mn{font-size:14px;font-weight:500}
 .mrow .rate{font-family:var(--f-mono)} .mrow .rate.hi{color:var(--amber);font-weight:700}
 .mrow.hi .mp{color:var(--amber)}
 .chk{display:flex;gap:10px;align-items:center;font-weight:600;min-height:44px} .chk input{width:24px;height:24px}
@@ -226,6 +230,16 @@ dialog.mayday{border-top:8px solid var(--red)}
 .mditem.on .box{background:var(--green);border-color:var(--green);color:#fff}
 .mditem .tm2{font-family:var(--f-mono);font-size:14px;color:var(--ink-2)}
 @media (max-width:640px){ .set{grid-template-columns:1fr} .simbadge{font-size:11px;padding:3px 6px} }
+.qrwrap{display:grid;place-items:center}
+.qrwrap canvas{width:min(100%,440px);height:auto;image-rendering:pixelated;border-radius:6px;background:#fff}
+.qrvideo{width:100%;max-height:52vh;background:#000;border-radius:8px;object-fit:cover}
+.grpqr{float:right;min-height:32px}
+dialog.qrdlg .dlg-body{justify-items:stretch}
+.syncbadge{font-family:var(--f-mono);font-size:13px;font-weight:600;border-radius:6px;padding:4px 8px;background:var(--panel-2);border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
+.syncbadge.ok{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.syncbadge.bad{background:var(--red);border-color:var(--red);color:var(--red-ink)}
+.synccode{display:flex;align-items:baseline;gap:12px}
+.synccode b{font-size:32px;letter-spacing:.12em}
 .empty{border:2px dashed var(--line-2);border-radius:var(--r);padding:28px;text-align:center;color:var(--ink-2)}
 
 /* Forms */
@@ -400,6 +414,7 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
       <div><h1>Atemschutzüberwachung</h1><small id="artLabel">Einsatz</small></div>
     </div>
     <div class="meta" id="meta"></div>
+    <span class="syncbadge" id="syncBadge" hidden></span>
     <span class="simbadge" id="simBadge" hidden>ÜBUNG</span>
     <div class="clock" id="clock" aria-label="Uhrzeit">--:--:--</div>
   </div>
@@ -437,18 +452,50 @@ function queryMins(t){
   if(t) Object.keys(t.ev).forEach(k=>{ const m=/^k(\d+)$/.exec(k); if(m) set.add(+m[1]); });
   return [...set].sort((a,b)=>a-b);
 }
-function queries(t){ return queryMins(t).map(m=>({k:'k'+m, min:m, l:m+'-min-Abfrage'})); }
+// Rückzug soll (Faustformel) – ohne Abhängigkeit von den Abfragen
+function sollOf(t){
+  const c=S.config, ev=t.ev; if(!ev.beginn || !ev.ziel) return null;
+  const rd=[], mins=[];
+  t.mitglieder.forEach((_,i)=>{ const a=ev.beginn.p[i], z=ev.ziel.p[i]; const d=Math.max(c.minRueckzug, 2*(a-z)); rd.push(d); mins.push((z-d)/c.verbrauch); });
+  const m=Math.min(...mins), sofort=m<0.5;
+  return {p:rd, min:sofort?0:Math.round(m), t:ev.ziel.t+(sofort?0:Math.round(m))*60000, sofort};
+}
+// Erwartete Zeit bis zum Rückzug (min ab Beginn): nach „Einsatzort an“ aus Rückzug soll, vorher aus dem Flaschendruck geschätzt
+function expectedMin(t){
+  const ev=t.ev; if(!ev.beginn) return null;
+  const so=sollOf(t); if(so) return Math.max(0,(so.t-ev.beginn.t)/60000);
+  const p=ev.beginn.p.filter(x=>x!=null); if(!p.length) return null;
+  return Math.max(0,(Math.min(...p)-S.config.minRueckzug)/S.config.verbrauch);
+}
+const QLAB={q1:'⅓', q2:'⅔'};
+function queries(t){
+  const c=S.config, list=[], ev=t?t.ev:{};
+  const b = t && ev.beginn ? ev.beginn.t : null;
+  const add=(k,min,short,spk)=>list.push({k, min, short, spk, l:short+'-Abfrage', lab:'Druck '+short, btn:'Druckabfrage '+short, due: b!=null && min!=null ? b+min*60000 : null});
+  if(c.abfrageModus==='drittel'){
+    const T = t ? expectedMin(t) : null, cap=c.drittelMax||10;
+    const m1 = T==null ? cap : Math.min(cap, T/3), m2 = T==null ? null : Math.max(m1+1, T*2/3);
+    add('q1', m1, '⅓', 'ein Drittel'); add('q2', m2, '⅔', 'zwei Drittel');
+    if(t) Object.keys(ev).forEach(k=>{ const m=/^k(\d+)$/.exec(k); if(m) add(k, +m[1], m[1]+' min', m[1]+' Minuten'); });
+  } else {
+    queryMins(t).forEach(m=>add('k'+m, m, m+' min', m+' Minuten'));
+    if(t) ['q1','q2'].forEach(k=>{ if(ev[k]) add(k, (ev[k].t-(b||ev[k].t))/60000, QLAB[k], k==='q1'?'ein Drittel':'zwei Drittel'); });
+  }
+  return list.sort((a,b)=>(a.min??9999)-(b.min??9999));
+}
 function steps(t){
   return [
     {k:'beginn',   l:'Beginn',        b:'Anschluss / Beginn'},
     {k:'ziel',     l:'Einsatzort an', b:'Einsatzort erreicht'},
     {k:'soll',     l:'Rückzug soll',  calc:true},
-    ...queries(t).map(q=>({k:q.k, l:'Druck '+q.min+' min', b:'Druckabfrage '+q.min+' min', q:true, min:q.min})),
+    ...queries(t).map(q=>({k:q.k, l:q.lab, b:q.btn, q:true, due:q.due})),
     {k:'rueckzug', l:'Rückzug ist',   b:'Rückzug angetreten'},
     {k:'ende',     l:'Ende',          b:'Ende / Gerät abgelegt'}
   ];
 }
 function evSteps(t){ return steps(t).filter(s=>!s.calc); }
+function lowOf(e){ if(!e||!e.p) return null; const v=e.p.filter(x=>x!=null); return v.length?Math.min(...v):null; }
+function prevLow(t,k){ const cur=t.ev[k]; let prev=null; Object.entries(t.ev).forEach(([kk,e])=>{ if(kk===k||!e||!e.p) return; if(cur && e.t>=cur.t) return; if(!prev||e.t>prev.t) prev=e; }); return lowOf(prev); }
 function lastReading(t){ let l=null; Object.values(t.ev).forEach(e=>{ if(e && e.p && (!l || e.t>=l.t)) l=e; }); return l; }
 const MAYDAY_ITEMS = [
   ['quittiert','Notruf quittiert („Mayday verstanden“)'],
@@ -474,7 +521,7 @@ const CAM_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 
 /* ---------- Zustand ---------- */
 const uid = () => Math.random().toString(36).slice(2,10);
-const defaultConfig = () => ({maxBar:330, verbrauch:8.3, minRueckzug:50, uebergabeUrl:'', abfragen:[10,20], sprache:false, stPruefung:true, verbrauchWarn:12});
+const defaultConfig = () => ({maxBar:330, verbrauch:8.3, minRueckzug:50, uebergabeUrl:'', abfragen:[10,20], sprache:false, stPruefung:true, verbrauchWarn:12, funkName:'frei', druckModus:'niedrigster', syncUrl:'', syncKey:'', abfrageModus:'drittel', drittelMax:10});
 function blankState(keepConfig){
   return {
     version:1, sample:false,
@@ -489,7 +536,7 @@ function sampleState(){
   Object.assign(s.einsatz,{einsatzstelle:'Übungsobjekt Lagerhalle, Industriestr. 4', art:'Übung', einheitsfuehrer:'Gruppenführer Beispiel', ueberwacher:'Maschinist Beispiel', ueberwacher2:'Melder Beispiel'});
   s.trupps.push({id:uid(), rufgruppe:'Angriffstrupp', auftrag:'Menschenrettung 1. OG, 1. C-Rohr', bemerkung:'Zugang über Treppenraum Nord',
     mitglieder:[member('Müller, Jan','Truppführer','PA-114','LA-2031','F-0587','M-341',300), member('Schneider, Lea','Truppmann','PA-117','LA-2044','F-0592','M-338',300)],
-    ev:{beginn:{t:now-14*min,p:[300,300]}, ziel:{t:now-9*min,p:[270,260]}, k10:{t:now-4*min,p:[230,220]}}, notfall:null});
+    ev:{beginn:{t:now-14*min,p:[300,300]}, ziel:{t:now-9*min,p:[260,260],single:true}, q1:{t:now-5*min,p:[230,230],single:true}}, notfall:null});
   s.trupps.push({id:uid(), rufgruppe:'Wassertrupp', auftrag:'Sicherheitstrupp, Bereitstellung Eingang Nord', bemerkung:'', st:true,
     mitglieder:[member('Weber, Tom','Truppführer','PA-121','LA-2050','F-0610','M-352',310), member('Fischer, Nina','Truppmann','PA-122','LA-2057','F-0613','M-355',300)],
     ev:{beginn:{t:now-8*min-40000,p:[310,300]}}, notfall:null});
@@ -503,8 +550,9 @@ function load(){
   try{ const raw = localStorage.getItem(KEY); if(raw){ const o = JSON.parse(raw); if(o && o.version===1) return o; } }catch(e){}
   return sampleState();
 }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-S = load(); S.config = Object.assign(defaultConfig(), S.config||{}); save();
+function saveRaw(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function save(){ try{ stampChanges(); }catch(e){} saveRaw(); try{ syncSoon(); }catch(e){} }
+S = load(); S.config = Object.assign(defaultConfig(), S.config||{}); saveRaw();
 // Uhr: im Übungsmodus läuft die Zeit beschleunigt (S.clock = {f: Faktor, ar: Echtzeit-Anker, av: virtueller Anker})
 function nowT(){ const c=S.clock; return c ? c.av + (Date.now()-c.ar)*c.f : Date.now(); }
 function setSpeed(f){ const n=nowT(); if(f===1 && S.clock && Math.abs(n-Date.now())<1000){ delete S.clock; } else S.clock={f, ar:Date.now(), av:n}; save(); }
@@ -532,15 +580,7 @@ function calc(t, now=nowT()){
   const last = lastReading(t);
   if(last){ r.lowest = Math.min(...last.p.filter(x=>x!=null)); r.lastT = last.t; }
   if(ev.beginn && ev.ziel){
-    const rd = [], mins = [];
-    for(let i=0;i<n;i++){
-      const a = ev.beginn.p[i], z = ev.ziel.p[i];
-      const d = Math.max(c.minRueckzug, 2*(a - z));
-      rd.push(d); mins.push((z - d)/c.verbrauch);
-    }
-    const m = Math.min(...mins);
-    const sofort = m < 0.5;
-    r.soll = {p:rd, min:sofort?0:Math.round(m), t: ev.ziel.t + (sofort?0:Math.round(m))*60000, sofort};
+    r.soll = sollOf(t); const rd = r.soll.p;
     // Prognose aus gemessenem Verbrauch (nach Einsatzort an)
     const later = queries(t).map(q=>ev[q.k]).filter(e=>e && e.t > ev.ziel.t + 60000).sort((a,b)=>b.t-a.t)[0];
     if(later){
@@ -562,7 +602,7 @@ function calc(t, now=nowT()){
   if(ev.beginn && !ev.ende){
     const el = now - ev.beginn.t;
     if(!ev.rueckzug){
-      queries(t).forEach(q=>{ if(el >= q.min*60000 && !ev[q.k]) r.warns.push('Druckabfrage '+q.min+' min fällig'); });
+      queries(t).forEach(q=>{ if(q.due!=null && now >= q.due && !ev[q.k]) r.warns.push('Druckabfrage '+q.short+' fällig'); });
       if(r.soll){
         if(r.soll.sofort) r.alarms.push('Rückzug sofort! Druck reicht nicht für Hin- und Rückweg');
         else if(now >= r.soll.t) r.alarms.push('Rückzugszeit erreicht – Trupp zurückrufen');
@@ -587,10 +627,27 @@ function calc(t, now=nowT()){
       r.rates.push(rate);
       if(rate!=null && c.verbrauchWarn>0 && rate > c.verbrauchWarn){ r.high.push(i); }
     }
-    if(r.high.length && !ev.ende) r.warns.push('Hoher Luftverbrauch: '+r.high.map(i=>(t.mitglieder[i].name||t.mitglieder[i].funktion)+' '+Math.round(r.rates[i])+' bar/min').join(', '));
+    if(r.high.length && !ev.ende){
+      if(last && last.single) r.warns.push('Hoher Luftverbrauch im Trupp: '+Math.round(Math.max(...r.high.map(i=>r.rates[i])))+' bar/min');
+      else r.warns.push('Hoher Luftverbrauch: '+r.high.map(i=>(t.mitglieder[i].name||t.mitglieder[i].funktion)+' '+Math.round(r.rates[i])+' bar/min').join(', '));
+    }
   }
   return r;
 }
+
+// Funkrufname: frei (Rufgruppe) oder Nachname des Truppführers; bei gleichem Nachnamen mit Vorname
+function splitName(n){ n=(n||'').trim(); if(!n) return null; if(n.includes(',')){ const i=n.indexOf(','); return {nach:n.slice(0,i).trim(), vor:n.slice(i+1).trim()}; } const p=n.split(/\s+/); if(p.length===1) return {nach:p[0], vor:''}; const nach=p.pop(); return {nach, vor:p.join(' ')}; }
+function tfOf(t){ return t.mitglieder.find(m=>m.funktion==='Truppführer') || t.mitglieder[0]; }
+function nameFor(t, list){
+  const n=splitName(tfOf(t) && tfOf(t).name);
+  if(!n || !n.nach) return t.rufgruppe||'Trupp';
+  const same=list.filter(o=>o.id!==t.id).some(o=>{ const x=splitName(tfOf(o) && tfOf(o).name); return x && x.nach.toLowerCase()===n.nach.toLowerCase(); });
+  return same && n.vor ? n.nach+' '+n.vor : n.nach;
+}
+function tName(t){ return S.config.funkName==='tf' ? nameFor(t, S.trupps) : (t.rufgruppe||'Trupp'); }
+function tSpeak(t){ return S.config.funkName==='tf' && tfOf(t) && splitName(tfOf(t).name) ? 'Trupp '+tName(t) : tName(t); }
+function previewName(t){ const list=S.trupps.filter(o=>o.id!==t.id).concat([t]); const n=nameFor(t, list); return n; }
+function tSub(t){ return (S.config.funkName==='tf' && t.rufgruppe && tName(t)!==t.rufgruppe ? t.rufgruppe+' · ' : '')+(t.auftrag||''); }
 
 // Sortierung überall: 1. Am Einsatzort, 2. unter Atemschutz (inkl. Rückzug), 3. Bereit, 4. Beendet
 function rank(t){ const ev=t.ev; if(ev.ende) return 4; if(!ev.beginn) return 3; if(ev.ziel && !ev.rueckzug) return 1; return 2; }
@@ -599,7 +656,7 @@ function sortedTrupps(){ return S.trupps.map((t,i)=>[t,i]).sort((a,b)=>rank(a[0]
 // Nächste planmäßige Druckabfrage (10 / 20 min nach Beginn)
 function nextQuery(t){
   const ev=t.ev; if(!ev.beginn || ev.rueckzug || ev.ende) return null;
-  for(const q of queries(t)){ if(!ev[q.k]) return {k:q.k, l:q.l, min:q.min, t:ev.beginn.t + q.min*60000}; }
+  for(const q of queries(t)){ if(!ev[q.k] && q.due!=null) return {k:q.k, l:q.l, short:q.short, t:q.due}; }
   return null;
 }
 // Sicherheitstrupp-Prüfung
@@ -637,7 +694,7 @@ function nextStep(t, r){
   if(!ev.beginn) return 'beginn';
   if(ev.rueckzug) return 'ende';
   const el = r.elapsed;
-  const due = queries(t).find(q=>el>=q.min*60000 && !ev[q.k]);
+  const due = queries(t).find(q=>q.due!=null && ev.beginn.t+el>=q.due && !ev[q.k]);
   if(due) return due.k;
   if(!ev.ziel) return 'ziel';
   return 'rueckzug';
@@ -648,8 +705,8 @@ function tlStep(t, s, r, nxt){
   if(e) return '<button class="tl-step done" data-act="edit" data-t="'+t.id+'" data-s="'+s.k+'" aria-label="'+s.l+' '+hm(e.t)+' bearbeiten"><span class="tl-l">'+CHECK_SVG+s.l+'</span><span class="tl-t">'+hm(e.t)+'</span></button>';
   const disabled = (s.k!=='beginn' && !ev.beginn) || !!ev.ende;
   let sub='';
-  if(s.q && ev.beginn) sub='ab '+hm(ev.beginn.t+s.min*60000);
-  const due = !disabled && s.q && ev.beginn && !ev.rueckzug && nowT()>=ev.beginn.t+s.min*60000;
+  if(s.q && ev.beginn && s.due!=null) sub='ab '+hm(s.due);
+  const due = !disabled && s.q && ev.beginn && !ev.rueckzug && s.due!=null && nowT()>=s.due;
   return '<button class="tl-step'+(s.k===nxt?' next':'')+(due?' due':'')+'" data-act="step" data-t="'+t.id+'" data-s="'+s.k+'"'+(disabled?' disabled':'')+'><span class="tl-l">'+s.l+'</span><span class="tl-t">'+(sub||'--:--')+'</span></button>';
 }
 function kpiHTML(t, r){
@@ -657,7 +714,7 @@ function kpiHTML(t, r){
   const k1 = '<div class="kpi"><div class="l">Einsatzzeit</div><div class="v" data-live="el" data-t="'+t.id+'">'+(r.elapsed!=null?dur(r.elapsed):'--:--')+'</div><div class="s">'+(t.ev.beginn?'seit '+hm(t.ev.beginn.t):'noch nicht begonnen')+'</div></div>';
   const nq = nextQuery(t);
   let nqc='', nqv='--:--', nqs = t.ev.beginn ? (t.ev.rueckzug||t.ev.ende ? 'keine weitere' : 'alle erledigt') : 'ab Beginn';
-  if(nq){ const left = nq.t - now; nqc = left<=0?'warn':(left<=10000?'blink':''); nqv = left<=0?'fällig':dur(left); nqs = nq.min+' min · '+hm(nq.t); }
+  if(nq){ const left = nq.t - now; nqc = left<=0?'warn':(left<=10000?'blink':''); nqv = left<=0?'fällig':dur(left); nqs = nq.short+' · '+hm(nq.t); }
   const k2 = '<div class="kpi '+nqc+'" data-blink="'+t.id+'"><div class="l">Nächste Abfrage</div><div class="v" data-live="nq" data-t="'+t.id+'">'+nqv+'</div><div class="s">'+esc(nqs)+'</div></div>';
   let cls='', v='--:--', s='nach „Einsatzort an“';
   if(t.ev.ende){ v='–'; s='beendet'; }
@@ -671,12 +728,24 @@ function kpiHTML(t, r){
 }
 function membersHTML(t, r){
   const last = lastReading(t);
+  const single = last && last.single;
+  const tfn = m => esc(m.funktion==='Truppführer'?'TF':m.funktion==='Truppmann'?'TM':'TM2');
+  if(single){
+    const low = lowOf(last), rd = r.soll ? Math.max(...r.soll.p) : null;
+    const rate = r.rates.length ? Math.max(...r.rates.filter(x=>x!=null), -1) : -1, hi = r.high.length>0;
+    const isLow = rd!=null && low<=rd;
+    const top = '<div class="mrow tsum'+(hi?' hi':'')+'"><span class="mf">⬇</span><span class="mn">Niedrigster Druck<small>Abfrage '+hm(last.t)+(rate>=0?' · <span class="rate'+(hi?' hi':'')+'">'+Math.round(rate)+' bar/min</span>':'')+'</small></span>'+
+      '<span class="mp'+(isLow?' low':'')+'">'+low+'<small> bar</small></span><span class="mr">'+(rd!=null?rd+' bar':'–')+'</span></div>';
+    const rows = t.mitglieder.map((m,i)=>'<div class="mrow sub"><span class="mf">'+tfn(m)+'</span><span class="mn">'+esc(m.name||m.funktion)+'<small>'+esc(m.geraetNr||'Gerät –')+'</small></span>'+
+      '<span class="mr">'+(t.ev.beginn&&t.ev.beginn.p[i]!=null?'Start '+t.ev.beginn.p[i]+' bar':'')+'</span><span class="mr"></span></div>').join('');
+    return '<div class="mtable"><div class="mrow mh"><span></span><span>Trupp</span><span>Druck</span><span>Rückzug bei</span></div>'+top+rows+'</div>';
+  }
   const rows = t.mitglieder.map((m,i)=>{
     const p = last ? last.p[i] : (m.druck ?? null);
     const rd = r.soll ? r.soll.p[i] : null;
     const low = rd!=null && p!=null && p<=rd;
     const rate = r.rates[i], hi = r.high.includes(i);
-    return '<div class="mrow'+(hi?' hi':'')+'"><span class="mf">'+esc(m.funktion==='Truppführer'?'TF':m.funktion==='Truppmann'?'TM':'TM2')+'</span>'+
+    return '<div class="mrow'+(hi?' hi':'')+'"><span class="mf">'+tfn(m)+'</span>'+
       '<span class="mn">'+esc(m.name||m.funktion)+'<small>'+esc(m.geraetNr||'Gerät –')+(rate!=null?' · <span class="rate'+(hi?' hi':'')+'">'+Math.round(rate)+' bar/min</span>':'')+'</small></span>'+
       '<span class="mp'+(low?' low':'')+'">'+(p!=null?p+'<small> bar</small>':'–')+'</span>'+
       '<span class="mr">'+(rd!=null?rd+' bar':'–')+'</span></div>';
@@ -691,13 +760,14 @@ function cardHTML(t){
   const mcount = t.mayday ? MAYDAY_ITEMS.filter(([k])=>t.mayday.items && t.mayday.items[k]).length : 0;
   return '<article class="card '+st+'" id="card-'+t.id+'">'+
     (t.notfall?'<button class="maydaybar" data-act="mayday" data-t="'+t.id+'">MAYDAY seit '+hm(t.notfall)+' · Checkliste '+mcount+'/'+MAYDAY_ITEMS.length+' ›</button>':'')+
-    '<div class="card-head"><div style="flex:1;min-width:0"><h3>'+(t.st?'<span class="stb" title="Sicherheitstrupp">ST</span>':'')+esc(t.rufgruppe||'Trupp')+'</h3><div class="auftrag">'+esc(t.auftrag||'Auftrag offen')+'</div></div>'+statusPill(r)+'</div>'+
+    '<div class="card-head"><div style="flex:1;min-width:0"><h3>'+(t.st?'<span class="stb" title="Sicherheitstrupp">ST</span>':'')+esc(tName(t))+'</h3><div class="auftrag">'+esc(tSub(t)||'Auftrag offen')+'</div></div>'+statusPill(r)+'</div>'+
     alerts + kpiHTML(t,r) + membersHTML(t,r) +
     '<div class="tl">'+evSteps(t).map(s=>tlStep(t,s,r,nxt)).join('')+'</div>'+
     (t.bemerkung?'<div class="note">'+esc(t.bemerkung)+'</div>':'')+
     '<div class="card-foot">'+
       (nstep?'<button class="btn primary nextbtn" data-act="step" data-t="'+t.id+'" data-s="'+nstep.k+'">'+esc(nstep.b)+'</button>':'<span class="note" style="flex:1">Einsatz des Trupps beendet</span>')+
       '<button class="btn small ghost" data-act="trupp" data-t="'+t.id+'">Bearbeiten</button>'+
+      '<button class="btn small ghost" data-act="qrsend" data-t="'+t.id+'" title="Trupp per QR-Code an ein anderes Gerät übergeben">'+QR_SVG.replace(/width="20" height="20"/,'width="16" height="16"')+' QR</button>'+
       (t.ev.beginn && !t.ev.ende ? '<button class="btn notruf'+(t.notfall?' on':'')+'" data-act="notfall" data-t="'+t.id+'">'+(t.notfall?'Checkliste':'MAYDAY')+'</button>' : '')+
     '</div></article>';
 }
@@ -719,10 +789,10 @@ function ovRowHTML(t){
   else if(r.soll){ const left=r.soll.t-now; rzH='<div class="tm'+(left<=0?' alarm':left<120000?' warn':'')+'"><b>'+hm(r.soll.t)+'</b><span data-live="soll" data-t="'+t.id+'">'+dur(left)+'</span></div>'; }
   else rzH='<div class="tm"><b>–</b><span>'+(t.ev.beginn?'nach Einsatzort an':'–')+'</span></div>';
   const msgs = r.alarms.map(x=>'<div class="alm">⚠ '+esc(x)+'</div>').join('') + (r.alarms.length?'':r.warns.map(x=>'<div class="alm w">'+esc(x)+'</div>').join(''));
-  return '<button class="ovrow g'+g+' '+st+'" data-act="detail" data-t="'+t.id+'" aria-label="Detailansicht '+esc(t.rufgruppe)+'">'+
+  return '<button class="ovrow g'+g+' '+st+'" data-act="detail" data-t="'+t.id+'" aria-label="Detailansicht '+esc(tName(t))+'">'+
     '<div>'+statusPill(r)+'</div>'+
-    '<div class="rg">'+(t.st?'<span class="stb">ST</span>':'')+esc(t.rufgruppe||'Trupp')+(t.notfall?' <span class="stb may">MAYDAY</span>':'')+'</div>'+
-    '<div class="au">'+esc(t.auftrag||'–')+'</div>'+
+    '<div class="rg">'+(t.st?'<span class="stb">ST</span>':'')+esc(tName(t))+(t.notfall?' <span class="stb may">MAYDAY</span>':'')+'</div>'+
+    '<div class="au">'+esc(tSub(t)||'–')+'</div>'+
     nqH + rzH + '<div class="chev" aria-hidden="true">›</div>' + msgs + '</button>';
 }
 function renderUeb(){
@@ -739,10 +809,10 @@ function renderUeb(){
     const toggle = S.trupps.length >= OV_AB ? '<div class="seg" role="group" aria-label="Ansicht"><button data-ov="liste" aria-pressed="'+(ovMode==='liste')+'">Übersicht</button><button data-ov="karten" aria-pressed="'+(ovMode==='karten')+'">Alle Karten</button></div>' : '';
     const stw = stCheck();
     v.innerHTML = '<div class="toolbar"><h2>'+S.trupps.length+' Trupps · '+active+' unter Atemschutz</h2>'+toggle+
-      '<button class="btn primary" data-act="newtrupp">+ Trupp anlegen</button></div>'+
+      '<button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn primary" data-act="newtrupp">+ Trupp anlegen</button></div>'+
       (stw?'<div class="banner alarm" role="alert">⚠ '+esc(stw)+'</div>':'')+
       (!S.trupps.length ? '<div class="empty"><p><b>Noch kein Trupp angelegt.</b></p><p>Trupp anlegen, Namen, Gerätenummern und Flaschendruck erfassen, dann die Zeitpunkte per Knopfdruck bestätigen.</p><button class="btn primary" data-act="newtrupp">+ Ersten Trupp anlegen</button></div>' :
-       useList ? '<div class="ovlist"><div class="ovhead"><span>Status</span><span>Rufgruppe</span><span>Auftrag</span><span>Nächste Abfrage</span><span>Rückzug um</span><span></span></div>'+list.map(ovRowHTML).join('')+'</div>'
+       useList ? '<div class="ovlist"><div class="ovhead"><span>Status</span><span>'+(S.config.funkName==='tf'?'Funkrufname':'Rufgruppe')+'</span><span>Auftrag</span><span>Nächste Abfrage</span><span>Rückzug um</span><span></span></div>'+list.map(ovRowHTML).join('')+'</div>'
                : '<div class="grid">'+list.map(cardHTML).join('')+'</div>');
   }
   alarmSig = sigNow(nowT());
@@ -754,15 +824,15 @@ function renderGer(){
   const v = $('#view-ger');
   let rows = '';
   sortedTrupps().forEach((t,ti)=>{
-    rows += '<tr class="grp"><td colspan="8">'+(ti+1)+' · '+esc(t.rufgruppe||'Trupp')+' <span style="font-weight:500;font-family:var(--f-body);font-size:14px;color:var(--ink-2)">'+esc(t.auftrag||'')+'</span></td></tr>';
+    rows += '<tr class="grp"><td colspan="8"><button class="btn small ghost grpqr" tabindex="-1" data-act="qrsend" data-t="'+t.id+'">'+QR_SVG.replace(/width="20" height="20"/,'width="16" height="16"')+' QR-Übergabe</button>'+(ti+1)+' · '+esc(tName(t))+' <span style="font-weight:500;font-family:var(--f-body);font-size:14px;color:var(--ink-2)">'+esc(t.auftrag||'')+'</span></td></tr>';
     t.mitglieder.forEach(m=>{
       rows += '<tr class="mem"><td class="fn" style="white-space:nowrap">'+esc(m.funktion)+'</td>'+
         FIELDS.map(f=>'<td data-l="'+f.l+'"><input class="inp cell-inp'+(f.k==='name'?'':' mono')+'" id="g-'+m.id+'-'+f.k+'" data-m="'+m.id+'" data-t="'+t.id+'" data-f="'+f.k+'" value="'+esc(m[f.k])+'" aria-label="'+f.l+' '+esc(m.funktion)+'"></td>').join('')+
         '<td data-l="Flaschendruck">'+pressureSelect('g-'+m.id+'-druck', m.druck, m, 'data-m="'+m.id+'" data-t="'+t.id+'" data-f="druck" style="min-width:130px;font-size:18px;min-height:44px"')+'</td>'+
-        '<td class="camc"><button class="cam" data-act="scan" data-t="'+t.id+'" data-m="'+m.id+'" aria-label="Mit Kamera einlesen" title="Mit Kamera einlesen">'+CAM_SVG+'</button></td></tr>';
+        '<td class="camc"><button class="cam" tabindex="-1" data-act="scan" data-t="'+t.id+'" data-m="'+m.id+'" aria-label="Mit Kamera einlesen" title="Mit Kamera einlesen">'+CAM_SVG+'</button></td></tr>';
     });
   });
-  v.innerHTML = '<div class="toolbar"><h2>Geräteerfassung</h2><button class="btn primary" data-act="newtrupp">+ Trupp anlegen</button></div>'+
+  v.innerHTML = '<div class="toolbar"><h2>Geräteerfassung</h2><button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn primary" data-act="newtrupp">+ Trupp anlegen</button></div>'+
     '<p class="hint" style="margin-top:0">Kamera-Symbol antippen, Etikett, Namensschild oder Geräteplakette fotografieren, dann erkannte Werte den Feldern zuordnen.</p>'+
     (S.trupps.length ? '<div class="table-wrap"><table><thead><tr><th>Funktion</th>'+FIELDS.map(f=>'<th>'+f.l+'</th>').join('')+'<th>Flaschendruck</th><th>Kamera</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
       : '<div class="empty">Noch keine Trupps angelegt.</div>');
@@ -782,9 +852,19 @@ function renderEin(){
     '<label class="f">2. Überwacher<input class="inp" id="e-ueberwacher2" data-e="ueberwacher2" value="'+esc(e.ueberwacher2||'')+'"></label>'+
   '</div></div>'+
   '<h2 class="section-title">Überwachung &amp; Warnungen</h2><div class="panel setlist">'+
-    '<div class="set"><div><b>Druckabfragen</b><div class="hint">Minuten nach Beginn, durch Komma getrennt. FwDV 7: nach ⅓ und ⅔ der erwarteten Einsatzzeit (30 min → 10, 20 · 45 min → 15, 30).</div></div>'+
-      '<div class="setctl"><input class="inp mono" id="c-abfragen" data-abfr="1" value="'+esc((c.abfragen||[]).join(', '))+'" inputmode="text">'+
-      '<div class="chips">'+[[10,20],[15,30],[10,20,30,40],[10,20,30,40,50,60]].map(a=>'<button type="button" class="chip" data-preset="'+a.join(',')+'">'+a.join(' / ')+'</button>').join('')+'</div></div></div>'+
+    '<div class="set"><div><b>Druckabfragen</b><div class="hint">'+(c.abfrageModus==='drittel'
+        ? '<b>⅓ und ⅔ der Zeit bis zum Rückzug</b> (FwDV 7). Bis „Einsatzort an“ schätzt die App die Zeit aus dem Flaschendruck, danach rechnet sie mit „Rückzug soll“ neu. Beispiel: Rückzug soll 14 min nach Beginn → Abfragen nach ca. 4:40 und 9:20 min. Die erste Abfrage kommt spätestens nach der eingestellten Zeit.'
+        : 'Feste Zeiten: Minuten nach Beginn, durch Komma getrennt.')+'</div></div>'+
+      '<div class="setctl"><div class="seg half" role="group"><button data-am="drittel" aria-pressed="'+(c.abfrageModus==='drittel')+'">⅓ + ⅔</button><button data-am="fest" aria-pressed="'+(c.abfrageModus!=='drittel')+'">Feste Minuten</button></div>'+
+      (c.abfrageModus==='drittel'
+        ? '<label class="f">Erste Abfrage spätestens nach (min)<input class="inp mono" id="c-drittelMax" data-c="drittelMax" inputmode="numeric" value="'+(c.drittelMax||10)+'"></label>'
+        : '<input class="inp mono" id="c-abfragen" data-abfr="1" value="'+esc((c.abfragen||[]).join(', '))+'" inputmode="text">'+
+          '<div class="chips">'+[[10,20],[15,30],[10,20,30,40],[10,20,30,40,50,60]].map(a=>'<button type="button" class="chip" data-preset="'+a.join(',')+'">'+a.join(' / ')+'</button>').join('')+'</div>')+
+      '</div></div>'+
+    '<div class="set"><div><b>Druck bei Abfragen</b><div class="hint">Ab „Einsatzort an“ (Abfragen, Rückzug, Ende) nur den niedrigsten Druck des Trupps eintragen oder jede Person einzeln. Bei „Beginn“ immer je Person.</div></div>'+
+      '<div class="setctl"><div class="seg half" role="group"><button data-dm="niedrigster" aria-pressed="'+(c.druckModus!=='einzeln')+'">Nur niedrigster</button><button data-dm="einzeln" aria-pressed="'+(c.druckModus==='einzeln')+'">Jede Person</button></div></div></div>'+
+    '<div class="set"><div><b>Funkrufname der Trupps</b><div class="hint">„Nachname Truppführer“: Der Trupp heißt wie sein Truppführer, z. B. „Müller“. Haben zwei Truppführer denselben Nachnamen, kommt der Vorname dazu („Müller Jan“, „Müller Tim“).</div></div>'+
+      '<div class="setctl"><div class="seg half" role="group"><button data-fn="frei" aria-pressed="'+(c.funkName!=='tf')+'">Rufgruppe</button><button data-fn="tf" aria-pressed="'+(c.funkName==='tf')+'">Nachname TF</button></div></div></div>'+
     '<div class="set"><div><b>Sprachansage</b><div class="hint">Warnungen und fällige Abfragen werden angesagt, z. B. „Angriffstrupp. Druckabfrage 10 Minuten“.</div></div>'+
       '<div class="setctl"><div class="seg half" role="group"><button data-cfg="sprache" data-v="1" aria-pressed="'+!!c.sprache+'">Ein</button><button data-cfg="sprache" data-v="0" aria-pressed="'+!c.sprache+'">Aus</button></div>'+
       '<button type="button" class="btn small" data-act="speaktest"'+(('speechSynthesis' in window)?'':' disabled')+'>Test-Ansage</button></div></div>'+
@@ -807,8 +887,9 @@ function renderEin(){
     '<label class="f">Empfangsadresse der Fahrzeugverwaltung (URL)<input class="inp mono" id="c-uebergabeUrl" data-url="1" inputmode="url" placeholder="https://fahrzeugverwaltung.example/api/atemschutz" value="'+esc(c.uebergabeUrl||'')+'"></label>'+
     '<div class="row"><button class="btn" data-act="sendnow"'+(c.uebergabeUrl&&canSend()?'':' disabled')+'>Jetzt senden</button><span id="sendInfo" class="hint"></span></div>'+
   '</div>'+
+  syncPanelHTML()+
   '<h2 class="section-title">Einsatz abschließen</h2><div class="panel"><div class="row"><button class="btn danger" data-act="ende">Einsatzende</button><span class="hint">Speichert das Protokoll als PDF, meldet den Abschluss an die Fahrzeugverwaltung und löscht danach alle Einsatzdaten auf diesem Gerät.</span></div></div>';
-  renderSendInfo();
+  renderSendInfo(); renderSyncInfo();
 }
 function refTable(){
   const c=S.config, start=300, zs=[290,280,270,260,250,240,230,220,210,200];
@@ -879,7 +960,7 @@ function noteText(t, pdf){
   if(t.st) parts.push('Sicherheitstrupp');
   if(pdf){ // Abfragen, die nicht in die zwei Spalten des Bogens passen
     const qs=queries(t).filter(q=>t.ev[q.k]).slice(2);
-    qs.forEach(q=>parts.push('Druck '+q.min+' min: '+t.ev[q.k].p.join('/')+' bar ('+hm(t.ev[q.k].t)+')'));
+    qs.forEach(q=>parts.push('Druck '+q.short+': '+(t.ev[q.k].single?lowOf(t.ev[q.k]):t.ev[q.k].p.join('/'))+' bar ('+hm(t.ev[q.k].t)+')'));
   }
   const nf = t.notfall || (t.mayday && t.mayday.start);
   if(nf){
@@ -897,26 +978,31 @@ function noteText(t, pdf){
 }
 function renderPro(){
   const v=$('#view-pro');
-  const qm = [...new Set(S.trupps.flatMap(t=>queryMins(t)))].sort((a,b)=>a-b);
-  const cols = ['beginn','ziel','soll',...qm.map(m=>'k'+m),'rueckzug','ende'];
+  const qmap = new Map(); S.trupps.forEach(t=>queries(t).forEach(q=>{ if(!qmap.has(q.k)) qmap.set(q.k, q); }));
+  if(!S.trupps.length) queries(null).forEach(q=>qmap.set(q.k,q));
+  const qcols = [...qmap.values()].sort((a,b)=>(a.k[0]==='q'?0:1)-(b.k[0]==='q'?0:1) || (a.min??0)-(b.min??0) || a.k.localeCompare(b.k));
+  const qm = qcols.map(q=>q.short);
+  const cols = ['beginn','ziel','soll',...qcols.map(q=>q.k),'rueckzug','ende'];
   let body='';
   sortedTrupps().forEach(t=>{
     const r=calc(t);
     t.mitglieder.forEach((m,i)=>{
-      body+='<tr>'+(i===0?'<td rowspan="'+t.mitglieder.length+'"><b>'+esc(t.rufgruppe)+'</b><br><span class="hint">'+esc(t.auftrag)+'</span></td>':'')+
+      body+='<tr>'+(i===0?'<td rowspan="'+t.mitglieder.length+'"><b>'+esc(tName(t))+'</b><br><span class="hint">'+esc(t.auftrag)+'</span></td>':'')+
         '<td>'+esc(m.name||m.funktion)+'</td>'+
         cols.map(k=>{
+          if(k==='soll' && r.soll && t.ev.ziel && t.ev.ziel.single) return (i===0?'<td class="num" rowspan="'+t.mitglieder.length+'">'+Math.max(...r.soll.p)+'</td><td class="num" rowspan="'+t.mitglieder.length+'">'+(r.soll.sofort?'sofort':hm(r.soll.t))+'</td>':'');
           if(k==='soll') return r.soll?'<td class="num">'+r.soll.p[i]+'</td>'+(i===0?'<td class="num" rowspan="'+t.mitglieder.length+'">'+(r.soll.sofort?'sofort':hm(r.soll.t))+'</td>':''):'<td class="num">–</td>'+(i===0?'<td class="num" rowspan="'+t.mitglieder.length+'">–</td>':'');
           const e=t.ev[k];
-          if(/^k\d+$/.test(k)) return '<td class="num">'+(e?e.p[i]:'–')+'</td>';
-          return '<td class="num">'+(e?e.p[i]:'–')+'</td>'+(i===0?'<td class="num" rowspan="'+t.mitglieder.length+'">'+(e?hm(e.t):'–')+'</td>':'');
+          const pc = (e && e.single) ? (i===0?'<td class="num" rowspan="'+t.mitglieder.length+'">'+lowOf(e)+'</td>':'') : '<td class="num">'+(e?e.p[i]:'–')+'</td>';
+          if(/^(k\d+|q[12])$/.test(k)) return pc;
+          return pc+(i===0?'<td class="num" rowspan="'+t.mitglieder.length+'">'+(e?hm(e.t):'–')+'</td>':'');
         }).join('')+'</tr>';
     });
     const note = noteText(t, false);
     if(note) body+='<tr><td colspan="'+(12+qm.length)+'" class="hint">Zusatz/Bemerkung: '+esc(note)+'</td></tr>';
   });
   const head = '<tr><th rowspan="2">Rufgruppe / Auftrag</th><th rowspan="2">Name</th><th colspan="2">Beginn</th><th colspan="2">Einsatzort an</th><th colspan="2">Rückzug soll</th><th colspan="'+qm.length+'">Druck bei</th><th colspan="2">Rückzug ist</th><th colspan="2">Ende</th></tr>'+
-    '<tr>'+['Druck','Zeit','Druck','Zeit','Druck','Zeit',...qm.map(m=>m+' min'),'Druck','Zeit','Druck','Zeit'].map(x=>'<th class="num">'+x+'</th>').join('')+'</tr>';
+    '<tr>'+['Druck','Zeit','Druck','Zeit','Druck','Zeit',...qm,'Druck','Zeit','Druck','Zeit'].map(x=>'<th class="num">'+x+'</th>').join('')+'</tr>';
   let actions;
   if(pdfMode==='open') actions = '<button class="btn primary" data-act="pdf" data-how="open">PDF öffnen &amp; drucken</button><button class="btn" data-act="pdf" data-how="save">PDF speichern</button>';
   else if(pdfMode==='claude') actions = '<button class="btn primary" data-act="pdf" data-how="claude">PDF speichern</button><span class="hint">Die gespeicherte Datei im PDF-Programm öffnen und drucken.</span>';
@@ -1006,8 +1092,8 @@ function buildProtokollPDF(){
   const cA=52, cN=44, cw=(W-cA-cN)/12;
   const X = i => M+cA+cN+i*cw;
   const groupsHdr=[['Beginn',0],['Einsatzort an',2],['Rückzug soll',4],['Druck bei',6],['Rückzug ist',8],['Ende',10]];
-  const qm2 = queryMins(null).slice(0,2); while(qm2.length<2) qm2.push(qm2.length?qm2[0]+10:10);
-  const sub=['Druck','Zeit','Druck','Zeit','Druck','Zeit',qm2[0]+'min',qm2[1]+'min','Druck','Zeit','Druck','Zeit'];
+  const qm2 = queries(null).slice(0,2).map(q=>q.short.replace(' min','min')); while(qm2.length<2) qm2.push('');
+  const sub=['Druck','Zeit','Druck','Zeit','Druck','Zeit',qm2[0],qm2[1],'Druck','Zeit','Druck','Zeit'];
   const cellT=(str,x,y,w,h,o={})=>{ const size=o.size||8; d.text(d.fit(str,size,o.bold,w-1.6), o.align==='left'?x+1:x+w/2, y+h/2+size*0.125, {size, bold:o.bold, align:o.align==='left'?'left':'center', color:o.color}); };
   const block=(t,y)=>{
     const h1=5, h2=4.5, rh=7, rows=3, hb=8, top=y;
@@ -1023,7 +1109,7 @@ function buildProtokollPDF(){
     const bodyH=rows*rh;
     d.rect(M,y,cA,bodyH);
     if(t){
-      d.text(d.fit(t.rufgruppe||'',9,true,cA-2), M+1, y+4, {size:9, bold:true});
+      d.text(d.fit(tName(t),9,true,cA-2), M+1, y+4, {size:9, bold:true});
       d.wrap(t.auftrag||'',7.5,false,cA-2).slice(0,3).forEach((l,i)=>d.text(i===2?d.fit(l,7.5,false,cA-2):l, M+1, y+8.5+i*3.4, {size:7.5}));
     }
     for(let i=0;i<rows;i++){
@@ -1036,10 +1122,19 @@ function buildProtokollPDF(){
         if(!m) return;
         const tq=queries(t).map(q=>q.k); const key={0:'beginn',2:'ziel',6:tq[0],7:tq[1],8:'rueckzug',10:'ende'}[ci];
         let val='';
-        if(ci===4){ if(r&&r.soll) val=String(r.soll.p[i]); }
-        else if(t.ev[key] && t.ev[key].p[i]!=null) val=String(t.ev[key].p[i]);
+        if(ci===4){ if(r&&r.soll && !(t.ev.ziel&&t.ev.ziel.single)) val=String(r.soll.p[i]); }
+        else if(t.ev[key] && !t.ev[key].single && t.ev[key].p[i]!=null) val=String(t.ev[key].p[i]);
         cellT(val,X(ci),ry,cw,rh,{size:9});
       });
+    }
+    // Einzelwerte (niedrigster Druck im Trupp) über alle Zeilen
+    if(t){
+      const tq=queries(t).map(q=>q.k);
+      [[2,'ziel'],[6,tq[0]],[7,tq[1]],[8,'rueckzug'],[10,'ende']].forEach(([ci,key])=>{
+        const e=key&&t.ev[key]; if(!(e&&e.single)) return;
+        d.rect(X(ci),y,cw,bodyH,{fill:[255,255,255]}); cellT(String(lowOf(e)),X(ci),y,cw,bodyH,{size:10,bold:true});
+      });
+      if(r&&r.soll&&t.ev.ziel&&t.ev.ziel.single){ d.rect(X(4),y,cw,bodyH,{fill:[255,255,255]}); cellT(String(Math.max(...r.soll.p)),X(4),y,cw,bodyH,{size:10,bold:true}); }
     }
     // Zeitzellen (über alle Zeilen)
     [1,3,5,9,11].forEach(ci=>{
@@ -1089,7 +1184,7 @@ function buildProtokollPDF(){
   const gw=gc.reduce((a,c)=>a+c[1],0), gx=M+(W-gw)/2; let gy=28;
   let x=gx; gc.forEach(([l,w])=>{ d.rect(x,gy,w,6,{fill:GREY}); cellT(l,x,gy,w,6,{bold:true,size:8,align:'left'}); x+=w; });
   gy+=6;
-  const rows=[]; sortedTrupps().forEach(t=>t.mitglieder.forEach(m=>rows.push([t.rufgruppe,m.funktion,m.name,m.geraetNr,m.laNr,m.flascheNr,m.maskeNr])));
+  const rows=[]; sortedTrupps().forEach(t=>t.mitglieder.forEach(m=>rows.push([tName(t),m.funktion,m.name,m.geraetNr,m.laNr,m.flascheNr,m.maskeNr])));
   while(rows.length<8) rows.push(['','','','','','','']);
   rows.slice(0,24).forEach(r=>{ let x=gx; r.forEach((v,i)=>{ const w=gc[i][1]; d.rect(x,gy,w,6.5); cellT(v||'',x,gy,w,6.5,{size:8.5,align:'left'}); x+=w; }); gy+=6.5; });
   d.rect(gx,28,gw,gy-28,{lw:0.5});
@@ -1115,11 +1210,11 @@ window.ASUE_buildPDF = buildProtokollPDF;
 function openEnde(){
   const aktiv = S.trupps.filter(t=>t.ev.beginn && !t.ev.ende);
   const canSave = pdfMode==='open' || (pdfMode==='claude' && dlApi);
-  openDlg('<form id="endeForm"><div class="dlg-head"><h2>Einsatzende</h2><button type="button" class="btn small ghost" data-close>Abbrechen</button></div>'+
+  openDlg('<form id="endeForm"><div class="dlg-head"><h2>Einsatzende</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div>'+
     '<div class="dlg-body">'+
       '<p style="margin:0">Das Überwachungsprotokoll wird als PDF gespeichert. <b>Danach werden alle Einsatzdaten auf diesem Gerät gelöscht</b> (Einsatzdaten, Trupps, Geräte, Zeiten).</p>'+
       '<div class="calcbox">'+S.trupps.length+' Trupps · '+S.trupps.reduce((n,t)=>n+t.mitglieder.length,0)+' Personen · Datei: <span class="mono">'+esc(pdfName())+'</span></div>'+
-      (aktiv.length?'<div class="alert alarm" style="border-radius:8px;animation:none">Noch unter Atemschutz: '+aktiv.map(t=>esc(t.rufgruppe)).join(', ')+'</div>'+
+      (aktiv.length?'<div class="alert alarm" style="border-radius:8px;animation:none">Noch unter Atemschutz: '+aktiv.map(t=>esc(tName(t))).join(', ')+'</div>'+
         '<label class="row" style="gap:10px;font-weight:600"><input type="checkbox" id="endeTrotzdem" style="width:24px;height:24px"> Trotzdem beenden, die Trupps sind nicht mehr im Einsatz</label>':'')+
       (canSave?'':'<div class="err">In dieser Ansicht kann keine Datei gespeichert werden. Die Daten bleiben erhalten.</div>')+
       '<div class="err" id="endeErr" role="alert"></div>'+
@@ -1138,7 +1233,7 @@ function openEnde(){
       err.textContent = (x && x.code==='declined') ? 'Speichern abgebrochen. Die Daten bleiben erhalten.' : 'PDF konnte nicht gespeichert werden. Die Daten bleiben erhalten.';
       btn.disabled=false; btn.textContent='PDF speichern & Daten löschen'; return;
     }
-    sendStatus(true); S=blankState(S.config); save(); closeDlg(); setView('ueb');
+    sendStatus(true); S=blankState(S.config); shadow=null; syncState.dirty.clear(); syncState.einsatzDirty=false; saveRaw(); closeDlg(); setView('ueb');
     toast('Einsatz beendet: PDF gespeichert, Daten gelöscht');
   });
 }
@@ -1150,7 +1245,7 @@ function openMayday(tid){
   const md=t.mayday;
   const draw=(confirmEnd)=>{
     const done=MAYDAY_ITEMS.filter(([k])=>md.items[k]).length;
-    openDlg('<div class="dlg-head may"><h2>MAYDAY · '+esc(t.rufgruppe)+'</h2><button type="button" class="btn small" data-md="close">Schließen</button></div>'+
+    openDlg('<div class="dlg-head may"><h2>MAYDAY · '+esc(tName(t))+'</h2><button type="button" class="btn small" data-md="close">Schließen</button></div>'+
       '<div class="dlg-body">'+
         '<div class="row" style="align-items:baseline"><span class="prompt-big" id="mdTime">'+dur(nowT()-md.start)+'</span><span class="hint">seit '+hm(md.start)+' · '+done+' von '+MAYDAY_ITEMS.length+' erledigt</span></div>'+
         '<div class="mdlist">'+MAYDAY_ITEMS.map(([k,l])=>'<button type="button" class="mditem'+(md.items[k]?' on':'')+'" data-md="item" data-k="'+k+'"><span class="box">'+(md.items[k]?CHECK_SVG.replace(/width="14" height="14"/,'width="20" height="20"'):'')+'</span><span class="tx">'+esc(l)+'</span><span class="tm2">'+(md.items[k]?hm(md.items[k]):'')+'</span></button>').join('')+'</div>'+
@@ -1213,30 +1308,39 @@ function openStep(tid, k, edit){
   const s = steps(t).find(x=>x.k===k);
   const e = t.ev[k];
   const now = nowT();
-  const rows = t.mitglieder.map((m,i)=>{
-    const pv = prevReading(t,k,i);
-    // vorbelegt: beim Beginn mit dem beim Anlegen erfassten Flaschendruck, sonst mit der letzten Ablesung
-    const val = e ? e.p[i] : (k==='beginn' ? (m.druck ?? '') : (pv ?? ''));
-    return '<div class="p-row"><div class="who">'+esc(m.name||m.funktion)+'<small>'+esc(m.funktion)+(m.geraetNr?' · '+esc(m.geraetNr):'')+(pv!=null?' · zuletzt '+pv+' bar':'')+'</small></div>'+
-      pressureSelect(i, val, m) + '</div>';
-  }).join('');
-  openDlg('<form id="stepForm" method="dialog"><div class="dlg-head"><h2>'+s.l+' · '+esc(t.rufgruppe)+'</h2><button type="button" class="btn small ghost" data-close>Abbrechen</button></div>'+
+  const single = k!=='beginn' && S.config.druckModus!=='einzeln';   // Abfragen per Funk: nur der niedrigste Druck des Trupps (einstellbar)
+  let rows;
+  if(single){
+    const pv = prevLow(t,k);
+    const val = e ? lowOf(e) : (pv ?? '');
+    rows = '<div class="p-row"><div class="who">Niedrigster Druck im Trupp<small>'+esc(t.mitglieder.map(m=>m.name||m.funktion).join(', '))+(pv!=null?' · zuletzt '+pv+' bar':'')+'</small></div>'+
+      pressureSelect(0, val, {name:'niedrigster Druck'}) + '</div>';
+  } else {
+    rows = t.mitglieder.map((m,i)=>{
+      const pv = k==='beginn' ? null : prevReading(t,k,i);
+      const val = e ? (e.single ? lowOf(e) : e.p[i]) : (k==='beginn' ? (m.druck ?? '') : (pv ?? ''));
+      return '<div class="p-row"><div class="who">'+esc(m.name||m.funktion)+'<small>'+esc(m.funktion)+(m.geraetNr?' · '+esc(m.geraetNr):'')+(pv!=null?' · zuletzt '+pv+' bar':'')+'</small></div>'+
+        pressureSelect(i, val, m) + '</div>';
+    }).join('');
+  }
+  openDlg('<form id="stepForm" method="dialog"><div class="dlg-head"><h2>'+s.l+' · '+esc(tName(t))+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div>'+
     '<div class="dlg-body">'+
       '<label class="f">Uhrzeit<input class="inp mono" id="stepTime" value="'+timeVal(e?e.t:now)+'" inputmode="numeric" style="max-width:180px"></label>'+
-      '<div class="hint">Druck je Truppmitglied auswählen (0–'+S.config.maxBar+' bar in 10er-Schritten).'+(e?'':(k==='beginn'?' Vorbelegt mit dem Flaschendruck vom Anlegen.':' Vorbelegt mit der letzten Ablesung – bitte anpassen.'))+'</div>'+ rows +
+      '<div class="hint">'+(single?'Den niedrigsten Druck im Trupp auswählen':'Druck je Truppmitglied auswählen')+' (0–'+S.config.maxBar+' bar in 10er-Schritten).'+(e?'':(k==='beginn'?' Vorbelegt mit dem Flaschendruck vom Anlegen.':' Vorbelegt mit der letzten Ablesung – bitte anpassen.'))+'</div>'+ rows +
       '<div id="stepCalc"></div><div id="sameBox"></div><div class="err" id="stepErr" role="alert"></div>'+
     '</div><div class="dlg-foot">'+
-      (edit?'<button type="button" class="btn danger" data-act="delstep" data-t="'+t.id+'" data-s="'+k+'">Eintrag löschen</button><span class="spacer"></span>':'')+
+      (edit?'<button type="button" class="btn danger" tabindex="-1" data-act="delstep" data-t="'+t.id+'" data-s="'+k+'">Eintrag löschen</button><span class="spacer"></span>':'')+
       '<button type="submit" class="btn primary" style="min-width:180px">'+(edit?'Speichern':esc(s.b)+' bestätigen')+'</button></div></form>');
   const form = $('#stepForm');
+  const readPs = () => single ? t.mitglieder.map(()=>parseInt($('#p-0').value,10)) : t.mitglieder.map((_,i)=>parseInt($('#p-'+i).value,10));
   const preview = () => {
     if(k!=='ziel') return;
-    const ps = t.mitglieder.map((_,i)=>parseInt($('#p-'+i).value,10));
+    const ps = readPs();
     if(!t.ev.beginn || ps.some(isNaN)) { $('#stepCalc').innerHTML=''; return; }
     const c=S.config; let mins=[], rds=[];
     ps.forEach((z,i)=>{ const d=Math.max(c.minRueckzug,2*(t.ev.beginn.p[i]-z)); rds.push(d); mins.push((z-d)/c.verbrauch); });
     const m=Math.min(...mins); const tt=parseTime($('#stepTime').value, now)||now;
-    $('#stepCalc').innerHTML='<div class="calcbox"><b>Rückzug soll:</b> '+(m<0.5?'<span class="err">sofort!</span>':'um <b class="mono">'+hm(tt+Math.round(m)*60000)+'</b> (nach '+Math.round(m)+' min)')+' · Rückzugsdruck '+rds.map(x=>x+' bar').join(' / ')+'</div>';
+    $('#stepCalc').innerHTML='<div class="calcbox"><b>Rückzug soll:</b> '+(m<0.5?'<span class="err">sofort!</span>':'um <b class="mono">'+hm(tt+Math.round(m)*60000)+'</b> (nach '+Math.round(m)+' min)')+' · Rückzug bei <b>'+Math.max(...rds)+' bar</b></div>';
   };
   form.addEventListener('input', preview); form.addEventListener('change', preview); preview();
   setTimeout(()=>{ const f=$('#p-0'); if(f && !e) f.focus(); }, 50);
@@ -1245,28 +1349,38 @@ function openStep(tid, k, edit){
     const err = $('#stepErr'); err.textContent='';
     const tt = parseTime($('#stepTime').value, now);
     if(tt==null){ err.textContent='Uhrzeit bitte als HH:MM oder HH:MM:SS eingeben.'; return; }
-    const ps=[]; let bad=false;
-    t.mitglieder.forEach((m,i)=>{
-      const inp=$('#p-'+i); const v=parseInt(inp.value,10);
-      inp.classList.remove('bad');
-      if(isNaN(v)||v<0||v>S.config.maxBar){ inp.classList.add('bad'); bad=true; }
-      ps.push(v);
-    });
-    if(bad){ err.textContent='Bitte für jedes Truppmitglied einen Druck auswählen.'; return; }
-    // Bestätigung, wenn der Druck bei einer Abfrage gegenüber der letzten Ablesung unverändert ist
-    if(!edit && k!=='beginn'){
-      const same = t.mitglieder.map((m,i)=>({m, pv:prevReading(t,k,i), v:ps[i]})).filter(x=>x.pv!=null && x.v===x.pv);
-      const box=$('#sameBox'), ok=$('#sameOk');
-      if(same.length && !(ok && ok.checked)){
-        box.innerHTML='<div class="samebox" role="alert"><div><b>Druck unverändert</b> bei '+same.map(x=>esc(x.m.name||x.m.funktion)+' ('+x.v+' bar)').join(', ')+'. Wurde der Druck wirklich abgefragt?</div>'+
-          '<label><input type="checkbox" id="sameOk"> Ja, Druck wurde abgefragt und ist unverändert</label></div>';
-        return;
+    const ps = readPs();
+    let bad=false;
+    (single?[0]:t.mitglieder.map((_,i)=>i)).forEach(i=>{ const inp=$('#p-'+i); inp.classList.remove('bad'); const v=parseInt(inp.value,10); if(isNaN(v)||v<0||v>S.config.maxBar){ inp.classList.add('bad'); bad=true; } });
+    if(bad){ err.textContent = single ? 'Bitte den niedrigsten Druck im Trupp auswählen.' : 'Bitte für jedes Truppmitglied einen Druck auswählen.'; return; }
+    if(single){
+      const v=ps[0], pv=prevLow(t,k);
+      // Bestätigung, wenn der Druck gegenüber der letzten Ablesung unverändert ist
+      if(!edit && pv!=null && v===pv){
+        const box=$('#sameBox'), ok=$('#sameOk');
+        if(!(ok && ok.checked)){
+          box.innerHTML='<div class="samebox" role="alert"><div><b>Druck unverändert</b> ('+v+' bar wie bei der letzten Ablesung). Wurde der Druck wirklich abgefragt?</div>'+
+            '<label><input type="checkbox" id="sameOk"> Ja, Druck wurde abgefragt und ist unverändert</label></div>';
+          return;
+        }
+      } else $('#sameBox').innerHTML='';
+      if(pv!=null && v>pv && !form.dataset.ack){ form.dataset.ack='1'; err.textContent='Der Wert ist höher als die vorherige Ablesung ('+pv+' bar). Zum Übernehmen erneut bestätigen.'; return; }
+      t.ev[k] = {t:tt, p:ps, single:true};
+    } else {
+      if(!edit && k!=='beginn'){
+        const same = t.mitglieder.map((m,i)=>({m, pv:prevReading(t,k,i), v:ps[i]})).filter(x=>x.pv!=null && x.v===x.pv);
+        const box=$('#sameBox'), ok=$('#sameOk');
+        if(same.length && !(ok && ok.checked)){
+          box.innerHTML='<div class="samebox" role="alert"><div><b>Druck unverändert</b> bei '+same.map(x=>esc(x.m.name||x.m.funktion)+' ('+x.v+' bar)').join(', ')+'. Wurde der Druck wirklich abgefragt?</div>'+
+            '<label><input type="checkbox" id="sameOk"> Ja, Druck wurde abgefragt und ist unverändert</label></div>';
+          return;
+        }
+        if(!same.length) box.innerHTML='';
+        const up = ps.some((v,i)=>{ const pv=prevReading(t,k,i); return pv!=null && v>pv; });
+        if(up && !form.dataset.ack){ form.dataset.ack='1'; err.textContent='Ein Wert ist höher als die vorherige Ablesung. Zum Übernehmen erneut bestätigen.'; return; }
       }
-      if(!same.length) box.innerHTML='';
+      t.ev[k] = {t:tt, p:ps};
     }
-    const up = ps.map((v,i)=>{const pv=prevReading(t,k,i); return pv!=null && v>pv;});
-    if(up.some(Boolean) && !form.dataset.ack){ form.dataset.ack='1'; err.textContent='Ein Wert ist höher als die vorherige Ablesung. Zum Übernehmen erneut bestätigen.'; return; }
-    t.ev[k] = {t:tt, p:ps};
     S.sample=false; save(); closeDlg(); renderAll(); unlockAudio();
     toast(s.l+' '+hm(tt)+' erfasst');
   });
@@ -1279,14 +1393,15 @@ function openTrupp(tid){
   const draw = () => {
     const mem = t.mitglieder.map((m,i)=>'<div class="panel" style="padding:12px;display:grid;gap:10px">'+
       '<div class="row"><b style="font-family:var(--f-disp);font-size:18px">'+esc(m.funktion)+'</b><span class="spacer"></span>'+
-      '<button type="button" class="btn small" data-act="scan-dlg" data-i="'+i+'">'+CAM_SVG.replace('<svg','<svg width="18" height="18"')+' Kamera</button>'+
-      (i===2?'<button type="button" class="btn small ghost" data-act="rm-mem">Entfernen</button>':'')+'</div>'+
+      '<button type="button" class="btn small" tabindex="-1" data-act="scan-dlg" data-i="'+i+'">'+CAM_SVG.replace('<svg','<svg width="18" height="18"')+' Kamera</button>'+
+      (i===2?'<button type="button" class="btn small ghost" tabindex="-1" data-act="rm-mem">Entfernen</button>':'')+'</div>'+
       '<div class="fgrid">'+FIELDS.map(f=>'<label class="f">'+f.l+'<input class="inp'+(f.k==='name'?'':' mono')+'" id="tm-'+i+'-'+f.k+'" data-i="'+i+'" data-f="'+f.k+'" value="'+esc(m[f.k])+'"></label>').join('')+
       '<label class="f">Flaschendruck (bar)'+pressureSelect('tm-'+i+'-druck', m.druck, m, 'data-i="'+i+'" data-f="druck" style="font-size:18px;min-height:44px"')+'</label></div></div>').join('');
-    openDlg('<form id="truppForm"><div class="dlg-head"><h2>'+(isNew?'Trupp anlegen':'Trupp bearbeiten')+'</h2><button type="button" class="btn small ghost" data-close>Abbrechen</button></div>'+
+    openDlg('<form id="truppForm"><div class="dlg-head"><h2>'+(isNew?'Trupp anlegen':'Trupp bearbeiten')+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div>'+
       '<div class="dlg-body">'+
-        '<div class="fgrid"><label class="f">Rufgruppe / Trupp<input class="inp" id="t-rufgruppe" list="rgList" value="'+esc(t.rufgruppe)+'" required></label>'+
+        '<div class="fgrid"><label class="f">'+(S.config.funkName==='tf'?'Trupp-Bezeichnung (optional)':'Rufgruppe / Trupp')+'<input class="inp" id="t-rufgruppe" list="rgList" value="'+esc(t.rufgruppe)+'"></label>'+
         '<label class="f">Auftrag<input class="inp" id="t-auftrag" value="'+esc(t.auftrag)+'"></label></div>'+
+        (S.config.funkName==='tf'?'<div class="calcbox">Funkrufname: <b id="fnPrev">'+esc(previewName(t))+'</b> <span class="hint">(Nachname des Truppführers)</span></div>':'')+
         '<label class="chk"><input type="checkbox" id="t-st"'+(t.st?' checked':'')+'> Sicherheitstrupp</label>'+
         '<datalist id="rgList"><option>Angriffstrupp</option><option>Wassertrupp</option><option>Schlauchtrupp</option><option>Sicherheitstrupp</option><option>Trupp 1</option><option>Trupp 2</option><option>Trupp 3</option></datalist>'+
         mem +
@@ -1294,11 +1409,12 @@ function openTrupp(tid){
         '<label class="f">Zusatz / Bemerkung<textarea class="inp" id="t-bemerkung" rows="2">'+esc(t.bemerkung)+'</textarea></label>'+
         '<div class="err" id="truppErr" role="alert"></div>'+
       '</div><div class="dlg-foot">'+(isNew?'':'<button type="button" class="btn danger" data-act="del-trupp">Trupp löschen</button><span class="spacer"></span>')+
-      '<button type="submit" class="btn primary">'+(isNew?'Trupp anlegen':'Speichern')+'</button></div></form><div id="delConfirm"></div>');
+      '<button type="submit" class="btn" data-qrafter="1">'+(isNew?'Anlegen':'Speichern')+' &amp; QR zeigen</button><button type="submit" class="btn primary">'+(isNew?'Trupp anlegen':'Speichern')+'</button></div></form><div id="delConfirm"></div>');
     const f = $('#truppForm');
+    setTimeout(()=>{ const first = S.config.funkName==='tf' ? $('#tm-0-name') : $('#t-rufgruppe'); if(first && isNew && !first.value) first.focus(); }, 60);
     f.addEventListener('input', e=>{
       const el=e.target;
-      if(el.dataset.f) t.mitglieder[+el.dataset.i][el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value;
+      if(el.dataset.f){ t.mitglieder[+el.dataset.i][el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; const fp=$('#fnPrev'); if(fp) fp.textContent=previewName(t); }
       else if(el.id==='t-rufgruppe'){ t.rufgruppe=el.value; if(isNew && /sicherheit/i.test(el.value) && !t.stTouched){ t.st=true; const c=$('#t-st'); if(c) c.checked=true; } }
       else if(el.id==='t-st'){ t.st=el.checked; t.stTouched=true; }
       else if(el.id==='t-auftrag') t.auftrag=el.value;
@@ -1318,12 +1434,18 @@ function openTrupp(tid){
     });
     f.addEventListener('submit', e=>{
       e.preventDefault();
-      if(!t.rufgruppe.trim()){ $('#truppErr').textContent='Bitte Rufgruppe bzw. Truppbezeichnung eintragen.'; return; }
+      if(S.config.funkName==='tf'){ const n=splitName(tfOf(t)&&tfOf(t).name); if(!(n&&n.nach) && !t.rufgruppe.trim()){ $('#truppErr').textContent='Bitte den Namen des Truppführers oder eine Trupp-Bezeichnung eintragen.'; return; } }
+      else if(!t.rufgruppe.trim()){ $('#truppErr').textContent='Bitte Rufgruppe bzw. Truppbezeichnung eintragen.'; return; }
       if(t.mitglieder.length < 3) Object.values(t.ev).forEach(x=>{ x.p = x.p.slice(0,t.mitglieder.length); });
       Object.values(t.ev).forEach(x=>{ while(x.p.length<t.mitglieder.length) x.p.push(null); });
-      const idx=S.trupps.findIndex(x=>x.id===t.id);
-      if(idx>=0) S.trupps[idx]=t; else S.trupps.push(t);
+      // nur die im Fenster bearbeiteten Felder übernehmen – Zeiten/Drücke, die inzwischen (z. B. von einem anderen Gerät) erfasst wurden, bleiben erhalten
+      const live=S.trupps.find(x=>x.id===t.id);
+      if(live){
+        ['rufgruppe','auftrag','bemerkung','st','mitglieder'].forEach(f=>live[f]=t[f]);
+        const n=t.mitglieder.length; Object.values(live.ev).forEach(x=>{ if(x&&x.p){ x.p=x.p.slice(0,n); while(x.p.length<n) x.p.push(x.single?x.p[0]:null); } });
+      } else S.trupps.push(t);
       S.sample=false; save(); closeDlg(); renderAll(); toast(isNew?'Trupp angelegt':'Gespeichert');
+      if(e.submitter && e.submitter.dataset.qrafter) openQRSend(t.id);
     });
   };
   const openTruppAgain = () => draw();
@@ -1524,6 +1646,333 @@ function openScan(m, onDone){
   draw();
 }
 
+/* ---------- QR-Code-Erzeugung (Byte-Modus, Fehlerkorrektur M, ohne externe Bibliothek) ---------- */
+const QRGEN = (()=>{
+  const ECC = {L:[-1,7,10,15,20,26,18,20,24,30,18,20,24,26,30,22,24,28,30,28,28,28,28,30,30,26,28,30,30,30,30,30,30,30,30,30,30,30,30,30,30],
+               M:[-1,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24,28,28,26,26,26,26,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28]};
+  const BLK = {L:[-1,1,1,1,1,1,2,2,2,2,4,4,4,4,4,6,6,6,6,7,8,8,9,9,10,12,12,12,13,14,15,16,17,18,19,19,20,21,22,24,25],
+               M:[-1,1,1,1,2,2,4,4,4,5,5,5,8,9,9,10,10,11,13,14,16,17,17,18,20,21,23,25,26,28,29,31,33,35,37,38,40,43,45,47,49]};
+  const FMT = {L:1, M:0};
+  const rawMods = v => { let r=(16*v+128)*v+64; if(v>=2){ const n=Math.floor(v/7)+2; r-=(25*n-10)*n-55; if(v>=7) r-=36; } return r; };
+  const dataCw = (v,e) => Math.floor(rawMods(v)/8) - ECC[e][v]*BLK[e][v];
+  const gmul = (x,y) => { let z=0; for(let i=7;i>=0;i--){ z=(z<<1)^((z>>>7)*0x11D); z^=((y>>>i)&1)*x; } return z&255; };
+  const rsDiv = d => { const r=new Array(d).fill(0); r[d-1]=1; let root=1; for(let i=0;i<d;i++){ for(let j=0;j<d;j++){ r[j]=gmul(r[j],root); if(j+1<d) r[j]^=r[j+1]; } root=gmul(root,2); } return r; };
+  const rsRem = (data,div) => { const r=new Array(div.length).fill(0); for(const b of data){ const f=b^r.shift(); r.push(0); div.forEach((c,i)=>r[i]^=gmul(c,f)); } return r; };
+  const alignPos = (v,size) => { if(v===1) return []; const n=Math.floor(v/7)+2; const step=(v===32)?26:Math.ceil((v*4+4)/(n*2-2))*2; const r=[6]; for(let p=size-7; r.length<n; p-=step) r.splice(1,0,p); return r; };
+  function encode(text, ecl='M'){
+    const bytes=[...new TextEncoder().encode(text)];
+    let v=1, cap;
+    for(;v<=40;v++){ cap=dataCw(v,ecl)*8; const cc=v<10?8:16; if(4+cc+bytes.length*8<=cap) break; }
+    if(v>40) throw new Error('Daten zu lang für einen QR-Code');
+    const bits=[]; const put=(val,n)=>{ for(let i=n-1;i>=0;i--) bits.push((val>>>i)&1); };
+    put(4,4); put(bytes.length, v<10?8:16); bytes.forEach(b=>put(b,8));
+    put(0, Math.min(4, cap-bits.length)); while(bits.length%8) bits.push(0);
+    const data=[]; for(let i=0;i<bits.length;i+=8){ let b=0; for(let j=0;j<8;j++) b=(b<<1)|bits[i+j]; data.push(b); }
+    for(let p=0xEC; data.length<cap/8; p^=0xEC^0x11) data.push(p);
+    // Blöcke + Fehlerkorrektur
+    const nb=BLK[ecl][v], el=ECC[ecl][v], raw=Math.floor(rawMods(v)/8), nShort=nb-raw%nb, shortLen=Math.floor(raw/nb), div=rsDiv(el);
+    const blocks=[]; for(let i=0,k=0;i<nb;i++){ const dat=data.slice(k,k+shortLen-el+(i<nShort?0:1)); k+=dat.length; const ec=rsRem(dat,div); if(i<nShort) dat.push(0); blocks.push(dat.concat(ec)); }
+    const cw=[]; for(let i=0;i<blocks[0].length;i++) blocks.forEach((b,j)=>{ if(i!==shortLen-el || j>=nShort) cw.push(b[i]); });
+    // Matrix
+    const size=v*4+17, M=[...Array(size)].map(()=>new Array(size).fill(false)), F=[...Array(size)].map(()=>new Array(size).fill(false));
+    const set=(x,y,d)=>{ M[y][x]=d; F[y][x]=true; };
+    for(let i=0;i<size;i++){ set(6,i,i%2===0); set(i,6,i%2===0); }
+    const finder=(cx,cy)=>{ for(let dy=-4;dy<=4;dy++) for(let dx=-4;dx<=4;dx++){ const x=cx+dx,y=cy+dy; if(x>=0&&x<size&&y>=0&&y<size){ const d=Math.max(Math.abs(dx),Math.abs(dy)); set(x,y,d!==2&&d!==4); } } };
+    finder(3,3); finder(size-4,3); finder(3,size-4);
+    const ap=alignPos(v,size), na=ap.length;
+    for(let i=0;i<na;i++) for(let j=0;j<na;j++){ if((i===0&&j===0)||(i===0&&j===na-1)||(i===na-1&&j===0)) continue; for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++) set(ap[i]+dx,ap[j]+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1); }
+    const drawFormat=(mask)=>{
+      const d=(FMT[ecl]<<3)|mask; let r=d; for(let i=0;i<10;i++) r=(r<<1)^((r>>>9)*0x537); const b=((d<<10)|r)^0x5412; const g=i=>((b>>>i)&1)===1;
+      for(let i=0;i<=5;i++) set(8,i,g(i)); set(8,7,g(6)); set(8,8,g(7)); set(7,8,g(8)); for(let i=9;i<15;i++) set(14-i,8,g(i));
+      for(let i=0;i<8;i++) set(size-1-i,8,g(i)); for(let i=8;i<15;i++) set(8,size-15+i,g(i)); set(8,size-8,true);
+    };
+    drawFormat(0);
+    if(v>=7){ let r=v; for(let i=0;i<12;i++) r=(r<<1)^((r>>>11)*0x1F25); const b=(v<<12)|r; for(let i=0;i<18;i++){ const bit=((b>>>i)&1)===1, a=size-11+i%3, c=Math.floor(i/3); set(a,c,bit); set(c,a,bit); } }
+    // Datenbits
+    let i=0;
+    for(let right=size-1; right>=1; right-=2){ if(right===6) right=5; for(let vert=0;vert<size;vert++) for(let j=0;j<2;j++){ const x=right-j, up=((right+1)&2)===0, y=up?size-1-vert:vert; if(!F[y][x] && i<cw.length*8){ M[y][x]=((cw[i>>>3]>>>(7-(i&7)))&1)===1; i++; } } }
+    const maskFn=[(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,(x,y)=>x%3===0,(x,y)=>(x+y)%3===0,(x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2===0,(x,y)=>x*y%2+x*y%3===0,(x,y)=>(x*y%2+x*y%3)%2===0,(x,y)=>((x+y)%2+x*y%3)%2===0];
+    const apply=m=>{ for(let y=0;y<size;y++) for(let x=0;x<size;x++) if(!F[y][x] && maskFn[m](x,y)) M[y][x]=!M[y][x]; };
+    const penalty=()=>{ let p=0, dark=0;
+      for(let y=0;y<size;y++){ let run=1; for(let x=1;x<size;x++){ if(M[y][x]===M[y][x-1]){ run++; if(run===5) p+=3; else if(run>5) p++; } else run=1; } }
+      for(let x=0;x<size;x++){ let run=1; for(let y=1;y<size;y++){ if(M[y][x]===M[y-1][x]){ run++; if(run===5) p+=3; else if(run>5) p++; } else run=1; } }
+      for(let y=0;y<size-1;y++) for(let x=0;x<size-1;x++){ const c=M[y][x]; if(c===M[y][x+1]&&c===M[y+1][x]&&c===M[y+1][x+1]) p+=3; }
+      for(let y=0;y<size;y++) for(let x=0;x<size;x++) if(M[y][x]) dark++;
+      p += Math.floor(Math.abs(dark*20-size*size*10)/(size*size))*10; return p; };
+    let best=0, bestP=Infinity;
+    for(let m=0;m<8;m++){ apply(m); drawFormat(m); const pe=penalty(); if(pe<bestP){ bestP=pe; best=m; } apply(m); }
+    apply(best); drawFormat(best);
+    return {size, M, version:v};
+  }
+  function toCanvas(text, px){
+    const q=encode(text,'L'), border=4, n=q.size+border*2, scale=Math.max(2, Math.floor((px||480)/n));
+    const c=document.createElement('canvas'); c.width=c.height=n*scale; const x=c.getContext('2d');
+    x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.fillStyle='#000';
+    for(let y=0;y<q.size;y++) for(let xx=0;xx<q.size;xx++) if(q.M[y][xx]) x.fillRect((xx+border)*scale,(y+border)*scale,scale,scale);
+    c.dataset.version=q.version; return c;
+  }
+  return {encode, toCanvas};
+})();
+
+/* ---------- Server-Abgleich mehrerer Geräte (z. B. Raspberry Pi der Fahrzeugverwaltung) ----------
+   Protokoll siehe SERVER_API.md. Jedes Feld eines Trupps trägt einen Änderungszeitpunkt (_m);
+   beim Abgleich gewinnt je Feld der neuere Stand. Der Server speichert nur und zählt eine Revision hoch. */
+const SYNC_FIELDS=['rufgruppe','auftrag','bemerkung','st','mitglieder','notfall','mayday'];
+const E_FIELDS=['einsatzstelle','art','einheitsfuehrer','ueberwacher','ueberwacher2','datum'];
+const syncState={ok:null, at:null, busy:false, dirty:new Set(), einsatzDirty:false, msg:'', timer:null};
+let shadow=null;
+function snapT(t){ const o={}; SYNC_FIELDS.forEach(f=>o[f]=JSON.stringify(t[f]??null)); Object.keys(t.ev||{}).forEach(k=>o['ev.'+k]=JSON.stringify(t.ev[k])); return o; }
+function snapE(){ const o={}; E_FIELDS.forEach(f=>o[f]=JSON.stringify(S.einsatz[f]??null)); return o; }
+function buildShadow(){ const t={}; S.trupps.forEach(x=>t[x.id]=snapT(x)); return {eid:S.einsatz.id, t, e:snapE()}; }
+function stampChanges(){
+  const now=Date.now();
+  if(!shadow || shadow.eid!==S.einsatz.id){ S.trupps.forEach(t=>{ t._m=t._m||{}; Object.keys(snapT(t)).forEach(k=>{ if(!t._m[k]) t._m[k]=now; }); }); S.einsatz._m=S.einsatz._m||{}; E_FIELDS.forEach(f=>{ if(!S.einsatz._m[f]) S.einsatz._m[f]=now; }); shadow=buildShadow(); return; }
+  S.trupps.forEach(t=>{
+    t._m=t._m||{}; const cur=snapT(t), old=shadow.t[t.id];
+    if(!old){ Object.keys(cur).forEach(k=>t._m[k]=Math.max(t._m[k]||0, now)); syncState.dirty.add(t.id); return; }
+    let ch=false; new Set([...Object.keys(cur),...Object.keys(old)]).forEach(k=>{ if(cur[k]!==old[k]){ t._m[k]=now; ch=true; } });
+    if(ch) syncState.dirty.add(t.id);
+  });
+  Object.keys(shadow.t).forEach(id=>{ if(!S.trupps.some(t=>t.id===id)){ S.gone=S.gone||{}; S.gone[id]=now; syncState.dirty.add(id); } });
+  const ce=snapE(); S.einsatz._m=S.einsatz._m||{};
+  E_FIELDS.forEach(f=>{ if(ce[f]!==shadow.e[f]){ S.einsatz._m[f]=now; syncState.einsatzDirty=true; } });
+  shadow=buildShadow();
+}
+const maxM = o => Math.max(0, ...Object.values((o&&o._m)||{}));
+function mergeInto(loc, rem, fields){ // Feldweise: neuerer Zeitstempel gewinnt; gibt zurück, ob lokal Neueres übrig bleibt
+  loc._m=loc._m||{}; const rm=rem._m||{}; let localNewer=false, changed=false;
+  new Set([...Object.keys(rm), ...Object.keys(loc._m)]).forEach(k=>{
+    const lt=loc._m[k]||0, rt=rm[k]||0;
+    if(rt>lt){
+      changed=true; loc._m[k]=rt;
+      if(k.startsWith('ev.')){ const ek=k.slice(3); loc.ev=loc.ev||{}; if(rem.ev && rem.ev[ek]!==undefined && rem.ev[ek]!==null) loc.ev[ek]=JSON.parse(JSON.stringify(rem.ev[ek])); else delete loc.ev[ek]; }
+      else if(!fields || fields.includes(k)) loc[k]=JSON.parse(JSON.stringify(rem[k]??null));
+    } else if(lt>rt) localNewer=true;
+  });
+  return {localNewer, changed};
+}
+function syncOn(){ return !!(S.sync && S.sync.code && S.config.syncUrl && canSend()); }
+async function api(method, path, body){
+  const base=(S.config.syncUrl||'').trim().replace(/\/+$/,'');
+  const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(), 8000);
+  try{
+    const r=await fetch(base+path,{method, headers:{'Content-Type':'application/json','Authorization':'Bearer '+(S.config.syncKey||'')}, body:body?JSON.stringify(body):undefined, cache:'no-store', signal:ctl.signal});
+    if(r.status===401||r.status===403) throw new Error('Wehr-Schlüssel falsch');
+    if(!r.ok) throw new Error('Server antwortet mit Fehler '+r.status);
+    return r.status===204 ? null : await r.json();
+  }catch(e){ throw new Error(e.name==='AbortError'?'Server antwortet nicht':e.message.includes('Failed to fetch')||e.message.includes('Load failed')?'Server nicht erreichbar':e.message); }
+  finally{ clearTimeout(to); }
+}
+function applyRemote(r){
+  let changed=false;
+  if(r.einsatz && r.einsatz._m){ const res=mergeInto(S.einsatz, r.einsatz, E_FIELDS); if(res.changed) changed=true; if(res.localNewer) syncState.einsatzDirty=true; }
+  (r.trupps||[]).forEach(item=>{
+    const loc=S.trupps.find(t=>t.id===item.id);
+    if(item._gone){
+      if(loc && maxM(loc) <= item._gone){ S.trupps=S.trupps.filter(t=>t.id!==item.id); changed=true; }
+      else if(loc) syncState.dirty.add(item.id);
+      S.gone=S.gone||{}; S.gone[item.id]=Math.max(S.gone[item.id]||0, item._gone);
+      return;
+    }
+    if(!loc){
+      if(S.gone && S.gone[item.id] && S.gone[item.id] >= maxM(item)) { syncState.dirty.add(item.id); return; }
+      const t=JSON.parse(JSON.stringify(item)); t.ev=t.ev||{}; S.trupps.push(t); changed=true; return;
+    }
+    const res=mergeInto(loc, item, SYNC_FIELDS);
+    if(res.changed) changed=true; if(res.localNewer) syncState.dirty.add(loc.id);
+  });
+  shadow=buildShadow();
+  if(changed){ S.sample=false; saveRaw(); if(!dlg.open || view!=='ueb') renderAll(); else { renderMeta(); } }
+}
+async function syncTick(){
+  if(!syncOn() || syncState.busy) return;
+  syncState.busy=true;
+  const code=encodeURIComponent(S.sync.code);
+  try{
+    for(const id of [...syncState.dirty]){
+      const t=S.trupps.find(x=>x.id===id);
+      const body = t ? Object.assign({}, t, {stTouched:undefined}) : {id, _gone:(S.gone&&S.gone[id])||Date.now()};
+      await api('PUT','/einsaetze/'+code+'/trupps/'+encodeURIComponent(id), body);
+      syncState.dirty.delete(id);
+    }
+    if(syncState.einsatzDirty){ await api('PUT','/einsaetze/'+code+'/einsatz', S.einsatz); syncState.einsatzDirty=false; }
+    const r=await api('GET','/einsaetze/'+code+'?since='+(S.sync.rev||0));
+    if(r){ applyRemote(r); if(typeof r.rev==='number'){ S.sync.rev=r.rev; saveRaw(); } }
+    syncState.ok=true; syncState.msg=''; syncState.at=Date.now();
+  }catch(e){ syncState.ok=false; syncState.msg=e.message; syncState.at=Date.now(); }
+  finally{ syncState.busy=false; renderSyncBadge(); if(view==='ein') renderSyncInfo(); }
+}
+function syncSoon(){ if(!syncOn()) return; clearTimeout(syncState.timer); syncState.timer=setTimeout(syncTick, 250); }
+function newCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<6;i++) c+=a[Math.floor(Math.random()*a.length)]; return c; }
+function shareEinsatz(){
+  if(!S.config.syncUrl){ toast('Bitte zuerst die Server-Adresse eintragen'); return; }
+  if(S.sample){ S=blankState(S.config); shadow=null; }
+  S.sync={code:newCode(), rev:0, host:true};
+  shadow=null; stampChanges(); S.trupps.forEach(t=>syncState.dirty.add(t.id)); syncState.einsatzDirty=true;
+  saveRaw(); renderAll(); syncTick(); toast('Einsatz freigegeben: '+S.sync.code);
+}
+function joinEinsatz(code, url){
+  code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(code.length<4){ toast('Einsatz-Code prüfen'); return; }
+  if(url) S.config.syncUrl=url;
+  if(!S.config.syncUrl){ toast('Bitte zuerst die Server-Adresse eintragen'); return; }
+  if(S.sample){ S=blankState(S.config); }
+  shadow=null; stampChanges();
+  S.sync={code, rev:0, host:false};
+  S.trupps.forEach(t=>syncState.dirty.add(t.id));   // eigene Trupps in den gemeinsamen Einsatz übernehmen
+  saveRaw(); renderAll(); syncTick(); toast('Einsatz '+code+' beigetreten');
+}
+function leaveSync(){ S.sync=null; syncState.ok=null; syncState.dirty.clear(); syncState.einsatzDirty=false; saveRaw(); renderAll(); toast('Abgleich getrennt'); }
+function joinPayload(){ return 'ASUEJ1:'+JSON.stringify({u:S.config.syncUrl, c:S.sync.code}); }
+function openJoinQR(){
+  let canvas; try{ canvas=QRGEN.toCanvas(joinPayload(), 460); }catch(e){ return; }
+  openDlg('<div class="dlg-head"><h2>Beitreten: Einsatz '+esc(S.sync.code)+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div>'+
+    '<div class="dlg-body"><div class="qrwrap" id="qrWrap"></div><div class="hint" style="text-align:center">Am anderen Gerät: <b>„QR übernehmen“</b> und diesen Code scannen – oder unter Einsatzdaten den Code <b class="mono">'+esc(S.sync.code)+'</b> eingeben. Der Wehr-Schlüssel muss dort einmal eingetragen sein.</div></div>','qrdlg');
+  $('#qrWrap').appendChild(canvas);
+}
+function renderSyncBadge(){
+  const b=$('#syncBadge'); if(!b) return;
+  if(!S.sync){ b.hidden=true; return; }
+  b.hidden=false; b.className='syncbadge '+(syncState.ok===false?'bad':syncState.ok?'ok':'');
+  b.textContent='⇄ '+S.sync.code; b.title = syncState.ok===false ? 'Abgleich gestört: '+syncState.msg : 'Abgleich aktiv';
+}
+function renderSyncInfo(){
+  const el=$('#syncInfo'); if(!el) return;
+  el.className='hint'+(syncState.ok===false?' err':'');
+  el.textContent = !canSend() ? 'Der Abgleich funktioniert nur in der installierten App (nicht in dieser Vorschau).' :
+    !S.sync ? 'Nicht verbunden.' :
+    syncState.ok===false ? 'Gestört: '+syncState.msg+' – neuer Versuch alle 2 Sekunden. Das Gerät arbeitet normal weiter.' :
+    syncState.ok ? 'Abgeglichen um '+hms(syncState.at)+(syncState.dirty.size?' · '+syncState.dirty.size+' Änderung(en) ausstehend':'') : 'Verbinde …';
+}
+function syncPanelHTML(){
+  const c=S.config;
+  const conn = S.sync ? (
+      '<div class="synccode"><span class="hint">Gemeinsamer Einsatz</span><b class="mono">'+esc(S.sync.code)+'</b></div>'+
+      '<div class="row"><button type="button" class="btn primary" data-act="joinqr">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' Beitritts-QR zeigen</button><button type="button" class="btn" data-act="syncnow">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="syncleave">Trennen</button></div>'
+    ) : (
+      '<div class="row"><button type="button" class="btn primary" data-act="syncshare">Diesen Einsatz freigeben</button><span class="hint">erzeugt einen Einsatz-Code für die anderen Geräte</span></div>'+
+      '<div class="row"><input class="inp mono" id="joinCode" placeholder="Einsatz-Code" maxlength="8" style="max-width:180px;text-transform:uppercase" data-nosave="1"><button type="button" class="btn" data-act="syncjoin">Beitreten</button><button type="button" class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' Beitritts-QR scannen</button></div>'
+    );
+  return '<h2 class="section-title">Mehrere Geräte (Server-Abgleich)</h2><div class="panel" style="display:grid;gap:12px">'+
+    '<p class="hint" style="margin:0">Alle verbundenen Geräte sehen denselben Einsatz, z. B. Überwachung am Tablet und Trupp-Eingabe am Handy. Dafür wird ein Server gebraucht (Raspberry Pi der Fahrzeugverwaltung). Ohne Server funktioniert die <b>QR-Übergabe</b> weiterhin.</p>'+
+    '<div class="fgrid"><label class="f">Server-Adresse<input class="inp mono" id="c-syncUrl" data-sync="syncUrl" inputmode="url" placeholder="https://…/asue/api" value="'+esc(c.syncUrl||'')+'"></label>'+
+    '<label class="f">Wehr-Schlüssel<input class="inp mono" type="password" id="c-syncKey" data-sync="syncKey" autocomplete="off" value="'+esc(c.syncKey||'')+'"></label></div>'+
+    conn + '<div id="syncInfo" class="hint"></div></div>';
+}
+
+/* ---------- Trupp-Übergabe per QR-Code (Handy → Tablet) ---------- */
+function truppPayload(t){
+  const o={v:1, id:t.id, r:t.rufgruppe||'', a:t.auftrag||'', m:t.mitglieder.map(m=>[m.name||'', m.geraetNr||'', m.laNr||'', m.flascheNr||'', m.maskeNr||'', m.druck??null])};
+  if(t.st) o.s=1; if(t.bemerkung) o.b=t.bemerkung;
+  if(t.ev.beginn) o.e=[t.ev.beginn.t, t.ev.beginn.p];
+  // nur ASCII, damit Umlaute bei jedem Scanner richtig ankommen
+  return 'ASUE1:'+JSON.stringify(o).replace(/[\u007f-￿]/g, c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
+}
+function parsePayload(txt){
+  txt=String(txt||'').trim(); if(!/^ASUE1:/.test(txt)) return null;
+  try{ const o=JSON.parse(txt.slice(6)); if(!o || !Array.isArray(o.m)) return null; return o; }catch(e){ return null; }
+}
+function importTrupp(o){
+  const ex=S.trupps.find(t=>t.id===o.id);
+  const mem=o.m.slice(0,3).map((a,i)=>({id:(ex&&ex.mitglieder[i]&&ex.mitglieder[i].id)||uid(), name:a[0]||'', funktion:FUNKTIONEN[i]||'Truppmann', geraetNr:a[1]||'', laNr:a[2]||'', flascheNr:a[3]||'', maskeNr:a[4]||'', druck:a[5]??null}));
+  if(ex){
+    Object.assign(ex,{rufgruppe:o.r||ex.rufgruppe, auftrag:o.a||ex.auftrag, st:!!o.s, bemerkung:o.b||ex.bemerkung, mitglieder:mem});
+    if(o.e && !ex.ev.beginn) ex.ev.beginn={t:o.e[0], p:o.e[1]};
+    return {t:ex, neu:false};
+  }
+  const t={id:o.id||uid(), rufgruppe:o.r||'', auftrag:o.a||'', bemerkung:o.b||'', st:!!o.s, mitglieder:mem, ev:o.e?{beginn:{t:o.e[0], p:o.e[1]}}:{}, notfall:null};
+  S.trupps.push(t); return {t, neu:true};
+}
+function openQRSend(tid){
+  const t=S.trupps.find(x=>x.id===tid); if(!t) return;
+  let canvas;
+  try{ canvas=QRGEN.toCanvas(truppPayload(t), 520); }catch(e){ toast('QR-Code konnte nicht erzeugt werden'); return; }
+  const draw=(confirmDel)=>{
+    openDlg('<div class="dlg-head"><h2>QR-Übergabe · '+esc(tName(t))+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div>'+
+      '<div class="dlg-body">'+
+        '<div class="qrwrap" id="qrWrap"></div>'+
+        '<div class="hint" style="text-align:center">Am Überwachungs-Tablet: <b>Überwachung → „QR übernehmen“</b> und diesen Code scannen.</div>'+
+        '<div class="prompt-list">'+t.mitglieder.map(m=>'<div><span>'+esc(m.funktion)+': '+esc(m.name||'–')+'</span><span class="mono">'+esc(m.geraetNr||'')+(m.druck!=null?' · '+m.druck+' bar':'')+'</span></div>').join('')+'</div>'+
+        (confirmDel?'<div class="samebox"><b>Trupp von diesem Gerät entfernen?</b> Nur tun, wenn das Tablet den Trupp übernommen hat.<div class="row"><button type="button" class="btn" data-qs="no">Nein</button><button type="button" class="btn primary" data-qs="yes">Ja, entfernen</button></div></div>':'')+
+      '</div><div class="dlg-foot"><button type="button" class="btn" data-qs="del">Vom Gerät entfernen</button><span class="spacer"></span><button type="button" class="btn primary" data-qs="done">Fertig</button></div>','qrdlg');
+    $('#qrWrap').appendChild(canvas);
+  };
+  dlg.onclick=e=>{
+    const b=e.target.closest('[data-qs]'); if(!b) return;
+    const a=b.dataset.qs;
+    if(a==='done'){ t.qrAt=nowT(); save(); dlg.onclick=null; closeDlg(); renderAll(); }
+    if(a==='del') draw(true);
+    if(a==='no') draw(false);
+    if(a==='yes'){ S.trupps=S.trupps.filter(x=>x.id!==t.id); save(); dlg.onclick=null; closeDlg(); renderAll(); toast('Trupp vom Gerät entfernt'); }
+  };
+  draw(false);
+}
+let qrStream=null, qrTimer=null;
+function stopQRCam(){ if(qrTimer){ clearTimeout(qrTimer); qrTimer=null; } if(qrStream){ qrStream.getTracks().forEach(tr=>tr.stop()); qrStream=null; } }
+function openQRReceive(){
+  let found=null, msg='';
+  const canLive = (()=>{ try{ return window.self===window.top && navigator.mediaDevices && navigator.mediaDevices.getUserMedia; }catch(e){ return false; } })();
+  const draw=()=>{
+    const ex = found && S.trupps.find(t=>t.id===found.id);
+    openDlg('<div class="dlg-head"><h2>Trupp per QR übernehmen</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div>'+
+      '<div class="dlg-body">'+
+        (found ? (
+          '<div class="calcbox"><b>'+esc(found.r||'Trupp')+'</b>'+(found.a?' · '+esc(found.a):'')+(found.s?' · <span class="stb">ST</span>':'')+'</div>'+
+          '<div class="prompt-list">'+found.m.map((a,i)=>'<div><span>'+esc(FUNKTIONEN[i]||'Truppmann')+': '+esc(a[0]||'–')+'</span><span class="mono">'+esc(a[1]||'')+(a[5]!=null?' · '+a[5]+' bar':'')+'</span></div>').join('')+'</div>'+
+          (found.e?'<div class="hint">Beginn bereits erfasst: '+hm(found.e[0])+'</div>':'')+
+          (ex?'<div class="samebox">Dieser Trupp ist schon vorhanden. Beim Übernehmen werden Namen und Geräte aktualisiert, erfasste Zeiten bleiben erhalten.</div>':'')
+        ) : (
+          (canLive?'<video id="qrVideo" class="qrvideo" playsinline muted></video><div class="hint" id="qrHint">Kamera auf den QR-Code am Handy richten …</div>':'')+
+          '<div class="row"><button type="button" class="btn'+(canLive?'':' primary')+'" data-qr="photo">'+CAM_SVG.replace('<svg','<svg width="18" height="18"')+' Foto vom QR-Code aufnehmen</button></div>'+
+          (msg?'<div class="err">'+esc(msg)+'</div>':'')
+        ))+
+      '</div><div class="dlg-foot">'+(found?'<button type="button" class="btn" data-qr="again">Neu scannen</button><span class="spacer"></span><button type="button" class="btn primary" data-qr="take">'+(ex?'Aktualisieren':'Trupp übernehmen')+'</button>':'')+'</div>');
+    if(!found && canLive) startLive();
+  };
+  const hit = txt => { if(/^ASUEJ1:/.test(String(txt||''))){ try{ const j=JSON.parse(String(txt).slice(7)); stopQRCam(); dlg.onclick=null; closeDlg(); joinEinsatz(j.c, j.u); return true; }catch(e){} }
+    const o=parsePayload(txt); if(o){ found=o; stopQRCam(); try{ if(navigator.vibrate) navigator.vibrate(120); }catch(e){} draw(); return true; } return false; };
+  const startLive = async () => {
+    const video=$('#qrVideo'); if(!video) return;
+    try{
+      qrStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment', width:{ideal:1280}}, audio:false});
+      video.srcObject=qrStream; await video.play();
+    }catch(e){ video.hidden=true; const h=$('#qrHint'); if(h) h.textContent='Live-Kamera nicht verfügbar – bitte „Foto vom QR-Code aufnehmen“ nutzen.'; const pb=dlg.querySelector('[data-qr="photo"]'); if(pb) pb.classList.add('primary'); return; }
+    const c=document.createElement('canvas');
+    const loop = async () => {
+      if(!qrStream || !dlg.open) return;
+      if(video.videoWidth){
+        const sc=Math.min(1, 900/Math.max(video.videoWidth, video.videoHeight));
+        c.width=Math.round(video.videoWidth*sc); c.height=Math.round(video.videoHeight*sc);
+        c.getContext('2d').drawImage(video,0,0,c.width,c.height);
+        const codes = await detectCodes(c);
+        for(const cd of codes){ if(hit(cd.text)) return; }
+        if(codes.length){ const h=$('#qrHint'); if(h) h.textContent='Code erkannt, aber kein Trupp-Code der ASÜ-App.'; }
+      }
+      qrTimer=setTimeout(loop, 300);
+    };
+    loop();
+  };
+  dlg.onclick=async e=>{
+    const b=e.target.closest('[data-qr]'); if(!b) return;
+    const a=b.dataset.qr;
+    if(a==='again'){ found=null; msg=''; draw(); }
+    if(a==='take'){ const r=importTrupp(found); S.sample=false; save(); dlg.onclick=null; closeDlg(); renderAll(); toast((r.neu?'Trupp übernommen: ':'Trupp aktualisiert: ')+tName(r.t)); }
+    if(a==='photo'){
+      stopQRCam();
+      const fi=$('#fileCam'); fi.value='';
+      fi.onchange=async()=>{
+        const file=fi.files&&fi.files[0]; if(!file) return;
+        try{ const pr=await prepImage(file); const codes=await detectCodes(pr.orig); if(!codes.some(cd=>hit(cd.text))){ msg=codes.length?'Der Code gehört nicht zur ASÜ-App.':'Kein QR-Code erkannt. Näher heran und Spiegelungen auf dem Handy-Display vermeiden.'; draw(); } }
+        catch(err){ msg='Foto konnte nicht gelesen werden.'; draw(); }
+      };
+      fi.click();
+    }
+  };
+  draw();
+}
+dlg.addEventListener('close', stopQRCam);
+window.ASUE_qrText = id => { const t=S.trupps.find(x=>x.id===id)||S.trupps[0]; return truppPayload(t); };
+window.ASUE_import = txt => { const o=parsePayload(txt); if(o){ importTrupp(o); save(); renderAll(); } return !!o; };
+
 /* ---------- Audio / Vibration / Wachhalten ---------- */
 let actx=null, wake=null;
 let speechReady=false;
@@ -1541,8 +1990,8 @@ function announce(now){
   const cur=new Map();
   S.trupps.forEach(t=>{
     const r=calc(t,now);
-    r.alarms.forEach(a=>{ if(!/^(ATEMSCHUTZNOTFALL|Rückzugszeit erreicht|Rückzug sofort)/.test(a)) cur.set(t.id+'|'+a, t.rufgruppe+'. '+a.replace(/ – .*$/,'').replace(/!/g,'')); });
-    r.warns.forEach(w=>{ if(!/^Druckabfrage/.test(w)) cur.set(t.id+'|'+w.replace(/\d+ bar\/min/g,''), t.rufgruppe+'. '+w.replace(/ \d+ bar\/min/g,'')); });
+    r.alarms.forEach(a=>{ if(!/^(ATEMSCHUTZNOTFALL|Rückzugszeit erreicht|Rückzug sofort)/.test(a)) cur.set(t.id+'|'+a, tSpeak(t)+'. '+a.replace(/ – .*$/,'').replace(/!/g,'')); });
+    r.warns.forEach(w=>{ if(!/^Druckabfrage/.test(w)) cur.set(t.id+'|'+w.replace(/\d+ bar\/min/g,''), tSpeak(t)+'. '+w.replace(/ \d+ bar\/min/g,'')); });
   });
   const st=stCheck(); if(st) cur.set('st|'+st, st.replace(/ – .*$/,'').replace(/!/g,''));
   cur.forEach((txt,key)=>{ if(!spoken.has(key)){ spoken.add(key); if(announceReady) speak(txt); } });
@@ -1572,9 +2021,12 @@ document.addEventListener('click', e=>{
   const tab=e.target.closest('.tab'); if(tab){ if(tab.dataset.view==='ueb') detailId=null; setView(tab.dataset.view); return; }
   const ov=e.target.closest('[data-ov]'); if(ov){ ovMode=ov.dataset.ov; try{ sessionStorage.setItem('asue.ov',ovMode); }catch(x){} renderUeb(); return; }
   if(e.target.closest('[data-close]')){ closeDlg(); return; }
-  if(e.target.id==='btnClearSample'){ S=blankState(S.config); save(); renderAll(); toast('Leerer Einsatz angelegt'); return; }
+  if(e.target.id==='btnClearSample'){ S=blankState(S.config); shadow=null; saveRaw(); renderAll(); toast('Leerer Einsatz angelegt'); return; }
   const art=e.target.closest('[data-art]'); if(art){ S.einsatz.art=art.dataset.art; save(); renderAll(); return; }
   const cfg=e.target.closest('[data-cfg]'); if(cfg){ S.config[cfg.dataset.cfg]=cfg.dataset.v==='1'; save(); if(cfg.dataset.cfg==='sprache' && S.config.sprache){ speechReady=false; unlockAudio(); speak('Sprachansage eingeschaltet'); } renderAll(); return; }
+  const amb=e.target.closest('[data-am]'); if(amb){ S.config.abfrageModus=amb.dataset.am; save(); renderAll(); toast(S.config.abfrageModus==='drittel'?'Abfragen nach ⅓ und ⅔ der Zeit bis zum Rückzug':'Abfragen zu festen Minuten'); return; }
+  const dmb=e.target.closest('[data-dm]'); if(dmb){ S.config.druckModus=dmb.dataset.dm; save(); renderAll(); toast(S.config.druckModus==='einzeln'?'Druck: jede Person einzeln':'Druck: nur niedrigster im Trupp'); return; }
+  const fnb=e.target.closest('[data-fn]'); if(fnb){ S.config.funkName=fnb.dataset.fn; save(); renderAll(); toast(S.config.funkName==='tf'?'Funkrufname = Nachname Truppführer':'Funkrufname = Rufgruppe'); return; }
   const pre=e.target.closest('[data-preset]'); if(pre){ S.config.abfragen=pre.dataset.preset.split(',').map(Number); save(); renderAll(); toast('Abfragen: '+S.config.abfragen.join(' / ')+' min'); return; }
   const spd=e.target.closest('[data-speed]'); if(spd){ const f=+spd.dataset.speed; setSpeed(f); if(f>1 && S.einsatz.art!=='Übung'){ S.einsatz.art='Übung'; save(); toast('Art auf „Übung“ gesetzt'); } renderAll(); return; }
   const b=e.target.closest('[data-act]'); if(!b || dlg.contains(b) && ['scan-dlg','add-mem','rm-mem','del-trupp','del-no','del-yes'].includes(b.dataset.act)) return;
@@ -1586,12 +2038,19 @@ document.addEventListener('click', e=>{
   else if(a==='trupp') openTrupp(tid);
   else if(a==='notfall' || a==='mayday'){
     const t=S.trupps.find(x=>x.id===tid);
-    if(!t.notfall){ t.notfall=nowT(); t.mayday={start:t.notfall, items:{}, standort:''}; save(); renderAll(); beep(true); speak('Atemschutznotfall! '+t.rufgruppe); }
+    if(!t.notfall){ t.notfall=nowT(); t.mayday={start:t.notfall, items:{}, standort:''}; save(); renderAll(); beep(true); speak('Atemschutznotfall! '+tSpeak(t)); }
     openMayday(tid);
   }
   else if(a==='scan'){ const t=S.trupps.find(x=>x.id===tid); const m=t.mitglieder.find(x=>x.id===b.dataset.m); openScan(m, null); }
   else if(a==='pdf') doPdf(b.dataset.how);
   else if(a==='ende') openEnde();
+  else if(a==='qrsend') openQRSend(tid);
+  else if(a==='syncshare') shareEinsatz();
+  else if(a==='syncjoin') joinEinsatz(($('#joinCode')||{}).value);
+  else if(a==='syncleave') leaveSync();
+  else if(a==='syncnow') syncTick();
+  else if(a==='joinqr') openJoinQR();
+  else if(a==='qrrecv') openQRReceive();
   else if(a==='detail'){ detailId=tid; renderUeb(); window.scrollTo({top:0}); }
   else if(a==='back'){ detailId=null; renderUeb(); }
   else if(a==='speaktest'){ const was=S.config.sprache; S.config.sprache=true; speechReady=false; unlockAudio(); speak('Angriffstrupp. Druckabfrage 10 Minuten'); S.config.sprache=was; }
@@ -1603,6 +2062,8 @@ document.addEventListener('input', e=>{
   if(dlg.contains(el)) return;
   if(el.dataset.e){ S.einsatz[el.dataset.e]=el.value; S.sample=false; save(); renderMeta(); }
   else if(el.dataset.url){ S.config.uebergabeUrl=el.value.trim(); sendState.sig=''; sendState.ok=null; save(); const b=$('[data-act="sendnow"]'); if(b) b.disabled=!(S.config.uebergabeUrl&&canSend()); renderSendInfo(); }
+  else if(el.dataset.sync){ S.config[el.dataset.sync]=el.value.trim(); saveRaw(); renderSyncInfo(); }
+  else if(el.dataset.nosave){}
   else if(el.dataset.abfr){ const arr=[...new Set(el.value.split(/[^0-9]+/).map(Number).filter(n=>n>0&&n<=180))].sort((a,b)=>a-b).slice(0,8); if(arr.length){ S.config.abfragen=arr; save(); } }
   else if(el.dataset.c==='verbrauchWarn'){ const v=parseFloat(el.value.replace(',','.')); if(!isNaN(v)&&v>=0){ S.config.verbrauchWarn=v; save(); } }
   else if(el.dataset.c){ const v=parseFloat(el.value.replace(',','.')); if(!isNaN(v)&&v>0){ S.config[el.dataset.c]= el.dataset.c==='maxBar'?Math.min(400,Math.round(v)):v; save(); } }
@@ -1610,6 +2071,17 @@ document.addEventListener('input', e=>{
 });
 document.addEventListener('change', e=>{ if((e.target.dataset.c || e.target.dataset.abfr) && view==='ein') renderEin(); });
 dlg.addEventListener('close', ()=>{ dlg.onclick=null; });
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Enter' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+  const el=e.target; if(!el || !el.matches || !el.matches('input:not([type=checkbox]):not([type=radio]), select')) return;
+  const scope = el.closest('form') || el.closest('.panel') || el.closest('table');
+  if(!scope) return;
+  const list=[...scope.querySelectorAll('input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])')].filter(x=>x.tabIndex>=0 && x.offsetParent!==null);
+  const i=list.indexOf(el);
+  e.preventDefault();
+  if(i>=0 && i<list.length-1){ list[i+1].focus(); if(list[i+1].select && list[i+1].tagName==='INPUT') list[i+1].select(); }
+  else if(el.form){ el.form.requestSubmit ? el.form.requestSubmit() : el.form.dispatchEvent(new Event('submit',{cancelable:true})); }
+});
 
 /* ---------- Takt ---------- */
 /* ---------- Meldung bei fälliger Abfrage ---------- */
@@ -1619,7 +2091,7 @@ function duePrompts(now){
   const list=[];
   S.trupps.forEach(t=>{
     const ev=t.ev; if(!ev.beginn || ev.rueckzug || ev.ende) return;
-    queries(t).forEach(q=>{ const due=ev.beginn.t+q.min*60000; if(!ev[q.k] && now>=due) list.push({key:t.id+':'+q.k, t, k:q.k, due, kind:'abfrage', l:q.l}); });
+    queries(t).forEach(q=>{ const due=q.due; if(due!=null && !ev[q.k] && now>=due) list.push({key:t.id+':'+q.k, t, k:q.k, due, kind:'abfrage', l:q.l, spk:q.spk}); });
     const r=calc(t,now);
     if(r.soll && (r.soll.sofort || now>=r.soll.t)) list.push({key:t.id+':rz', t, k:'rueckzug', due:r.soll.t, kind:'rueckzug', l:r.soll.sofort?'Rückzug sofort':'Rückzugszeit erreicht'});
   });
@@ -1629,12 +2101,12 @@ function showPrompt(p, now){
   promptKey = p.key;
   const t=p.t, isRz = p.kind==='rueckzug';
   const last = lastReading(t);
-  const mem = t.mitglieder.map((m,i)=>'<div><span>'+esc(m.name||m.funktion)+'</span><span class="mono">'+(last&&last.p[i]!=null?'zuletzt '+last.p[i]+' bar':'–')+'</span></div>').join('');
+  const mem = '<div><span>Niedrigster Druck im Trupp</span><span class="mono">'+(last?'zuletzt '+lowOf(last)+' bar ('+hm(last.t)+')':'–')+'</span></div>';
   openDlg('<div class="dlg-head"><h2>'+(isRz?'⚠ '+esc(p.l):'Druckabfrage fällig')+'</h2></div>'+
     '<div class="dlg-body">'+
-      '<div><div style="font-family:var(--f-disp);font-size:26px;font-weight:700">'+esc(t.rufgruppe)+'</div><div class="hint">'+esc(t.auftrag||'')+'</div></div>'+
+      '<div><div style="font-family:var(--f-disp);font-size:26px;font-weight:700">'+esc(tName(t))+'</div><div class="hint">'+esc(t.auftrag||'')+'</div></div>'+
       '<div class="row" style="align-items:baseline"><span class="prompt-big" id="promptOver">'+dur(now-p.due)+'</span><span class="hint">'+(isRz?'seit Rückzugszeit '+hm(p.due):p.l+' seit '+hm(p.due)+' fällig')+'</span></div>'+
-      '<div class="calcbox">'+(isRz?'Trupp über Funk zum Rückzug auffordern und Druck abfragen.':'Trupp über Funk rufen und Flaschendruck aller Truppmitglieder abfragen.')+'</div>'+
+      '<div class="calcbox">'+(isRz?'Trupp über Funk zum Rückzug auffordern und Druck abfragen.':'Trupp über Funk rufen und den niedrigsten Flaschendruck im Trupp abfragen.')+'</div>'+
       '<div class="prompt-list">'+mem+'</div>'+
     '</div><div class="dlg-foot"><button class="btn" data-pr="later">In 1 min erinnern</button><span class="spacer"></span>'+
       '<button class="btn primary" data-pr="go" style="min-width:200px">'+(isRz?'Rückzug erfassen':'Druck jetzt erfassen')+'</button></div>', 'prompt'+(isRz?' alarm':''));
@@ -1644,7 +2116,7 @@ function showPrompt(p, now){
     if(b.dataset.pr==='go') openStep(t.id, p.k, false); else closeDlg();
   };
   beep(isRz);
-  speak(t.rufgruppe+'. '+(isRz ? p.l : 'Druckabfrage '+p.k.slice(1)+' Minuten'));
+  speak(tSpeak(t)+'. '+(isRz ? p.l : 'Druckabfrage '+(p.spk||'')));
 }
 dlg.addEventListener('cancel', ()=>{ if(promptKey){ snooze[promptKey]=nowT()+60000; promptKey=null; } });
 
@@ -1662,6 +2134,8 @@ function tick(){
     const p = duePrompts(now)[0]; if(p) showPrompt(p, now);
   }
   sendTick(now);
+  if(syncOn() && Date.now()-(syncState.at||0) > 2000) syncTick();
+  renderSyncBadge();
   if(view!=='ueb') return;
   const sig = sigNow(now);
   if(sig!==alarmSig){
