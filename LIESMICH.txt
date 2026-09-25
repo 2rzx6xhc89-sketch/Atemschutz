@@ -20,3 +20,16 @@ Daten
   Format und Anforderungen an den Empfänger: siehe DATENMODELL.md
 
 Lokaler Test am PC:  python3 -m http.server 8080  im Ordner starten, dann http://localhost:8080 öffnen.
+
+Anmeldung und Wappen
+- Jede Feuerwehr meldet sich mit ihrem Zugang an (Liste: ASUE_Zugaenge.csv – nicht auf GitHub hochladen!).
+  Die Einsatzdaten werden je Zugang getrennt auf dem Gerät gespeichert.
+- Wappen: Ordner "wappen" im Repository. Dateinamen:
+    Gemeinde:  flecken-aerzen.png (liegt bei), stadt-blomberg.png
+    Orte:      aerzen.png, dehmke.png, dehmkerbrock.png, egge.png, gellersen.png, griessem.png,
+               gross-berkel.png, grupenhagen.png, herkendorf.png, koenigsfoerde-selxen.png,
+               multhoepen.png, reher.png, reinerbeck.png, eschenbruch.png
+  PNG mit transparentem Hintergrund, ca. 200–400 px hoch. Fehlt ein Ortswappen, nimmt die App das Gemeindewappen.
+  Ortswappen erscheint oben links in App und PDF, Gemeindewappen oben rechts im PDF.
+- Passwort ändern: als admin anmelden → Einstellungen → „Passwort ändern / Zugang anlegen“,
+  Eintrag in benutzer.js ersetzen und benutzer.js neu hochladen.
