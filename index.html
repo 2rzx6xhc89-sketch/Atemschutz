@@ -325,6 +325,7 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px}
 
 .tab .sm{display:none}
+@media (max-width:640px){ .brand small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} }
 .clock{margin-left:auto}
 .top[data-view="ueb"] .meta,.top[data-view="ueb"] #artLabel{display:none}
 @media (max-width:640px){
@@ -539,7 +540,7 @@ const CAM_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 
 /* ---------- Zustand ---------- */
 const uid = () => Math.random().toString(36).slice(2,10);
-const defaultConfig = () => ({maxBar:330, verbrauch:8.3, minRueckzug:50, uebergabeUrl:'', abfragen:[10,20], sprache:false, stPruefung:true, verbrauchWarn:12, funkName:'frei', druckModus:'niedrigster', syncUrl:'', syncKey:'', abfrageModus:'drittel', drittelMax:10});
+const defaultConfig = () => ({maxBar:330, verbrauch:8.3, minRueckzug:50, uebergabeUrl:'', abfragen:[10,20], sprache:false, stPruefung:true, verbrauchWarn:12, funkName:'frei', druckModus:'niedrigster', syncUrl:'', syncKey:'', autoSync:true, abfrageModus:'drittel', drittelMax:10});
 function blankState(keepConfig){
   return {
     version:1, sample:false,
@@ -573,10 +574,54 @@ function isAdmin(){ return !!(CUR && CUR.rolle==='admin'); }
 function stateKey(){ return KEY+'.'+(CUR?CUR.user:'_'); }
 function gemeindeOf(b){ return (b && BEN.gemeinden[b.gemeinde]) || {name:'', wappen:''}; }
 async function pbkdf2(pw, saltHex, iter){
+  if(!(window.crypto && crypto.subtle)){ await new Promise(r=>setTimeout(r,30)); return pbkdf2js(pw, saltHex, iter); }
   const enc=new TextEncoder(); const salt=new Uint8Array(saltHex.match(/../g).map(h=>parseInt(h,16)));
   const k=await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
   const bits=await crypto.subtle.deriveBits({name:'PBKDF2', hash:'SHA-256', salt, iterations:iter}, k, 256);
   return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+// PBKDF2-HMAC-SHA256 ohne WebCrypto (für Aufruf über http:// im Gerätehaus-WLAN, dort fehlt crypto.subtle)
+function pbkdf2js(pw, saltHex, iter){
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const IV=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const W=new Int32Array(64);
+  function comp(st){ // W[0..15] muss gefüllt sein; st wird verändert
+    for(let i=16;i<64;i++){ const x=W[i-15], y=W[i-2];
+      W[i]=(((x>>>7|x<<25)^(x>>>18|x<<14)^(x>>>3)) + W[i-7] + ((y>>>17|y<<15)^(y>>>19|y<<13)^(y>>>10)) + W[i-16])|0; }
+    let a=st[0],b=st[1],c=st[2],d=st[3],e=st[4],f=st[5],g=st[6],h=st[7];
+    for(let i=0;i<64;i++){
+      const t1=(h + ((e>>>6|e<<26)^(e>>>11|e<<21)^(e>>>25|e<<7)) + ((e&f)^(~e&g)) + K[i] + W[i])|0;
+      const t2=(((a>>>2|a<<30)^(a>>>13|a<<19)^(a>>>22|a<<10)) + ((a&b)^(a&c)^(b&c)))|0;
+      h=g; g=f; f=e; e=(d+t1)|0; d=c; c=b; b=a; a=(t1+t2)|0;
+    }
+    st[0]=(st[0]+a)|0; st[1]=(st[1]+b)|0; st[2]=(st[2]+c)|0; st[3]=(st[3]+d)|0; st[4]=(st[4]+e)|0; st[5]=(st[5]+f)|0; st[6]=(st[6]+g)|0; st[7]=(st[7]+h)|0;
+  }
+  function hash(st, bytes, prefix){ // bytes mit Padding verarbeiten; prefix = bereits verarbeitete Bytes
+    const n=bytes.length, total=Math.ceil((n+9)/64)*64, buf=new Uint8Array(total);
+    buf.set(bytes); buf[n]=0x80; const bits=(n+prefix)*8;
+    buf[total-4]=bits>>>24&255; buf[total-3]=bits>>>16&255; buf[total-2]=bits>>>8&255; buf[total-1]=bits&255;
+    for(let o=0;o<total;o+=64){ for(let i=0;i<16;i++) W[i]=buf[o+i*4]<<24|buf[o+i*4+1]<<16|buf[o+i*4+2]<<8|buf[o+i*4+3]; comp(st); }
+    return st;
+  }
+  const toBytes=st=>{ const b=new Uint8Array(32); for(let i=0;i<8;i++){ b[i*4]=st[i]>>>24; b[i*4+1]=st[i]>>>16&255; b[i*4+2]=st[i]>>>8&255; b[i*4+3]=st[i]&255; } return b; };
+  let key=new TextEncoder().encode(pw);
+  if(key.length>64) key=toBytes(hash(IV.slice(), key, 0));
+  const ipad=new Uint8Array(64).fill(0x36), opad=new Uint8Array(64).fill(0x5c);
+  key.forEach((v,i)=>{ ipad[i]^=v; opad[i]^=v; });
+  const inner=IV.slice(), outer=IV.slice();
+  for(let i=0;i<16;i++) W[i]=ipad[i*4]<<24|ipad[i*4+1]<<16|ipad[i*4+2]<<8|ipad[i*4+3]; comp(inner);
+  for(let i=0;i<16;i++) W[i]=opad[i*4]<<24|opad[i*4+1]<<16|opad[i*4+2]<<8|opad[i*4+3]; comp(outer);
+  const salt=new Uint8Array(saltHex.match(/../g).map(h=>parseInt(h,16)));
+  const msg=new Uint8Array(salt.length+4); msg.set(salt); msg[salt.length+3]=1;
+  let u=hash(inner.slice(), msg, 64);
+  u=hash(outer.slice(), toBytes(u), 64);
+  const acc=u.slice(), s=new Int32Array(8);
+  for(let it=1; it<iter; it++){
+    s.set(inner); for(let i=0;i<8;i++) W[i]=u[i]; W[8]=0x80000000|0; for(let i=9;i<15;i++) W[i]=0; W[15]=768; comp(s);
+    const t=new Int32Array(outer); for(let i=0;i<8;i++) W[i]=s[i]; W[8]=0x80000000|0; for(let i=9;i<15;i++) W[i]=0; W[15]=768; comp(t);
+    u=t; for(let i=0;i<8;i++) acc[i]^=u[i];
+  }
+  return [...toBytes(acc)].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 // Wappen laden (Ortswappen → Gemeindewappen → eingebautes Aerzen-Wappen bzw. neutraler Schild)
 const NEUTRAL_SVG = 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 39"><path d="M2 2h26v18c0 9-6 14-13 17C8 34 2 29 2 20z" fill="#e9ecea" stroke="#8a9296" stroke-width="1.5"/><path d="M15 10c3 4 5 6 5 10a5 5 0 0 1-10 0c0-2 1-4 2-5 0 2 1 3 2 3 0-3 0-5 1-8z" fill="#B3121F"/></svg>');
@@ -599,7 +644,7 @@ function showLogin(msg){
   o.innerHTML='<form class="login-box" id="loginForm" autocomplete="on">'+
     '<img class="login-wappen" id="loginWappen" src="'+NEUTRAL_SVG+'" alt="">'+
     '<h1>Atemschutzüberwachung</h1><p class="hint" id="loginName">Bitte mit dem Zugang Ihrer Feuerwehr anmelden.</p>'+
-    (noUsers?'<div class="err">Die Benutzerdatei (benutzer.js) fehlt. Bitte die App vollständig auf den Webspace laden.</div>':'')+
+    (noUsers?'<div class="err">Die Benutzerdatei (benutzer.js) fehlt. Bitte die App vollständig auf den Server kopieren (Ordner asue).</div>':'')+
     '<label class="f">Benutzer<input class="inp" id="lgUser" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>'+
     '<label class="f">Passwort<input class="inp" id="lgPass" type="password" autocomplete="current-password" required></label>'+
     '<div class="err" id="lgErr" role="alert">'+esc(msg||'')+'</div>'+
@@ -616,7 +661,7 @@ function showLogin(msg){
     const btn=e.target.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent='Prüfe …';
     let ok=false;
     try{ if(b) ok = (await pbkdf2($('#lgPass').value, b.salt, BEN.iterationen||150000)) === b.hash; }
-    catch(x){ err.textContent='Anmeldung auf diesem Gerät nicht möglich (nur über https).'; btn.disabled=false; btn.textContent='Anmelden'; return; }
+    catch(x){ err.textContent='Anmeldung auf diesem Gerät nicht möglich.'; btn.disabled=false; btn.textContent='Anmelden'; return; }
     await new Promise(r=>setTimeout(r, ok?0:700));   // Rateversuche etwas bremsen
     if(!ok){ err.textContent='Benutzer oder Passwort falsch.'; btn.disabled=false; btn.textContent='Anmelden'; $('#lgPass').select(); return; }
     loginAs(b);
@@ -651,7 +696,7 @@ function userPanelHTML(){
       '<details class="adm"><summary><b>Alle Zugänge</b> ('+BEN.benutzer.length+')</summary><div class="table-wrap" style="margin-top:8px"><table><thead><tr><th>Benutzer</th><th>Name</th><th>Gemeinde</th><th>Wappen-Datei</th><th>Rolle</th></tr></thead><tbody>'+
       BEN.benutzer.map(x=>'<tr><td class="mono">'+esc(x.user)+'</td><td>'+esc(x.name)+'</td><td>'+esc(gemeindeOf(x).name)+'</td><td class="mono" data-wcheck="'+esc(x.wappen)+'">'+esc(x.wappen)+'</td><td>'+esc(x.rolle)+'</td></tr>').join('')+'</tbody></table></div></details>'+
       '<details class="adm"><summary><b>Passwort ändern / Zugang anlegen</b></summary><div style="display:grid;gap:10px;margin-top:8px">'+
-      '<p class="hint" style="margin:0">Erzeugt einen Eintrag für die Datei <span class="mono">benutzer.js</span>. Den bestehenden Eintrag des Benutzers dort ersetzen (oder neu einfügen) und die Datei auf GitHub hochladen.</p>'+
+      '<p class="hint" style="margin:0">Erzeugt einen Eintrag für die Datei <span class="mono">benutzer.js</span>. Den bestehenden Eintrag des Benutzers dort ersetzen (oder neu einfügen) und die Datei auf dem Pi unter <span class="mono">asue/benutzer.js</span> ersetzen.</p>'+
       '<div class="fgrid"><label class="f">Benutzer<input class="inp mono" id="nbUser" autocapitalize="none"></label><label class="f">Name<input class="inp" id="nbName" placeholder="Ortsfeuerwehr …"></label>'+
       '<label class="f">Gemeinde<select class="inp" id="nbGem">'+Object.entries(BEN.gemeinden).map(([k,g])=>'<option value="'+esc(k)+'">'+esc(g.name)+'</option>').join('')+'</select></label>'+
       '<label class="f">Neues Passwort<input class="inp mono" id="nbPass"></label></div>'+
@@ -983,7 +1028,7 @@ function renderEin(){
     '<label class="f">2. Überwacher<input class="inp" id="e-ueberwacher2" data-e="ueberwacher2" value="'+esc(e.ueberwacher2||'')+'"></label>'+
   '</div></div>'+
   syncPanelHTML()+
-  '<h2 class="section-title">Einsatz abschließen</h2><div class="panel"><div class="row"><button class="btn danger" data-act="ende">Einsatzende</button><span class="hint">Speichert das Protokoll als PDF, meldet den Abschluss an die Fahrzeugverwaltung und löscht danach alle Einsatzdaten auf diesem Gerät.</span></div></div>';
+  '<h2 class="section-title">Einsatz abschließen</h2><div class="panel"><div class="row"><button class="btn danger" data-act="ende">Einsatzende</button><span class="hint">Speichert das Protokoll als PDF, meldet den Abschluss an die Einsatzverwaltung und löscht danach alle Einsatzdaten auf diesem Gerät.</span></div></div>';
   renderSyncInfo();
 }
 function renderSet(){
@@ -1020,10 +1065,11 @@ function renderSet(){
     '<label class="f">Mindest-Rückzugsdruck (bar)<input class="inp mono" id="c-minRueckzug" inputmode="numeric" data-c="minRueckzug" value="'+c.minRueckzug+'"></label>'+
   '</div><p class="hint">Rückzugsdruck = doppelter Verbrauch bis zum Einsatzort, mindestens '+c.minRueckzug+' bar. Rückzugszeit = (Druck am Einsatzort − Rückzugsdruck) ÷ '+String(c.verbrauch).replace('.',',')+' bar/min. Maßgeblich ist das Truppmitglied mit der kürzesten Zeit. Mit 8,3 bar/min entspricht das genau der Richtwerttabelle auf dem Papierbogen.</p>'+
   refTable()+'</div>'+
-  '<h2 class="section-title">Übergabe an Fahrzeugverwaltung</h2><div class="panel" style="display:grid;gap:12px">'+
-    '<p class="hint" style="margin:0">Gesendet wird der Truppstatus als Anzahl Trupps und Personen: <b>bereit</b>, <b>im Einsatz</b> und <b>waren im Einsatz</b> (siehe Truppstatus unter Einsatzdaten). Das passiert bei jeder Änderung, alle 5 Minuten als Lebenszeichen und einmal zum Einsatzende.</p>'+
-    '<label class="f">Empfangsadresse der Fahrzeugverwaltung (URL)<input class="inp mono" id="c-uebergabeUrl" data-url="1" inputmode="url" placeholder="https://fahrzeugverwaltung.example/api/atemschutz" value="'+esc(c.uebergabeUrl||'')+'"></label>'+
-    '<div class="row"><button class="btn" data-act="sendnow"'+(c.uebergabeUrl&&canSend()?'':' disabled')+'>Jetzt senden</button><span id="sendInfo" class="hint"></span></div>'+
+  '<h2 class="section-title">Übergabe an Einsatzverwaltung</h2><div class="panel" style="display:grid;gap:12px">'+
+    '<p class="hint" style="margin:0">Gesendet wird der Truppstatus als Anzahl Trupps und Personen: <b>bereit</b>, <b>im Einsatz</b> und <b>waren im Einsatz</b> (siehe Truppstatus unter Einsatzdaten). Das passiert bei jeder Änderung, alle 5 Minuten als Lebenszeichen und einmal zum Einsatzende. Namen, Gerätenummern und Drücke werden <b>nicht</b> übertragen.</p>'+
+    (PI.ok ? '<div class="calcbox">Diese App läuft auf dem Server der Einsatzverwaltung. Der Truppstatus geht automatisch dorthin – hier muss nichts eingetragen werden.</div>' : '')+
+    '<label class="f">Empfangsadresse der Einsatzverwaltung (URL)<input class="inp mono" id="c-uebergabeUrl" data-url="1" inputmode="url" placeholder="'+(PI.ok?'leer = dieser Server':'https://pi:8082/api/status')+'" value="'+esc(c.uebergabeUrl||'')+'"></label>'+
+    '<div class="row"><button class="btn" data-act="sendnow"'+(statusUrl()&&canSend()?'':' disabled')+'>Jetzt senden</button><span id="sendInfo" class="hint"></span></div>'+
   '</div>';
   renderSendInfo(); checkWappenFiles();
 }
@@ -1035,7 +1081,7 @@ function refTable(){
     '<tr><td>Rückzug nach Minuten</td>'+cells.map(x=>'<td class="mono'+(x.x?' sofort':'')+'">'+x.m+'</td>').join('')+'</tr></tbody></table></div>';
 }
 
-/* ---------- Übergabe an Fahrzeugverwaltung: Truppstatus ---------- */
+/* ---------- Übergabe an Einsatzverwaltung: Truppstatus ---------- */
 // bereit = angelegt, noch nicht begonnen · imEinsatz = Beginn bestätigt, Ende noch nicht · warenImEinsatz = Ende bestätigt
 function truppStatus(){
   const z={bereit:{trupps:0,personen:0}, imEinsatz:{trupps:0,personen:0}, warenImEinsatz:{trupps:0,personen:0}};
@@ -1054,36 +1100,55 @@ function statusStripHTML(){
   const z=truppStatus();
   const tile=(l,o,c)=>'<div class="sttile" style="--c:'+c+'"><div class="l">'+l+'</div><div class="n"><b>'+o.trupps+'</b><span>'+(o.trupps===1?'Trupp':'Trupps')+'</span><b>'+o.personen+'</b><span>'+(o.personen===1?'Person':'Personen')+'</span></div></div>';
   let line='';
-  if(S.config.uebergabeUrl){
-    if(!canSend()) line='<div class="sendline">Übertragung an die Fahrzeugverwaltung nur in der installierten Tablet-App.</div>';
-    else if(sendState.ok===false) line='<div class="sendline bad">Übertragung an die Fahrzeugverwaltung fehlgeschlagen'+(sendState.at?' ('+hm(sendState.at)+')':'')+' – neuer Versuch alle 30 s</div>';
-    else if(sendState.ok) line='<div class="sendline">An Fahrzeugverwaltung gesendet '+hm(sendState.at)+'</div>';
+  if(statusUrl()){
+    if(!canSend()) line='<div class="sendline">Übertragung an die Einsatzverwaltung nur in der installierten Tablet-App.</div>';
+    else if(sendState.ok===false) line='<div class="sendline bad">Übertragung an die Einsatzverwaltung fehlgeschlagen'+(sendState.at?' ('+hm(sendState.at)+')':'')+' – neuer Versuch alle 30 s</div>';
+    else if(sendState.ok) line='<div class="sendline">An Einsatzverwaltung gesendet '+hm(sendState.at)+'</div>';
   }
   return '<div class="statusbar">'+tile('Bereit',z.bereit,'var(--green)')+tile('Im Einsatz',z.imEinsatz,'var(--blue)')+tile('Waren im Einsatz',z.warenImEinsatz,'var(--ink-3)')+'</div>'+line;
 }
 const sendState={ok:null, at:null, sig:'', tried:0, busy:false};
 function canSend(){ try{ return window.self===window.top && /^https?:/.test(location.protocol); }catch(e){ return false; } }
+/* ---------- Betrieb auf dem Server der Einsatzverwaltung (Raspberry Pi) ----------
+   Wird die App von dort geladen (…/asue/), gehen Truppstatus und Abgleich automatisch an
+   diesen Server. Eigene Adressen in den Einstellungen haben Vorrang. */
+const PI={ok:null, base:'', key:false};
+function statusUrl(){ return ((S.config.uebergabeUrl||'').trim()) || (PI.ok ? PI.base+'/status' : ''); }
+function syncBase(){ return ((S.config.syncUrl||'').trim().replace(/\/+$/,'')) || (PI.ok ? PI.base : ''); }
+function authHdr(){ const k=(S.config.syncKey||'').trim(); return k ? {'Authorization':'Bearer '+k} : {}; }
+async function detectPi(){
+  if(!canSend()){ PI.ok=false; return; }
+  const base=new URL('api', location.href).href.replace(/\/+$/,'');
+  try{
+    const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(), 5000);
+    const r=await fetch(base+'/health',{cache:'no-store', signal:ctl.signal}); clearTimeout(to);
+    const j=r.ok ? await r.json() : null;
+    if(j && j.name==='Einsatzverwaltung'){ PI.ok=true; PI.base=base; PI.key=!!j.schluessel; }
+    else if(PI.ok===null) PI.ok=false;
+  }catch(e){ if(PI.ok===null) PI.ok=false; }
+  if(CUR && (view==='ein'||view==='set')) renderAll();
+}
 function sendStatus(final){
-  const url=(S.config.uebergabeUrl||'').trim();
-  if(!url || !canSend() || (sendState.busy && !final)) return Promise.resolve(false);
+  const url=statusUrl();
+  if(!url || !canSend() || S.sample || (sendState.busy && !final)) return Promise.resolve(false);
   const body=JSON.stringify(statusPayload(final));
   sendState.busy=true; sendState.tried=nowT();
   const sig=JSON.stringify(truppStatus())+S.einsatz.id;
-  return fetch(url,{method:'POST', headers:{'Content-Type':'application/json'}, body, keepalive:true, cache:'no-store'})
+  return fetch(url,{method:'POST', headers:Object.assign({'Content-Type':'application/json'}, authHdr()), body, keepalive:true, cache:'no-store'})
     .then(r=>{ sendState.ok=r.ok; if(r.ok) sendState.sig=sig; })
     .catch(()=>{ sendState.ok=false; })
     .then(()=>{ sendState.busy=false; sendState.at=nowT(); if(view==='ein') refreshStrip(); if(view==='set') renderSendInfo(); return sendState.ok; });
 }
 function refreshStrip(){ const w=$('#statusWrap'); if(w) w.innerHTML=statusStripHTML(); }
 function sendTick(now){
-  if(!S.config.uebergabeUrl || !canSend() || sendState.busy) return;
+  if(!statusUrl() || !canSend() || sendState.busy || S.sample) return;   // Beispieldaten nie melden
   const sig=JSON.stringify(truppStatus())+S.einsatz.id;
   const wait = sendState.ok===false ? 30000 : 300000;   // Fehler: alle 30 s, sonst Lebenszeichen alle 5 min
   if(sig!==sendState.sig || now-sendState.tried > wait) sendStatus(false);
 }
 function renderSendInfo(){
   const el=$('#sendInfo'); if(!el) return;
-  const url=S.config.uebergabeUrl;
+  const url=statusUrl();
   el.className='hint'+(sendState.ok===false?' err':'');
   el.textContent = !url ? 'Keine Adresse eingetragen – es wird nichts gesendet.' :
     !canSend() ? 'In dieser Vorschau wird nicht gesendet. In der installierten Tablet-App wird bei jeder Statusänderung gesendet.' :
@@ -1858,7 +1923,7 @@ const QRGEN = (()=>{
   return {encode, toCanvas};
 })();
 
-/* ---------- Server-Abgleich mehrerer Geräte (z. B. Raspberry Pi der Fahrzeugverwaltung) ----------
+/* ---------- Server-Abgleich mehrerer Geräte (z. B. Raspberry Pi der Einsatzverwaltung) ----------
    Protokoll siehe SERVER_API.md. Jedes Feld eines Trupps trägt einen Änderungszeitpunkt (_m);
    beim Abgleich gewinnt je Feld der neuere Stand. Der Server speichert nur und zählt eine Revision hoch. */
 const SYNC_FIELDS=['rufgruppe','auftrag','bemerkung','st','mitglieder','notfall','mayday'];
@@ -1895,12 +1960,12 @@ function mergeInto(loc, rem, fields){ // Feldweise: neuerer Zeitstempel gewinnt;
   });
   return {localNewer, changed};
 }
-function syncOn(){ return !!(S.sync && S.sync.code && S.config.syncUrl && canSend()); }
+function syncOn(){ return !!(S.sync && S.sync.code && syncBase() && canSend()); }
 async function api(method, path, body){
-  const base=(S.config.syncUrl||'').trim().replace(/\/+$/,'');
+  const base=syncBase();
   const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(), 8000);
   try{
-    const r=await fetch(base+path,{method, headers:{'Content-Type':'application/json','Authorization':'Bearer '+(S.config.syncKey||'')}, body:body?JSON.stringify(body):undefined, cache:'no-store', signal:ctl.signal});
+    const r=await fetch(base+path,{method, headers:Object.assign({'Content-Type':'application/json'}, authHdr()), body:body?JSON.stringify(body):undefined, cache:'no-store', signal:ctl.signal});
     if(r.status===401||r.status===403) throw new Error('Wehr-Schlüssel falsch');
     if(!r.ok) throw new Error('Server antwortet mit Fehler '+r.status);
     return r.status===204 ? null : await r.json();
@@ -1948,25 +2013,31 @@ async function syncTick(){
 }
 function syncSoon(){ if(!syncOn()) return; clearTimeout(syncState.timer); syncState.timer=setTimeout(syncTick, 250); }
 function newCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<6;i++) c+=a[Math.floor(Math.random()*a.length)]; return c; }
-function shareEinsatz(){
-  if(!S.config.syncUrl){ toast('Bitte zuerst die Server-Adresse eintragen'); return; }
+function shareEinsatz(silent){
+  if(!syncBase()){ toast('Bitte zuerst die Server-Adresse eintragen'); return; }
   if(S.sample){ S=blankState(S.config); shadow=null; }
   S.sync={code:newCode(), rev:0, host:true};
   shadow=null; stampChanges(); S.trupps.forEach(t=>syncState.dirty.add(t.id)); syncState.einsatzDirty=true;
-  saveRaw(); renderAll(); syncTick(); toast('Einsatz freigegeben: '+S.sync.code);
+  S.syncOff=false; saveRaw(); if(!silent) renderAll(); else renderSyncBadge(); syncTick(); if(!silent) toast('Einsatz freigegeben: '+S.sync.code);
+}
+// Auf dem Server der Einsatzverwaltung wird jeder Einsatz automatisch dort gesichert (gemeinsame Datenbank)
+function autoShareTick(){
+  if(!PI.ok || S.sync || S.syncOff || S.sample || !CUR || !canSend() || S.config.autoSync===false || (S.config.syncUrl||'').trim()) return;
+  if(!S.trupps.length && !(S.einsatz.einsatzstelle||'').trim()) return;
+  shareEinsatz(true);
 }
 function joinEinsatz(code, url){
   code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(code.length<4){ toast('Einsatz-Code prüfen'); return; }
-  if(url) S.config.syncUrl=url;
-  if(!S.config.syncUrl){ toast('Bitte zuerst die Server-Adresse eintragen'); return; }
+  if(url && url.replace(/\/+$/,'')!==PI.base) S.config.syncUrl=url;
+  if(!syncBase()){ toast('Bitte zuerst die Server-Adresse eintragen'); return; }
   if(S.sample){ S=blankState(S.config); }
   shadow=null; stampChanges();
   S.sync={code, rev:0, host:false};
   S.trupps.forEach(t=>syncState.dirty.add(t.id));   // eigene Trupps in den gemeinsamen Einsatz übernehmen
   saveRaw(); renderAll(); syncTick(); toast('Einsatz '+code+' beigetreten');
 }
-function leaveSync(){ S.sync=null; syncState.ok=null; syncState.dirty.clear(); syncState.einsatzDirty=false; saveRaw(); renderAll(); toast('Abgleich getrennt'); }
-function joinPayload(){ return 'ASUEJ1:'+JSON.stringify({u:S.config.syncUrl, c:S.sync.code}); }
+function leaveSync(){ S.sync=null; S.syncOff=true; syncState.ok=null; syncState.dirty.clear(); syncState.einsatzDirty=false; saveRaw(); renderAll(); toast('Abgleich getrennt'); }
+function joinPayload(){ return 'ASUEJ1:'+JSON.stringify({u:syncBase(), c:S.sync.code}); }
 function openJoinQR(){
   let canvas; try{ canvas=QRGEN.toCanvas(joinPayload(), 460); }catch(e){ return; }
   openDlg('<div class="dlg-head"><h2>Beitreten: Einsatz '+esc(S.sync.code)+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div>'+
@@ -1997,8 +2068,9 @@ function syncPanelHTML(){
       '<div class="row"><input class="inp mono" id="joinCode" placeholder="Einsatz-Code" maxlength="8" style="max-width:180px;text-transform:uppercase" data-nosave="1"><button type="button" class="btn" data-act="syncjoin">Beitreten</button><button type="button" class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' Beitritts-QR scannen</button></div>'
     );
   return '<h2 class="section-title">Mehrere Geräte (Server-Abgleich)</h2><div class="panel" style="display:grid;gap:12px">'+
-    '<p class="hint" style="margin:0">Alle verbundenen Geräte sehen denselben Einsatz, z. B. Überwachung am Tablet und Trupp-Eingabe am Handy. Dafür wird ein Server gebraucht (Raspberry Pi der Fahrzeugverwaltung). Ohne Server funktioniert die <b>QR-Übergabe</b> weiterhin.</p>'+
-    '<div class="fgrid"><label class="f">Server-Adresse<input class="inp mono" id="c-syncUrl" data-sync="syncUrl" inputmode="url" placeholder="https://…/asue/api" value="'+esc(c.syncUrl||'')+'"></label>'+
+    '<p class="hint" style="margin:0">Alle verbundenen Geräte sehen denselben Einsatz, z. B. Überwachung am Tablet und Trupp-Eingabe am Handy. Dafür wird ein Server gebraucht (Raspberry Pi der Einsatzverwaltung). Ohne Server funktioniert die <b>QR-Übergabe</b> weiterhin.</p>'+
+    (PI.ok ? '<div class="calcbox">Server der Einsatzverwaltung erkannt. Jeder Einsatz wird dort automatisch mitgesichert, sobald der erste Trupp angelegt ist. Andere Geräte treten mit dem Einsatz-Code bei.'+(PI.key?' Der Server verlangt einen Wehr-Schlüssel.':'')+'</div>' : '')+
+    '<div class="fgrid"><label class="f">Server-Adresse<input class="inp mono" id="c-syncUrl" data-sync="syncUrl" inputmode="url" placeholder="'+(PI.ok?'leer = dieser Server':'https://pi:8082/api')+'" value="'+esc(c.syncUrl||'')+'"></label>'+
     '<label class="f">Wehr-Schlüssel<input class="inp mono" type="password" id="c-syncKey" data-sync="syncKey" autocomplete="off" value="'+esc(c.syncKey||'')+'"></label></div>'+
     conn + '<div id="syncInfo" class="hint"></div></div>';
 }
@@ -2210,7 +2282,7 @@ document.addEventListener('input', e=>{
   const el=e.target;
   if(dlg.contains(el)) return;
   if(el.dataset.e){ S.einsatz[el.dataset.e]=el.value; S.sample=false; save(); renderMeta(); }
-  else if(el.dataset.url){ S.config.uebergabeUrl=el.value.trim(); sendState.sig=''; sendState.ok=null; save(); const b=$('[data-act="sendnow"]'); if(b) b.disabled=!(S.config.uebergabeUrl&&canSend()); renderSendInfo(); }
+  else if(el.dataset.url){ S.config.uebergabeUrl=el.value.trim(); sendState.sig=''; sendState.ok=null; save(); const b=$('[data-act="sendnow"]'); if(b) b.disabled=!(statusUrl()&&canSend()); renderSendInfo(); }
   else if(el.dataset.sync){ S.config[el.dataset.sync]=el.value.trim(); saveRaw(); renderSyncInfo(); }
   else if(el.dataset.nosave){}
   else if(el.dataset.abfr){ const arr=[...new Set(el.value.split(/[^0-9]+/).map(Number).filter(n=>n>0&&n<=180))].sort((a,b)=>a-b).slice(0,8); if(arr.length){ S.config.abfragen=arr; save(); } }
@@ -2284,6 +2356,7 @@ function tick(){
     const p = duePrompts(now)[0]; if(p) showPrompt(p, now);
   }
   sendTick(now);
+  autoShareTick();
   if(syncOn() && Date.now()-(syncState.at||0) > 2000) syncTick();
   renderSyncBadge();
   if(view!=='ueb') return;
@@ -2314,6 +2387,7 @@ try{ const v=sessionStorage.getItem('asue.view'); if(v && ['ueb','ger','ein','pr
 setView(view);
 if(CUR) loadWappen(); else showLogin();
 tick(); setInterval(tick, 250);
+detectPi(); setInterval(()=>{ if(!PI.ok) detectPi(); }, 60000);
 try{
   const top = window.self===window.top;
   if(top && 'serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
