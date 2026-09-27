@@ -2682,6 +2682,19 @@ function showRausPrompt(p, now){
 }
 dlg.addEventListener('cancel', ()=>{ if(promptKey){ snooze[promptKey]=nowT()+60000; promptKey=null; } });
 
+// Aufruf aus der Einsatzverwaltung: …/?zuschauen=CODE → dem Einsatz nur zum Ansehen beitreten
+let zuschauenCode = (()=>{ try{ return new URLSearchParams(location.search).get('zuschauen'); }catch(e){ return null; } })();
+function zuschauenTick(){
+  if(!zuschauenCode || !CUR || PI.ok===null) return;
+  const c = String(zuschauenCode).toUpperCase().replace(/[^A-Z0-9]/g,''); zuschauenCode = null;
+  try{ history.replaceState(null, '', location.pathname); }catch(e){}
+  if(c.length<4) return;
+  if(S.sync && S.sync.code===c){ setView('ueb'); return; }
+  if(S.sync && istFuehrend() && S.trupps.length){ toast('Dieses Gerät führt selbst eine Überwachung – zum Zuschauen bitte ein anderes Gerät oder Browserfenster nutzen'); return; }
+  if(!S.sync && !S.sample && S.trupps.length && !confirm('Auf diesem Gerät gibt es eigene Trupps. Beim Zuschauen werden sie dem führenden Gerät als Vorschlag gegeben. Fortfahren?')) return;
+  if(S.sync) leaveSync(true);
+  joinEinsatz(c); setView('ueb');
+}
 function tick(){
   const now=nowT();
   $('#clock').textContent = hms(now);
@@ -2696,6 +2709,7 @@ function tick(){
   } else if(!dlg.open){
     const p = duePrompts(now)[0]; if(p) showPrompt(p, now);
   }
+  zuschauenTick();
   sendTick(now);
   autoShareTick();
   if(PI.ok && CUR && !S.sample && !S.einsatz.evId && !S.einsatz.evAus && Date.now()-EV.at>10000){ EV.at=Date.now(); loadEvList(); }
