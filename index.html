@@ -271,6 +271,7 @@ input[type="date"].inp::-webkit-date-and-time-value{text-align:left;margin:0}
 /* Trupp anlegen: Name über die ganze Breite, Nummern (max. 5 Ziffern) paarweise nebeneinander */
 .mgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .mgrid .wide,.mgrid .druck{grid-column:1/-1}
+.mgrid .halb{grid-column:span 1}
 @media (min-width:641px){ .mgrid{grid-template-columns:repeat(4,minmax(0,1fr))} .mgrid .wide,.mgrid .druck{grid-column:span 2} }
 .inp.num{letter-spacing:.04em}
 .inp.bad{border-color:var(--red);box-shadow:0 0 0 2px var(--red-soft)}
@@ -543,12 +544,15 @@ const MAYDAY_ITEMS = [
   ['gerettet','Trupp gerettet / in Sicherheit']
 ];
 const FIELDS = [
-  {k:'name', l:'Name / Vorname'},
+  {k:'name', l:'Name, Vorname'},
   {k:'geraetNr', l:'Geräte-Nr.'},
   {k:'laNr', l:'LA-Nr.'},
   {k:'flascheNr', l:'Flaschen-Nr.'},
   {k:'maskeNr', l:'Masken-Nr.'}
 ];
+// Eingabe in Dialog und Geräteliste: Nachname und Vorname getrennt (m.nachname / m.vorname);
+// m.name = „Nachname, Vorname“ bleibt für Protokoll, PDF, QR und ältere Geräte erhalten
+const EFIELDS = [{k:'nachname', l:'Nachname', nm:1}, {k:'vorname', l:'Vorname', nm:1}].concat(FIELDS.filter(f=>f.k!=='name'));
 const FUNKTIONEN = ['Truppführer','Truppmann','Truppmann 2'];
 const WAPPEN_JPG = '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';
 const QR_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M21 14v7h-7M17 21v0"/></svg>';
@@ -556,7 +560,7 @@ const CAM_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 
 /* ---------- Zustand ---------- */
 const uid = () => Math.random().toString(36).slice(2,10);
-const defaultConfig = () => ({maxBar:330, verbrauch:8.3, minRueckzug:50, uebergabeUrl:'', abfragen:[10,20], sprache:false, stPruefung:true, verbrauchWarn:12, funkName:'frei', druckModus:'niedrigster', syncUrl:'', syncKey:'', autoSync:true, abfrageModus:'drittel', drittelMax:10});
+const defaultConfig = () => ({maxBar:330, verbrauch:8.3, minRueckzug:50, uebergabeUrl:'', abfragen:[10,20], sprache:false, stPruefung:true, verbrauchWarn:12, funkName:'frei', druckModus:'niedrigster', syncUrl:'', syncKey:'', autoSync:true, abfrageModus:'drittel', drittelMax:10, rausNach:10});
 function blankState(keepConfig){
   return {
     version:1, sample:false,
@@ -829,15 +833,20 @@ function calc(t, now=nowT()){
 
 // Funkrufname: frei (Rufgruppe) oder Nachname des Truppführers; bei gleichem Nachnamen mit Vorname
 function splitName(n){ n=(n||'').trim(); if(!n) return null; if(n.includes(',')){ const i=n.indexOf(','); return {nach:n.slice(0,i).trim(), vor:n.slice(i+1).trim()}; } const p=n.split(/\s+/); if(p.length===1) return {nach:p[0], vor:''}; const nach=p.pop(); return {nach, vor:p.join(' ')}; }
+function nameParts(m){ if(!m) return null; if(m.nachname!=null || m.vorname!=null){ const nach=(m.nachname||'').trim(), vor=(m.vorname||'').trim(); return (nach||vor) ? {nach, vor} : null; } return splitName(m.name); }
+function nameTeil(m, k){ const p=nameParts(m); return p ? (k==='nachname'?p.nach:p.vor) : ''; }
+function setNameTeil(m, k, v){ const p=nameParts(m)||{nach:'',vor:''}; m.nachname = k==='nachname' ? v : p.nach; m.vorname = k==='vorname' ? v : p.vor; const n=(m.nachname||'').trim(), vn=(m.vorname||'').trim(); m.name = n && vn ? n+', '+vn : (n || vn); }
+function nameAusVoll(m){ const p=splitName(m.name); m.nachname=p?p.nach:''; m.vorname=p?p.vor:''; }
+function feldWert(m, f){ return f.nm ? nameTeil(m, f.k) : m[f.k]; }
 function tfOf(t){ return t.mitglieder.find(m=>m.funktion==='Truppführer') || t.mitglieder[0]; }
 function nameFor(t, list){
-  const n=splitName(tfOf(t) && tfOf(t).name);
+  const n=nameParts(tfOf(t));
   if(!n || !n.nach) return t.rufgruppe||'Trupp';
-  const same=list.filter(o=>o.id!==t.id).some(o=>{ const x=splitName(tfOf(o) && tfOf(o).name); return x && x.nach.toLowerCase()===n.nach.toLowerCase(); });
+  const same=list.filter(o=>o.id!==t.id).some(o=>{ const x=nameParts(tfOf(o)); return x && x.nach.toLowerCase()===n.nach.toLowerCase(); });
   return same && n.vor ? n.nach+' '+n.vor : n.nach;
 }
 function tName(t){ return S.config.funkName==='tf' ? nameFor(t, S.trupps) : (t.rufgruppe||'Trupp'); }
-function tSpeak(t){ return S.config.funkName==='tf' && tfOf(t) && splitName(tfOf(t).name) ? 'Trupp '+tName(t) : tName(t); }
+function tSpeak(t){ return S.config.funkName==='tf' && nameParts(tfOf(t)) && nameParts(tfOf(t)).nach ? 'Trupp '+tName(t) : tName(t); }
 function previewName(t){ const list=S.trupps.filter(o=>o.id!==t.id).concat([t]); const n=nameFor(t, list); return n; }
 function tSub(t){ return (S.config.funkName==='tf' && t.rufgruppe && tName(t)!==t.rufgruppe ? t.rufgruppe+' · ' : '')+(t.auftrag||''); }
 
@@ -910,7 +919,7 @@ function kpiHTML(t, r){
   const k2 = '<div class="kpi '+nqc+'" data-blink="'+t.id+'"><div class="l">Nächste Abfrage</div><div class="v" data-live="nq" data-t="'+t.id+'">'+nqv+'</div><div class="s">'+esc(nqs)+'</div></div>';
   let cls='', v='--:--', s='nach „Einsatzort an“';
   if(t.ev.ende){ v='–'; s='beendet'; }
-  else if(t.ev.rueckzug){ v=hm(t.ev.rueckzug.t); s='Rückzug angetreten'; }
+  else if(t.ev.rueckzug){ v=hm(t.ev.rueckzug.t); s='Rückzug angetreten · „draußen?“ um '+hm(t.ev.rueckzug.t+(S.config.rausNach||10)*60000); }
   else if(r.soll){
     if(r.soll.sofort){ cls='alarm'; v='sofort!'; s='Druck zu gering'; }
     else { const left=r.soll.t-now; cls = left<=0?'alarm':(left<120000?'warn':''); v=dur(left); s='um '+hm(r.soll.t)+(r.prog?' · Prognose '+hm(r.prog.t):''); }
@@ -1016,17 +1025,17 @@ function renderGer(){
   const v = $('#view-ger');
   let rows = '';
   sortedTrupps().forEach((t,ti)=>{
-    rows += '<tr class="grp"><td colspan="8"><button class="btn small ghost grpqr" tabindex="-1" data-act="qrsend" data-t="'+t.id+'">'+QR_SVG.replace(/width="20" height="20"/,'width="16" height="16"')+' QR-Übergabe</button>'+(ti+1)+' · '+esc(tName(t))+' <span style="font-weight:500;font-family:var(--f-body);font-size:14px;color:var(--ink-2)">'+esc(t.auftrag||'')+'</span></td></tr>';
+    rows += '<tr class="grp"><td colspan="9"><button class="btn small ghost grpqr" tabindex="-1" data-act="qrsend" data-t="'+t.id+'">'+QR_SVG.replace(/width="20" height="20"/,'width="16" height="16"')+' QR-Übergabe</button>'+(ti+1)+' · '+esc(tName(t))+' <span style="font-weight:500;font-family:var(--f-body);font-size:14px;color:var(--ink-2)">'+esc(t.auftrag||'')+'</span></td></tr>';
     t.mitglieder.forEach(m=>{
       rows += '<tr class="mem"><td class="fn" style="white-space:nowrap">'+esc(m.funktion)+'</td>'+
-        FIELDS.map(f=>'<td data-l="'+f.l+'"><input class="inp cell-inp'+(f.k==='name'?'':' mono num')+'" id="g-'+m.id+'-'+f.k+'" data-m="'+m.id+'" data-t="'+t.id+'" data-f="'+f.k+'"'+(f.k==='name'?'':' inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next"')+' value="'+esc(m[f.k])+'" aria-label="'+f.l+' '+esc(m.funktion)+'"></td>').join('')+
+        EFIELDS.map(f=>'<td data-l="'+f.l+'"><input class="inp cell-inp'+(f.nm?'':' mono num')+'" id="g-'+m.id+'-'+f.k+'" data-m="'+m.id+'" data-t="'+t.id+'" data-f="'+f.k+'"'+(f.nm?' autocapitalize="words" autocomplete="off" enterkeyhint="next"':' inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next"')+' value="'+esc(feldWert(m,f))+'" aria-label="'+f.l+' '+esc(m.funktion)+'"></td>').join('')+
         '<td data-l="Flaschendruck">'+pressureSelect('g-'+m.id+'-druck', m.druck, m, 'data-m="'+m.id+'" data-t="'+t.id+'" data-f="druck" style="min-width:130px;font-size:18px;min-height:44px"')+'</td>'+
         '<td class="camc"><button class="cam" tabindex="-1" data-act="scan" data-t="'+t.id+'" data-m="'+m.id+'" aria-label="Mit Kamera einlesen" title="Mit Kamera einlesen">'+CAM_SVG+'</button></td></tr>';
     });
   });
   v.innerHTML = '<div class="toolbar"><h2>Geräteerfassung</h2><button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn primary" data-act="newtrupp">+ '+neuLabel()+'</button></div>'+fuehrungBannerHTML()+
     '<p class="hint" style="margin-top:0">Kamera-Symbol antippen, Etikett, Namensschild oder Geräteplakette fotografieren, dann erkannte Werte den Feldern zuordnen.</p>'+
-    (S.trupps.length ? '<div class="table-wrap"><table><thead><tr><th>Funktion</th>'+FIELDS.map(f=>'<th>'+f.l+'</th>').join('')+'<th>Flaschendruck</th><th>Kamera</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    (S.trupps.length ? '<div class="table-wrap"><table><thead><tr><th>Funktion</th>'+EFIELDS.map(f=>'<th>'+f.l+'</th>').join('')+'<th>Flaschendruck</th><th>Kamera</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
       : '<div class="empty">Noch keine Trupps angelegt.</div>');
 }
 
@@ -1061,6 +1070,8 @@ function renderSet(){
         : '<input class="inp mono" id="c-abfragen" data-abfr="1" value="'+esc((c.abfragen||[]).join(', '))+'" inputmode="text">'+
           '<div class="chips">'+[[10,20],[15,30],[10,20,30,40],[10,20,30,40,50,60]].map(a=>'<button type="button" class="chip" data-preset="'+a.join(',')+'">'+a.join(' / ')+'</button>').join('')+'</div>')+
       '</div></div>'+
+    '<div class="set"><div><b>Nach dem Rückzug nachfragen</b><div class="hint">So viele Minuten nach „Rückzug angetreten“ fragt die App, ob der Trupp den Gefahrenbereich verlassen hat. „Noch nicht“ fragt alle 2 Minuten erneut, bis „Ende“ erfasst ist.</div></div>'+
+      '<div class="setctl"><label class="f">Minuten nach Rückzug<input class="inp mono" id="c-rausNach" data-c="rausNach" inputmode="numeric" value="'+(c.rausNach||10)+'"></label></div></div>'+
     '<div class="set"><div><b>Druck bei Abfragen</b><div class="hint">Ab „Einsatzort an“ (Abfragen, Rückzug, Ende) nur den niedrigsten Druck des Trupps eintragen oder jede Person einzeln. Bei „Beginn“ immer je Person.</div></div>'+
       '<div class="setctl"><div class="seg half" role="group"><button data-dm="niedrigster" aria-pressed="'+(c.druckModus!=='einzeln')+'">Nur niedrigster</button><button data-dm="einzeln" aria-pressed="'+(c.druckModus==='einzeln')+'">Jede Person</button></div></div></div>'+
     '<div class="set"><div><b>Funkrufname der Trupps</b><div class="hint">„Nachname Truppführer“: Der Trupp heißt wie sein Truppführer, z. B. „Müller“. Haben zwei Truppführer denselben Nachnamen, kommt der Vorname dazu („Müller Jan“, „Müller Tim“).</div></div>'+
@@ -1673,7 +1684,7 @@ function openTrupp(tid){
       '<div class="row"><b style="font-family:var(--f-disp);font-size:18px">'+esc(m.funktion)+'</b><span class="spacer"></span>'+
       '<button type="button" class="btn small" tabindex="-1" data-act="scan-dlg" data-i="'+i+'">'+CAM_SVG.replace('<svg','<svg width="18" height="18"')+' Kamera</button>'+
       (i===2?'<button type="button" class="btn small ghost" tabindex="-1" data-act="rm-mem">Entfernen</button>':'')+'</div>'+
-      '<div class="mgrid">'+FIELDS.map(f=>'<label class="f'+(f.k==='name'?' wide':'')+'">'+f.l+'<input class="inp'+(f.k==='name'?'':' mono num')+'" id="tm-'+i+'-'+f.k+'" data-i="'+i+'" data-f="'+f.k+'"'+(f.k==='name'?'':' inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next"')+' value="'+esc(m[f.k])+'"></label>').join('')+
+      '<div class="mgrid">'+EFIELDS.map(f=>'<label class="f'+(f.nm?' halb':'')+'">'+f.l+'<input class="inp'+(f.nm?'':' mono num')+'" id="tm-'+i+'-'+f.k+'" data-i="'+i+'" data-f="'+f.k+'"'+(f.nm?' autocapitalize="words" autocomplete="off" enterkeyhint="next"':' inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next"')+' value="'+esc(feldWert(m,f))+'"></label>').join('')+
       '<label class="f druck">Flaschendruck (bar)'+pressureSelect('tm-'+i+'-druck', m.druck, m, 'data-i="'+i+'" data-f="druck" style="font-size:18px;min-height:44px"')+'</label></div></div>').join('');
     openDlg('<form id="truppForm"><div class="dlg-head"><h2>'+(alsVorschlag?(isNew?'Trupp vorschlagen':'Vorschlag bearbeiten'):(isNew?'Trupp anlegen':'Trupp bearbeiten'))+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div>'+
       '<div class="dlg-body">'+
@@ -1692,7 +1703,7 @@ function openTrupp(tid){
     setTimeout(()=>{ const first = S.config.funkName==='tf' ? $('#tm-0-name') : $('#t-rufgruppe'); if(first && isNew && !first.value) first.focus(); }, 60);
     f.addEventListener('input', e=>{
       const el=e.target;
-      if(el.dataset.f){ t.mitglieder[+el.dataset.i][el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; const fp=$('#fnPrev'); if(fp) fp.textContent=previewName(t); }
+      if(el.dataset.f){ const mm=t.mitglieder[+el.dataset.i]; if(el.dataset.f==='nachname'||el.dataset.f==='vorname') setNameTeil(mm, el.dataset.f, el.value); else mm[el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; const fp=$('#fnPrev'); if(fp) fp.textContent=previewName(t); }
       else if(el.id==='t-rufgruppe'){ t.rufgruppe=el.value; if(isNew && /sicherheit/i.test(el.value) && !t.stTouched){ t.st=true; const c=$('#t-st'); if(c) c.checked=true; } }
       else if(el.id==='t-st'){ t.st=el.checked; t.stTouched=true; }
       else if(el.id==='t-auftrag') t.auftrag=el.value;
@@ -1712,7 +1723,7 @@ function openTrupp(tid){
     });
     f.addEventListener('submit', e=>{
       e.preventDefault();
-      if(S.config.funkName==='tf'){ const n=splitName(tfOf(t)&&tfOf(t).name); if(!(n&&n.nach) && !t.rufgruppe.trim()){ $('#truppErr').textContent='Bitte den Namen des Truppführers oder eine Trupp-Bezeichnung eintragen.'; return; } }
+      if(S.config.funkName==='tf'){ const n=nameParts(tfOf(t)); if(!(n&&n.nach) && !t.rufgruppe.trim()){ $('#truppErr').textContent='Bitte den Namen des Truppführers oder eine Trupp-Bezeichnung eintragen.'; return; } }
       else if(!t.rufgruppe.trim()){ $('#truppErr').textContent='Bitte Rufgruppe bzw. Truppbezeichnung eintragen.'; return; }
       if(t.mitglieder.length < 3) Object.values(t.ev).forEach(x=>{ x.p = x.p.slice(0,t.mitglieder.length); });
       Object.values(t.ev).forEach(x=>{ while(x.p.length<t.mitglieder.length) x.p.push(null); });
@@ -1901,7 +1912,7 @@ function openScan(m, onDone){
     if(a==='cancel'){ dlg.onclick=null; onDone ? onDone() : closeDlg(); }
     if(a==='field'){ active=b.dataset.f; draw(); }
     if(a==='pick'){ if(b.dataset.to){ draft[b.dataset.to]=b.dataset.v; active=b.dataset.to; nextField(); } else if(codes && codes.some(c=>c.text===b.dataset.v)) applyCode({text:b.dataset.v}); else { draft[active]=b.dataset.v; nextField(); } draw(); }
-    if(a==='ok'){ FIELDS.forEach(f=>m[f.k]=(draft[f.k]||'').trim()); dlg.onclick=null; if(onDone) onDone(); else { S.sample=false; save(); closeDlg(); renderAll(); toast('Übernommen'); } }
+    if(a==='ok'){ FIELDS.forEach(f=>m[f.k]=(draft[f.k]||'').trim()); nameAusVoll(m); dlg.onclick=null; if(onDone) onDone(); else { S.sample=false; save(); closeDlg(); renderAll(); toast('Übernommen'); } }
     if(a==='shoot'){
       mode = b.dataset.mode;
       const fi = $('#fileCam'); fi.value='';
@@ -2365,7 +2376,7 @@ function openVorschlaege(){
 
 /* ---------- Trupp-Übergabe per QR-Code (Handy → Tablet) ---------- */
 function truppPayload(t){
-  const o={v:1, id:t.id, r:t.rufgruppe||'', a:t.auftrag||'', m:t.mitglieder.map(m=>[m.name||'', m.geraetNr||'', m.laNr||'', m.flascheNr||'', m.maskeNr||'', m.druck??null])};
+  const o={v:1, id:t.id, r:t.rufgruppe||'', a:t.auftrag||'', m:t.mitglieder.map(m=>{ const p=nameParts(m); return [m.name||'', m.geraetNr||'', m.laNr||'', m.flascheNr||'', m.maskeNr||'', m.druck??null, p?p.nach:'', p?p.vor:'']; })};
   if(t.st) o.s=1; if(t.bemerkung) o.b=t.bemerkung;
   if(t.ev.beginn) o.e=[t.ev.beginn.t, t.ev.beginn.p];
   // nur ASCII, damit Umlaute bei jedem Scanner richtig ankommen
@@ -2386,7 +2397,7 @@ function importTrupp(o){
   return r;
 }
 function importTruppIn(o, ex, liste){
-  const mem=o.m.slice(0,3).map((a,i)=>({id:(ex&&ex.mitglieder[i]&&ex.mitglieder[i].id)||uid(), name:a[0]||'', funktion:FUNKTIONEN[i]||'Truppmann', geraetNr:a[1]||'', laNr:a[2]||'', flascheNr:a[3]||'', maskeNr:a[4]||'', druck:a[5]??null}));
+  const mem=o.m.slice(0,3).map((a,i)=>{ const x={id:(ex&&ex.mitglieder[i]&&ex.mitglieder[i].id)||uid(), name:a[0]||'', funktion:FUNKTIONEN[i]||'Truppmann', geraetNr:a[1]||'', laNr:a[2]||'', flascheNr:a[3]||'', maskeNr:a[4]||'', druck:a[5]??null}; if(a.length>6){ x.nachname=a[6]||''; x.vorname=a[7]||''; } else nameAusVoll(x); return x; });
   if(ex){
     Object.assign(ex,{rufgruppe:o.r||ex.rufgruppe, auftrag:o.a||ex.auftrag, st:!!o.s, bemerkung:o.b||ex.bemerkung, mitglieder:mem});
     if(o.e && !ex.ev.beginn) ex.ev.beginn={t:o.e[0], p:o.e[1]};
@@ -2593,7 +2604,7 @@ document.addEventListener('input', e=>{
   else if(el.dataset.abfr){ const arr=[...new Set(el.value.split(/[^0-9]+/).map(Number).filter(n=>n>0&&n<=180))].sort((a,b)=>a-b).slice(0,8); if(arr.length){ S.config.abfragen=arr; save(); } }
   else if(el.dataset.c==='verbrauchWarn'){ const v=parseFloat(el.value.replace(',','.')); if(!isNaN(v)&&v>=0){ S.config.verbrauchWarn=v; save(); } }
   else if(el.dataset.c){ const v=parseFloat(el.value.replace(',','.')); if(!isNaN(v)&&v>0){ S.config[el.dataset.c]= el.dataset.c==='maxBar'?Math.min(400,Math.round(v)):v; save(); } }
-  else if(el.dataset.m && el.dataset.f){ const t=S.trupps.find(x=>x.id===el.dataset.t); const m=t&&t.mitglieder.find(x=>x.id===el.dataset.m); if(m){ m[el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; S.sample=false; save(); } }
+  else if(el.dataset.m && el.dataset.f){ const t=S.trupps.find(x=>x.id===el.dataset.t); const m=t&&t.mitglieder.find(x=>x.id===el.dataset.m); if(m){ if(el.dataset.f==='nachname'||el.dataset.f==='vorname') setNameTeil(m, el.dataset.f, el.value); else m[el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; S.sample=false; save(); } }
 });
 document.addEventListener('change', e=>{ if(e.target.id==='alsSel'){ setAls(e.target.value); return; } if(e.target.id==='evSel'){ if(nurLesen()){ sperrHinweis(); renderAll(); return; } const x=(EV.list||[]).find(y=>y.id===e.target.value); evLink(x||null); return; } if((e.target.dataset.c || e.target.dataset.abfr) && view==='set') renderSet(); });
 dlg.addEventListener('close', ()=>{ dlg.onclick=null; });
@@ -2617,7 +2628,10 @@ function duePrompts(now){
   const list=[];
   if(nurLesen()) return list;   // Abfragen macht nur das führende Gerät
   S.trupps.forEach(t=>{
-    const ev=t.ev; if(!ev.beginn || ev.rueckzug || ev.ende) return;
+    const ev=t.ev;
+    // nach „Rückzug angetreten“: nachfragen, ob der Trupp aus dem Gefahrenbereich heraus ist
+    if(ev.beginn && ev.rueckzug && !ev.ende){ const due=ev.rueckzug.t+(S.config.rausNach||10)*60000; if(now>=due) list.push({key:t.id+':raus', t, k:'ende', due, kind:'raus', l:'Trupp aus dem Gefahrenbereich?'}); return; }
+    if(!ev.beginn || ev.rueckzug || ev.ende) return;
     queries(t).forEach(q=>{ const due=q.due; if(due!=null && !ev[q.k] && now>=due) list.push({key:t.id+':'+q.k, t, k:q.k, due, kind:'abfrage', l:q.l, spk:q.spk}); });
     const r=calc(t,now);
     if(r.soll && (r.soll.sofort || now>=r.soll.t)) list.push({key:t.id+':rz', t, k:'rueckzug', due:r.soll.t, kind:'rueckzug', l:r.soll.sofort?'Rückzug sofort':'Rückzugszeit erreicht'});
@@ -2626,6 +2640,7 @@ function duePrompts(now){
 }
 function showPrompt(p, now){
   promptKey = p.key;
+  if(p.kind==='raus') return showRausPrompt(p, now);
   const t=p.t, isRz = p.kind==='rueckzug';
   const last = lastReading(t);
   const mem = '<div><span>Niedrigster Druck im Trupp</span><span class="mono">'+(last?'zuletzt '+lowOf(last)+' bar ('+hm(last.t)+')':'–')+'</span></div>';
@@ -2645,6 +2660,26 @@ function showPrompt(p, now){
   beep(isRz);
   speak(tSpeak(t)+'. '+(isRz ? p.l : 'Druckabfrage '+(p.spk||'')));
 }
+function showRausPrompt(p, now){
+  promptKey = p.key;
+  const t=p.t, min=Math.round((now-t.ev.rueckzug.t)/60000);
+  openDlg('<div class="dlg-head"><h2>Ist der Trupp draußen?</h2></div>'+
+    '<div class="dlg-body">'+
+      '<div><div style="font-family:var(--f-disp);font-size:26px;font-weight:700">'+esc(tName(t))+'</div><div class="hint">'+esc(t.auftrag||'')+'</div></div>'+
+      '<div class="row" style="align-items:baseline"><span class="prompt-big" id="promptOver">'+dur(now-t.ev.rueckzug.t)+'</span><span class="hint">seit „Rückzug angetreten“ um '+hm(t.ev.rueckzug.t)+'</span></div>'+
+      '<div class="calcbox">Trupp über Funk fragen, ob er den Gefahrenbereich verlassen hat. Ist er draußen, „Ende“ mit Restdruck erfassen.</div>'+
+      '<div class="prompt-list">'+t.mitglieder.map(m=>'<div><span>'+esc(m.funktion)+'</span><span>'+esc(m.name||'–')+'</span></div>').join('')+'</div>'+
+    '</div><div class="dlg-foot"><button class="btn" data-pr="later">Noch nicht – in 2 min erneut</button><span class="spacer"></span>'+
+      '<button class="btn primary" data-pr="go" style="min-width:200px">Ja, draußen – Ende erfassen</button></div>', 'prompt');
+  dlg.onclick = e => {
+    const b=e.target.closest('[data-pr]'); if(!b) return;
+    promptKey=null; dlg.onclick=null;
+    if(b.dataset.pr==='go'){ snooze[p.key]=nowT()+60000; openStep(t.id, 'ende', false); }
+    else { snooze[p.key]=nowT()+120000; closeDlg(); }
+  };
+  beep(false);
+  speak(tSpeak(t)+'. Rückzug seit '+min+' Minuten. Ist der Trupp draußen?');
+}
 dlg.addEventListener('cancel', ()=>{ if(promptKey){ snooze[promptKey]=nowT()+60000; promptKey=null; } });
 
 function tick(){
@@ -2656,7 +2691,7 @@ function tick(){
   announce(now);
   if(promptKey){
     const el=$('#promptOver'); const p=duePrompts(now).find(x=>x.key===promptKey) || null;
-    if(el && p) el.textContent = dur(now-p.due);
+    if(el && p) el.textContent = dur(now-(p.kind==='raus' ? p.t.ev.rueckzug.t : p.due));
     if(!p && dlg.open && dlg.classList.contains('prompt')){ promptKey=null; closeDlg(); }
   } else if(!dlg.open){
     const p = duePrompts(now)[0]; if(p) showPrompt(p, now);
