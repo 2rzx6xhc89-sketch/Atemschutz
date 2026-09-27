@@ -1040,7 +1040,13 @@ function renderGer(){
 }
 
 /* ---------- Einsatzdaten ---------- */
+/* Während getippt wird, nicht neu zeichnen (Hintergrund-Abfragen alle paar Sekunden würden sonst
+   das Feld leeren, z. B. den Einsatz-Code) – erst nach Verlassen des Feldes nachholen. */
+let joinCodeEntwurf='';
+function tippFeld(viewId){ const a=document.activeElement; return a && a.closest && a.closest('#'+viewId) && /^(INPUT|TEXTAREA)$/.test(a.tagName) && !/^(checkbox|radio|button)$/.test(a.type||'') ? a : null; }
+function spaeterZeichnen(el, fn){ if(el._zeichnenAus) return; el._zeichnenAus=true; el.addEventListener('blur', ()=>{ el._zeichnenAus=false; setTimeout(fn, 150); }, {once:true}); }
 function renderEin(){
+  const tf=tippFeld('view-ein'); if(tf){ spaeterZeichnen(tf, ()=>{ if(view==='ein') renderEin(); }); renderSyncInfo(); return; }
   const e = S.einsatz, c = S.config;
   $('#view-ein').innerHTML = fuehrungBannerHTML()+
   '<h2 class="section-title">Truppstatus</h2><div id="statusWrap">'+statusStripHTML()+'</div>'+
@@ -1058,6 +1064,7 @@ function renderEin(){
   renderSyncInfo();
 }
 function renderSet(){
+  const tf=tippFeld('view-set'); if(tf){ spaeterZeichnen(tf, ()=>{ if(view==='set') renderSet(); }); return; }
   const c = S.config;
   $('#view-set').innerHTML = userPanelHTML() +
   '<h2 class="section-title">Überwachung &amp; Warnungen</h2><div class="panel setlist">'+
@@ -2224,7 +2231,7 @@ function joinEinsatz(code, url){
   S.trupps=[]; S.gone={}; syncState.dirty.clear(); syncState.einsatzDirty=false;
   S.vorschlaege.forEach(v=>syncState.vDirty.add(v.id));
   S.sync={code, rev:0, host:false, fuehrung:null};
-  shadow=null; S.syncOff=false; saveRaw(); renderAll(); syncTick(); toast('Einsatz '+code+' beigetreten');
+  joinCodeEntwurf=''; shadow=null; S.syncOff=false; saveRaw(); renderAll(); syncTick(); toast('Einsatz '+code+' beigetreten');
 }
 function leaveSync(force){
   const andere=(S.sync&&S.sync.geraete||[]).filter(g=>g.id!==GERAET.id);
@@ -2281,7 +2288,7 @@ function syncPanelHTML(){
       '<div class="row"><button type="button" class="btn primary" data-act="joinqr">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' Beitritts-QR zeigen</button><button type="button" class="btn" data-act="syncnow">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="syncleave">Trennen</button></div>'
     ) : (
       '<div class="row"><button type="button" class="btn primary" data-act="syncshare">Diesen Einsatz freigeben</button><span class="hint">erzeugt einen Einsatz-Code; dieses Gerät führt die Überwachung</span></div>'+
-      '<div class="row"><input class="inp mono" id="joinCode" placeholder="Einsatz-Code" maxlength="8" style="max-width:180px;text-transform:uppercase" data-nosave="1"><button type="button" class="btn" data-act="syncjoin">Beitreten</button><button type="button" class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' Beitritts-QR scannen</button></div>'
+      '<div class="row"><input class="inp mono" id="joinCode" placeholder="Einsatz-Code" maxlength="8" style="max-width:180px;text-transform:uppercase" data-nosave="1" autocomplete="off" autocapitalize="characters" value="'+esc(joinCodeEntwurf)+'"><button type="button" class="btn" data-act="syncjoin">Beitreten</button><button type="button" class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' Beitritts-QR scannen</button></div>'
     );
   return '<h2 class="section-title">Mehrere Geräte (Server-Abgleich)</h2><div class="panel" style="display:grid;gap:12px">'+
     '<p class="hint" style="margin:0">Alle verbundenen Geräte sehen denselben Einsatz. <b>Nur ein Gerät führt die Überwachung</b>; die anderen zeigen an und können Trupps vorschlagen, die das führende Gerät bestätigt. Dafür wird der Server der Einsatzverwaltung gebraucht – im WLAN und über Mobilfunk. Ohne Server funktioniert die <b>QR-Übergabe</b> weiterhin.</p>'+
@@ -2594,6 +2601,7 @@ document.addEventListener('click', e=>{
 });
 document.addEventListener('input', e=>{
   const el=e.target;
+  if(el.id==='joinCode'){ joinCodeEntwurf=el.value; return; }
   if(dlg.contains(el)) return;
   if(nurLesen() && (el.dataset.e || (el.dataset.m && el.dataset.f))){ sperrHinweis(); renderAll(); return; }
   if(el.dataset.gname){ try{ localStorage.setItem('asue.geraetName', el.value.trim().slice(0,60)); }catch(x){} return; }

@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Übungsgenerator</title>
+<meta name="theme-color" content="#1F4E79">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&family=Roboto+Mono:wght@500;600&display=swap">
+<style>
+:root{--ground:#EEF0EE;--panel:#FFFFFF;--panel-2:#F6F7F6;--ink:#15191C;--ink-2:#4A5358;--ink-3:#7A8388;--line:#D3D8D6;--line-2:#B9C0BD;
+  --red:#B3121F;--red-soft:#FBE7E8;--amber:#B86E00;--amber-soft:#FFF1D6;--green:#1D6B45;--green-soft:#E1F2E8;--blue:#1F4E79;--blue-soft:#E3EDF6;
+  --f-disp:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;--f-mono:"Roboto Mono",ui-monospace,Menlo,monospace}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--ground:#0F1214;--panel:#181D20;--panel-2:#1F2528;--ink:#E7ECEA;--ink-2:#AAB4B8;--ink-3:#7C878C;--line:#2B3337;--line-2:#3C464B;
+  --red:#E0414B;--red-soft:#3A1719;--amber:#F0A83A;--amber-soft:#3A2A10;--green:#4CC08A;--green-soft:#12301F;--blue:#7FB2E3;--blue-soft:#15283A}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body);font-size:16px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.top{position:sticky;top:0;z-index:5;background:var(--ground);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mark{width:38px;height:38px;border-radius:9px;background:var(--blue);display:grid;place-items:center;color:#fff;font:700 20px var(--f-disp);flex:none}
+.top h1{font:700 26px/1 var(--f-disp);margin:0}.top small{display:block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.pill{margin-left:auto;border-radius:20px;padding:6px 12px;font-weight:700;font-size:13px;border:1px solid var(--line-2);background:var(--panel)}
+.pill.ok{background:var(--green-soft);color:var(--green);border-color:var(--green)}.pill.aus{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.wrap{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+h2{font:700 21px var(--f-disp);margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+h3{font:700 18px var(--f-disp);margin:14px 0 6px}
+.btn{border:1px solid var(--line-2);background:var(--panel);border-radius:9px;padding:8px 12px;font-weight:600;min-height:40px}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}.btn.rot{background:var(--red);border-color:var(--red);color:#fff}.btn.gruen{background:var(--green);border-color:var(--green);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}.btn.klein{min-height:32px;padding:4px 9px;font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hint{font-size:13px;color:var(--ink-2);line-height:1.4}
+.sz{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px;cursor:pointer;background:var(--panel-2)}
+.sz.on{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-soft);background:var(--panel)}
+.sz b{display:block}.sz span{font-size:13px;color:var(--ink-2)}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
+label.f input,label.f select,label.f textarea,.inp{border:1px solid var(--line-2);border-radius:8px;background:var(--panel);min-height:40px;padding:6px 9px;font-size:15px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink);width:100%}
+label.f textarea{min-height:56px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 10px}
+.grid .weit{grid-column:1/-1}
+.item{border:1px solid var(--line);border-left:6px solid var(--red);border-radius:10px;padding:10px;margin-bottom:10px;background:var(--panel)}
+.item.auftrag{border-left-color:var(--amber)}
+.item-kopf{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.item-kopf .art{font:700 17px var(--f-disp);text-transform:uppercase;letter-spacing:.04em}
+.item-kopf .zeit{font-family:var(--f-mono);font-weight:600;background:var(--panel-2);border-radius:6px;padding:2px 8px}
+.item-kopf .rechts{margin-left:auto;display:flex;gap:6px}
+.st{font-size:13px;font-weight:700;border-radius:6px;padding:2px 8px}.st.ok{background:var(--green-soft);color:var(--green)}.st.err{background:var(--red-soft);color:var(--red)}.st.wart{background:var(--amber-soft);color:var(--amber)}
+.adr{display:flex;gap:6px}.adr input{flex:1;min-width:0}
+.lauf{border:2px solid var(--blue);background:var(--blue-soft)}
+.lauf-uhr{font:700 34px var(--f-mono)}
+.plan-row{display:grid;grid-template-columns:70px 1fr auto;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.plan-row:first-child{border-top:0}.plan-row .t{font-family:var(--f-mono);font-weight:600}
+.plan-row .b{min-width:0}.plan-row .b small{display:block;color:var(--ink-2)}
+.leer{padding:26px;text-align:center;color:var(--ink-2)}
+.msg{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:8px;font-weight:600;max-width:calc(100vw - 32px);z-index:30}
+dialog{border:0;border-radius:14px;padding:0;max-width:min(680px,calc(100vw - 24px));width:100%;background:var(--panel);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dlg{padding:16px;display:grid;gap:10px}
+.chk{display:flex;gap:8px;align-items:center;font-weight:600;min-height:36px}.chk input{width:20px;height:20px}
+.warn{background:var(--amber-soft);border:1px solid var(--amber);border-radius:10px;padding:8px 10px;font-size:14px}
+.badge-uebung{background:var(--red);color:#fff;border-radius:6px;padding:1px 7px;font:700 13px var(--f-body);letter-spacing:.04em}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="mark">Ü</div>
+  <div><h1>Übungsgenerator</h1><small>Einsätze und Aufträge für Übungen</small></div>
+  <span class="pill" id="netz">prüfe Verbindung …</span>
+</header>
+<main class="wrap">
+  <section>
+    <div class="panel">
+      <h2>Szenarien</h2>
+      <div id="liste"></div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn pri" id="neu">+ Neues Szenario</button>
+        <button class="btn" id="imp">Importieren</button><input type="file" id="impDatei" accept=".json,application/json" hidden>
+      </div>
+      <div id="piListe"></div>
+    </div>
+    <div class="panel" style="margin-top:12px">
+      <h2>Einstellungen</h2>
+      <label class="f">Adresse der Einsatzverwaltung im Netzwerk<input id="piAdr" inputmode="url" placeholder="http://192.168.178.50:8080"></label>
+      <p class="hint">Für „Im Netzwerk übernehmen“: Adresse, unter der die Einsatzverwaltung im WLAN der Wehr erreichbar ist.</p>
+      <label class="f">Name der Übungsleitung<input id="leitung" maxlength="40" placeholder="z. B. GF Müller"></label>
+      <label class="f" style="margin-top:6px">Umkreis für zufällige Adressen (km)<input id="radius" type="number" min="0.5" max="30" step="0.5"></label>
+    </div>
+  </section>
+  <section id="haupt"></section>
+</main>
+<dialog id="dlg"></dialog>
+<div class="msg" id="msg" hidden></div>
+<script>
+(()=>{
+'use strict';
+const $ = s=>document.querySelector(s);
+const esc = t=>String(t==null?'':t).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad = n=>String(n).padStart(2,'0');
+const hm = t=>{ const d=new Date(t); return pad(d.getHours())+':'+pad(d.getMinutes()); };
+const mmss = ms=>{ const s=Math.max(0,Math.round(ms/1000)); return (s>=3600?Math.floor(s/3600)+':'+pad(Math.floor(s%3600/60)):Math.floor(s/60))+':'+pad(s%60); };
+const rid = p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const LS = { get(k,d){ try{ const v=localStorage.getItem('uebung.'+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }, set(k,v){ try{ localStorage.setItem('uebung.'+k, JSON.stringify(v)); }catch(e){ toast('Speicher des Browsers voll oder gesperrt.'); } } };
+function toast(t){ const m=$('#msg'); m.textContent=t; m.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>m.hidden=true, 3200); }
+
+/* ---------- Vorlagen ---------- */
+const HEIMAT_STD = {lat:52.0497, lon:9.2660, name:'Aerzen'};
+const KAT_STD = ['Baum/Ast','Wasser/Keller','Dach/Gebäude','Verkehrsweg frei machen','Strom/Gas','Tier','Menschenrettung','Sonstiges'];
+const EINSATZ_VORLAGEN = {
+  brand:[['B1','Mülltonnenbrand'],['B1','Kleiner Flächenbrand am Feldrand'],['B2','PKW-Brand auf Parkplatz'],['B2','Brand eines Gartenhauses'],['B2','Rauchentwicklung aus Kellerfenster'],['B3','Wohnungsbrand im 1. OG, eine Person vermisst'],['B3','Scheunenbrand, Übergreifen auf Wohnhaus droht'],['B4','Brand in Lagerhalle, starke Rauchentwicklung'],['BMA','Brandmeldeanlage ausgelöst']],
+  th:[['TH1','Ölspur auf der Fahrbahn'],['TH1','Baum auf Straße'],['TH','Person hinter verschlossener Tür, hilflos'],['TH','Tier in Notlage (Kuh im Graben)'],['TH','Person in Notlage auf Baugerüst']],
+  vu:[['TH VU','PKW gegen Baum, eine Person eingeklemmt'],['TH VU','Zwei PKW frontal, drei Verletzte'],['TH VU','PKW auf dem Dach, Fahrer ansprechbar'],['TH VU','LKW und PKW, auslaufende Betriebsstoffe'],['TH VU','Elektro-PKW gegen Hauswand, Rauch aus dem Unterboden']],
+  abc:[['ABC1','Gasgeruch im Mehrfamilienhaus'],['ABC1','Unbekannte Flüssigkeit tritt aus Fass aus'],['ABC2','Gefahrgut-LKW undicht (UN 1203)'],['ABC1','Chlorgeruch im Schwimmbad']],
+};
+const AUFTRAG_VORLAGEN = {
+  'Baum/Ast':[['Baum auf der Fahrbahn, Straße blockiert',1],['Großer Ast auf geparktem PKW',2],['Baum droht auf Wohnhaus zu stürzen',1],['Äste auf Gehweg',3]],
+  'Wasser/Keller':[['Keller ca. 30 cm unter Wasser',2],['Wasser dringt ins Erdgeschoss ein',1],['Heizungskeller läuft voll',2],['Tiefgarage unter Wasser',2]],
+  'Dach/Gebäude':[['Dachziegel lösen sich, Gehweg gefährdet',1],['Teile des Scheunendachs abgedeckt',2],['Schornstein beschädigt',2]],
+  'Verkehrsweg frei machen':[['Straße überflutet',2],['Schlamm und Geröll auf der Fahrbahn',2],['Verkehrsschild umgestürzt',3]],
+  'Strom/Gas':[['Stromleitung heruntergerissen',1],['Gasgeruch nach Baumsturz',1]],
+  'Tier':[['Pferde auf der Straße',2],['Verletzter Schwan am Ufer',3]],
+  'Menschenrettung':[['Person in PKW in überfluteter Unterführung',1],['Person unter umgestürztem Baum',1]],
+  'Sonstiges':[['Bauzaun umgestürzt',3],['Trampolin auf Nachbargrundstück geweht',3]],
+};
+const MELDENDE = ['Frau Meier','Herr Schulz','Frau Wagner','Herr Becker','Frau Hoffmann','Herr Koch','Frau Richter','Herr Klein','Frau Wolf','Herr Neumann','Anwohner','Polizei','Leitstelle'];
+const zuf = a=>a[Math.floor(Math.random()*a.length)];
+
+/* ---------- Zustand ---------- */
+let szen = LS.get('szenarien', []);
+let aktivId = LS.get('aktiv', szen[0] && szen[0].id);
+let einst = Object.assign({piAdr:'', leitung:'', radius:3}, LS.get('einst', {}));
+let lauf = LS.get('lauf', null);   // {szId, t0, pause, sent:{itemId:{t, ok, text, einsatzId, nummer, nr}}, ziel}
+const NET = {ok:false, status:null};
+const aktiv = ()=>szen.find(s=>s.id===aktivId) || null;
+function speichern(){ LS.set('szenarien', szen); LS.set('aktiv', aktivId); }
+function heimat(){ return (NET.status && NET.status.heimat) || HEIMAT_STD; }
+function kategorien(){ return (NET.status && NET.status.kategorien) || KAT_STD; }
+
+/* ---------- Verbindung: nur wenn diese Seite von der Einsatzverwaltung selbst kommt ---------- */
+async function netzPruefen(){
+  try{
+    const r = await fetch('/api/uebung/status', {cache:'no-store'});
+    const j = r.ok ? await r.json() : null;
+    NET.ok = !!(j && j.ok && j.name==='Einsatzverwaltung'); NET.status = NET.ok ? j : null;
+  }catch(e){ NET.ok = false; NET.status = null; }
+  const p = $('#netz');
+  p.className = 'pill '+(NET.ok?'ok':'aus');
+  p.textContent = NET.ok ? 'Im Netzwerk – Verschicken möglich' : 'Nur Vorbereiten – Verschicken im Netzwerk der Wehr';
+  p.title = NET.ok ? 'Verbunden mit der Einsatzverwaltung' : 'Diese Seite ist nicht mit der Einsatzverwaltung verbunden. Szenarien werden auf diesem Gerät gespeichert.';
+}
+
+/* ---------- Adressen ---------- */
+let geoLetzte = 0;
+async function geoWarte(){ const w = Math.max(0, geoLetzte+1100-Date.now()); geoLetzte = Date.now()+w; await new Promise(r=>setTimeout(r,w)); }
+async function adresseVon(lat, lon){
+  try{
+    if(NET.ok){ const r = await fetch(`/api/reverse?lat=${lat}&lon=${lon}`); if(r.ok){ const j = await r.json(); if(j.name) return j.name; } return ''; }
+    await geoWarte();
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&accept-language=de&lat=${lat}&lon=${lon}`);
+    if(!r.ok) return '';
+    const x = await r.json(), a = x.address||{};
+    const str = [a.road||a.pedestrian||a.footway||a.path, a.house_number].filter(Boolean).join(' ');
+    const ort = [a.postcode, a.village||a.town||a.city||a.hamlet||a.suburb].filter(Boolean).join(' ');
+    return [str, ort].filter(Boolean).join(', ');
+  }catch(e){ return ''; }
+}
+async function adresseSuchen(q){
+  try{
+    if(NET.ok){ const r = await fetch('/api/geocode?q='+encodeURIComponent(q)); const j = r.ok ? await r.json() : []; return j[0] || null; }
+    await geoWarte();
+    const qq = !/\b\d{5}\b/.test(q) && !q.includes(',') ? q+', 31855 Aerzen' : q;
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=de&accept-language=de&q='+encodeURIComponent(qq));
+    const j = r.ok ? await r.json() : [];
+    return j[0] ? {name:j[0].display_name, lat:+j[0].lat, lon:+j[0].lon} : null;
+  }catch(e){ return null; }
+}
+function zufallsPunkt(){
+  const h = heimat(), rKm = Math.max(0.3, +einst.radius||3);
+  const r = rKm*Math.sqrt(Math.random()), w = Math.random()*2*Math.PI;
+  return {lat:+(h.lat + r*Math.cos(w)/111.32).toFixed(6), lon:+(h.lon + r*Math.sin(w)/(111.32*Math.cos(h.lat*Math.PI/180))).toFixed(6)};
+}
+async function zufallsAdresse(){
+  for(let i=0;i<3;i++){
+    const p = zufallsPunkt(); const a = await adresseVon(p.lat, p.lon);
+    if(a && /\d{5}/.test(a) && /[a-zäöüß]/i.test(a.split(',')[0])) return {...p, adresse:a};
+    if(i===2) return {...p, adresse:a};
+  }
+}
+
+/* ---------- Szenarien ---------- */
+function neuesSzenario(name){ const s = {id:rid('s'), name:name||'Neues Szenario', beschreibung:'', geaendert:Date.now(), items:[]}; szen.unshift(s); aktivId = s.id; speichern(); return s; }
+function itemLabel(it){ return it.art==='einsatz' ? `${it.stichwort||'Einsatz'} – ${it.meldebild||''}` : `${it.kat||'Auftrag'} – ${it.adresse||it.text||''}`; }
+function sortieren(s){ s.items.sort((a,b)=>(+a.min||0)-(+b.min||0)); }
+function renderListe(){
+  $('#liste').innerHTML = szen.length ? szen.map(s=>`<div class="sz ${s.id===aktivId?'on':''}" data-sz="${esc(s.id)}"><b>${esc(s.name)}</b><span>${s.items.filter(i=>i.art==='einsatz').length} Einsätze · ${s.items.filter(i=>i.art==='auftrag').length} Aufträge · Dauer ${Math.max(0,...s.items.map(i=>+i.min||0))} min</span></div>`).join('') : '<div class="hint">Noch kein Szenario. „+ Neues Szenario“ oder zufällig erzeugen.</div>';
+  document.querySelectorAll('[data-sz]').forEach(x=>x.onclick = ()=>{ aktivId = x.dataset.sz; speichern(); render(); });
+}
+function feld(it, k, label, typ, extra){
+  const v = it[k]==null ? '' : it[k];
+  if(typ==='select') return `<label class="f ${extra&&extra.weit?'weit':''}">${label}<select data-k="${k}">${extra.opts.map(o=>{ const [val,l] = Array.isArray(o)?o:[o,o]; return `<option value="${esc(val)}" ${String(val)===String(v)?'selected':''}>${esc(l)}</option>`; }).join('')}</select></label>`;
+  if(typ==='textarea') return `<label class="f weit">${label}<textarea data-k="${k}" placeholder="${esc(extra&&extra.ph||'')}">${esc(v)}</textarea></label>`;
+  return `<label class="f ${extra&&extra.weit?'weit':''}">${label}<input data-k="${k}" ${typ?`type="${typ}"`:''} value="${esc(v)}" placeholder="${esc(extra&&extra.ph||'')}" ${extra&&extra.list?`list="${extra.list}"`:''}></label>`;
+}
+function adresseFeld(it){
+  return `<label class="f weit">Adresse / Einsatzort<div class="adr"><input data-k="adresse" value="${esc(it.adresse||'')}" placeholder="z. B. Mühlenstraße 7"><button class="btn klein" data-adr="such" title="Koordinate zur Adresse suchen">Suchen</button><button class="btn klein" data-adr="zuf" title="Zufällige Adresse im Umkreis">🎲</button></div></label>
+    <label class="f">Koordinate<input data-k="koord" value="${it.lat!=null?esc(it.lat+', '+it.lon):''}" placeholder="52.04970, 9.26600"></label>`;
+}
+function itemHTML(s, it){
+  const st = lauf && lauf.szId===s.id && lauf.sent[it.id];
+  const stHTML = st ? (st.ok ? `<span class="st ok">gesendet ${hm(st.t)}${st.nummer?' · '+esc(st.nummer):''}${st.nr?' · Auftrag '+st.nr:''}</span>` : `<span class="st err" title="${esc(st.text||'')}">Fehler: ${esc(st.text||'')}</span>`) : '';
+  const kopf = `<div class="item-kopf"><span class="art">${it.art==='einsatz'?'Einsatz':'Auftrag'}</span><span class="zeit">+${+it.min||0} min</span>${stHTML}<span class="rechts">${NET.ok?`<button class="btn klein gruen" data-send="${esc(it.id)}">Jetzt senden</button>`:''}<button class="btn klein" data-dup="${esc(it.id)}" title="Duplizieren">⧉</button><button class="btn klein" data-del="${esc(it.id)}" title="Entfernen">✕</button></span></div>`;
+  if(it.art==='einsatz'){
+    return `<div class="item" data-item="${esc(it.id)}">${kopf}<div class="grid">
+      ${feld(it,'min','Zeit ab Start (min)','number')}
+      ${feld(it,'stichwort','Stichwort','',{list:'stwListe', ph:'B3, TH VU …'})}
+      ${feld(it,'meldebild','Meldebild','',{weit:true, ph:'z. B. Scheunenbrand, Übergreifen droht'})}
+      ${adresseFeld(it)}
+      ${feld(it,'meldender','Meldender')}
+      <label class="chk"><input type="checkbox" data-k="gsl" ${it.gsl?'checked':''}> Großschadenslage (Aufträge)</label>
+      ${feld(it,'alarmieren','Fahrzeuge alarmieren (Funkrufnamen, Komma)','',{weit:true, ph:'leer = keine; z. B. 14-01-1, 14-23-10'})}
+      ${feld(it,'notiz','Hinweis für die Übungsleitung','textarea',{ph:'wird als Notiz am Einsatz eingetragen'})}
+    </div></div>`;
+  }
+  const ziele = s.items.filter(x=>x.art==='einsatz');
+  return `<div class="item auftrag" data-item="${esc(it.id)}">${kopf}<div class="grid">
+    ${feld(it,'min','Zeit ab Start (min)','number')}
+    ${feld(it,'ziel','Für Einsatz','select',{opts:[...ziele.map(z=>[z.id, (z.stichwort||'Einsatz')+' – '+(z.meldebild||'').slice(0,30)]), ['laufend','einen laufenden Einsatz (beim Verschicken wählen)']]})}
+    ${feld(it,'kat','Kategorie','select',{opts:[...new Set([...kategorien(), it.kat].filter(Boolean))]})}
+    ${feld(it,'prio','Priorität','select',{opts:[['1','1 – dringend'],['2','2 – normal'],['3','3 – kann warten']]})}
+    ${adresseFeld(it)}
+    ${feld(it,'text','Beschreibung','textarea',{ph:'z. B. Baum auf der Fahrbahn, Straße blockiert'})}
+    ${feld(it,'meldender','Meldender')}
+    ${feld(it,'telefon','Rückrufnummer')}
+  </div></div>`;
+}
+function render(){
+  renderListe();
+  const s = aktiv(), h = $('#haupt');
+  if(!s){ h.innerHTML = `<div class="panel leer">Szenario links wählen oder neu anlegen.<div class="row" style="justify-content:center;margin-top:12px"><button class="btn pri" id="leerNeu">+ Neues Szenario</button><button class="btn" id="leerZuf">🎲 Zufällig erzeugen</button></div></div>`; $('#leerNeu').onclick = ()=>{ neuesSzenario(); render(); }; $('#leerZuf').onclick = ()=>{ neuesSzenario('Zufallsübung '+new Date().toLocaleDateString('de-DE')); render(); openGenerator(); }; return; }
+  sortieren(s);
+  const laeuft = lauf && lauf.szId===s.id;
+  h.innerHTML = `
+    ${laufHTML(s)}
+    <div class="panel">
+      <h2><span class="badge-uebung">ÜBUNG</span> <input class="inp" id="szName" value="${esc(s.name)}" style="flex:1;min-width:200px;font:700 20px var(--f-disp)"></h2>
+      <label class="f">Beschreibung / Lage für die Übungsleitung<textarea id="szBeschr" placeholder="z. B. Unwetterübung Ortswehr, 60 Minuten, 2 Gruppen">${esc(s.beschreibung||'')}</textarea></label>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="plusE">+ Einsatz</button><button class="btn" id="plusA">+ Auftrag</button><button class="btn" id="gen">🎲 Zufällig erzeugen …</button>
+        <span style="flex:1"></span>
+        <button class="btn" id="exp">Exportieren</button>
+        ${!NET.ok && einst.piAdr ? '<button class="btn pri" id="uebergabe">Im Netzwerk übernehmen</button>' : ''}
+        ${NET.ok ? '<button class="btn" id="aufPi">Auf dem Pi ablegen</button>' : ''}
+        <button class="btn" id="dupSz">Duplizieren</button><button class="btn rot" id="delSz">Löschen</button>
+      </div>
+      ${!NET.ok ? `<p class="hint">Vorbereiten geht überall; das Szenario bleibt auf diesem Gerät. <b>Verschicken</b> geht nur, wenn die App im Netzwerk der Wehr über die Einsatzverwaltung geöffnet ist (<span style="font-family:var(--f-mono)">http://&lt;Pi&gt;:8080/uebung/</span>). Dorthin mit „Im Netzwerk übernehmen“ (Adresse in den Einstellungen) oder per Export/Import.</p>` : ''}
+    </div>
+    <h3>Ablauf (${s.items.length})</h3>
+    <div id="items">${s.items.length ? s.items.map(it=>itemHTML(s,it)).join('') : '<div class="panel leer">Noch keine Einsätze oder Aufträge.</div>'}</div>
+    <datalist id="stwListe">${['B1','B2','B3','B4','BMA','TH','TH1','TH VU','ABC1','ABC2','WASSER','UNWETTER','Übung'].map(x=>`<option value="${x}">`).join('')}</datalist>`;
+  $('#szName').oninput = e=>{ s.name = e.target.value.slice(0,80); s.geaendert = Date.now(); speichern(); renderListe(); };
+  $('#szBeschr').oninput = e=>{ s.beschreibung = e.target.value.slice(0,2000); speichern(); };
+  $('#plusE').onclick = ()=>{ s.items.push({id:rid('i'), art:'einsatz', min:naechsteMin(s), stichwort:'', meldebild:'', gsl:false}); speichern(); render(); };
+  $('#plusA').onclick = ()=>{ const z = s.items.find(x=>x.art==='einsatz'); s.items.push({id:rid('i'), art:'auftrag', min:naechsteMin(s), ziel:z?z.id:'laufend', kat:kategorien()[0], prio:'2'}); speichern(); render(); };
+  $('#gen').onclick = openGenerator;
+  $('#exp').onclick = ()=>exportieren([s]);
+  const ub = $('#uebergabe'); if(ub) ub.onclick = ()=>uebergeben(s);
+  const ap = $('#aufPi'); if(ap) ap.onclick = async ()=>{ try{ const r = await fetch('/api/uebung/szenarien', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({szenario:s})}); if(!r.ok) throw 0; toast('Auf dem Pi abgelegt – andere Geräte im Netzwerk können es laden.'); piListe(); }catch(e){ toast('Konnte nicht auf dem Pi ablegen.'); } };
+  $('#dupSz').onclick = ()=>{ const k = JSON.parse(JSON.stringify(s)); k.id = rid('s'); k.name = s.name+' (Kopie)'; k.items.forEach(i=>i.id=rid('i')); const map = {}; s.items.forEach((i,n)=>map[i.id]=k.items[n].id); k.items.forEach(i=>{ if(map[i.ziel]) i.ziel = map[i.ziel]; }); szen.unshift(k); aktivId = k.id; speichern(); render(); };
+  $('#delSz').onclick = ()=>{ if(!confirm(`Szenario „${s.name}“ auf diesem Gerät löschen?`)) return; szen = szen.filter(x=>x.id!==s.id); if(lauf && lauf.szId===s.id){ lauf = null; LS.set('lauf', null); } aktivId = szen[0] && szen[0].id; speichern(); render(); };
+  wireItems(s);
+  wireLauf(s);
+}
+function naechsteMin(s){ const m = Math.max(0, ...s.items.map(i=>+i.min||0)); return s.items.length ? m+5 : 0; }
+function wireItems(s){
+  document.querySelectorAll('[data-item]').forEach(box=>{
+    const it = s.items.find(x=>x.id===box.dataset.item);
+    box.querySelectorAll('[data-k]').forEach(el=>{
+      const k = el.dataset.k;
+      const setz = ()=>{
+        if(k==='gsl') it.gsl = el.checked;
+        else if(k==='koord'){ const m = /(-?\d+(?:[.,]\d+)?)\s*[,; ]\s*(-?\d+(?:[.,]\d+)?)/.exec(el.value); if(m){ it.lat = +m[1].replace(',','.'); it.lon = +m[2].replace(',','.'); } else if(!el.value.trim()){ it.lat = it.lon = null; } }
+        else if(k==='min') it.min = Math.max(0, Math.min(600, parseInt(el.value,10)||0));
+        else it[k] = el.value;
+        s.geaendert = Date.now(); speichern();
+      };
+      el.addEventListener(el.tagName==='SELECT'||el.type==='checkbox' ? 'change' : 'input', setz);
+      if(k==='min') el.addEventListener('change', ()=>render());
+    });
+    box.querySelectorAll('[data-adr]').forEach(b=>b.onclick = async ()=>{
+      b.disabled = true;
+      if(b.dataset.adr==='zuf'){ b.textContent = '…'; const a = await zufallsAdresse(); Object.assign(it, {lat:a.lat, lon:a.lon, adresse:a.adresse||it.adresse||''}); if(!a.adresse) toast('Keine Adresse gefunden (Internet?) – nur Koordinate gesetzt.'); }
+      else { const q = (it.adresse||'').trim(); if(q.length<3){ toast('Bitte zuerst eine Adresse eintragen.'); b.disabled = false; return; } b.textContent = '…'; const r = await adresseSuchen(q); if(r){ it.lat = +(+r.lat).toFixed(6); it.lon = +(+r.lon).toFixed(6); toast('Gefunden: '+r.name); } else toast('Adresse nicht gefunden (Internet?).'); }
+      speichern(); render();
+    });
+  });
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick = ()=>{ s.items = s.items.filter(x=>x.id!==b.dataset.del); speichern(); render(); });
+  document.querySelectorAll('[data-dup]').forEach(b=>b.onclick = ()=>{ const o = s.items.find(x=>x.id===b.dataset.dup); const k = {...JSON.parse(JSON.stringify(o)), id:rid('i')}; s.items.push(k); speichern(); render(); });
+  document.querySelectorAll('[data-send]').forEach(b=>b.onclick = async ()=>{ lauf = lauf && lauf.szId===s.id ? lauf : {szId:s.id, t0:null, pause:null, sent:{}, ziel:''}; const it = s.items.find(x=>x.id===b.dataset.send); b.disabled = true; await senden(s, it, true); render(); });
+}
+
+/* ---------- Zufällig erzeugen ---------- */
+function openGenerator(){
+  const s = aktiv(); if(!s) return;
+  const d = $('#dlg');
+  d.innerHTML = `<form class="dlg" method="dialog">
+    <h2>Zufällig erzeugen</h2>
+    <div class="grid">
+      <label class="f">Einsätze<input id="gE" type="number" min="0" max="10" value="2"></label>
+      <label class="f">Aufträge (Unwetter)<input id="gA" type="number" min="0" max="60" value="0"></label>
+      <label class="f">Zeitraum (min)<input id="gZ" type="number" min="0" max="480" value="45"></label>
+    </div>
+    <div class="row">${[['brand','Brand'],['th','Technische Hilfe'],['vu','Verkehrsunfall'],['abc','Gefahrstoff']].map(([k,l])=>`<label class="chk"><input type="checkbox" data-gart="${k}" ${k!=='abc'?'checked':''}> ${l}</label>`).join('')}</div>
+    <label class="chk"><input type="checkbox" id="gAdr" checked> Adressen im Umkreis von ${esc(+einst.radius||3)} km um ${esc(heimat().name||'den Heimatort')} suchen (braucht Internet, ca. 1 s je Adresse)</label>
+    <p class="hint">Aufträge gehen an einen Unwetter-Einsatz (Großschadenslage), der dafür am Anfang mit angelegt wird – oder an einen Einsatz des Szenarios mit „Großschadenslage“. Alle Einsätze werden beim Verschicken als ÜBUNG gekennzeichnet.</p>
+    <div id="gFort" class="hint"></div>
+    <div class="row"><button class="btn pri" id="gOk" type="button">Erzeugen</button><button class="btn" value="ab">Abbrechen</button></div>
+  </form>`;
+  d.showModal();
+  $('#gOk').onclick = async ()=>{
+    const nE = Math.max(0, Math.min(10, +$('#gE').value||0)), nA = Math.max(0, Math.min(60, +$('#gA').value||0)), Z = Math.max(0, +$('#gZ').value||0);
+    const arten = [...document.querySelectorAll('[data-gart]:checked')].map(x=>x.dataset.gart);
+    if(nE && !arten.length){ toast('Bitte mindestens eine Einsatzart wählen.'); return; }
+    const mitAdr = $('#gAdr').checked;
+    $('#gOk').disabled = true;
+    const fort = t=>{ $('#gFort').textContent = t; };
+    const neu = [];
+    const ort = async ()=>{ if(!mitAdr){ const p = zufallsPunkt(); return {...p, adresse:''}; } return await zufallsAdresse(); };
+    for(let i=0;i<nE;i++){
+      fort(`Einsatz ${i+1} von ${nE} …`);
+      const [stw, mb] = zuf(EINSATZ_VORLAGEN[zuf(arten)]);
+      const o = await ort();
+      neu.push({id:rid('i'), art:'einsatz', min: i===0 ? 0 : Math.round(Math.random()*Z), stichwort:stw, meldebild:mb, adresse:o.adresse, lat:o.lat, lon:o.lon, meldender:zuf(MELDENDE), gsl:false});
+    }
+    let ziel = s.items.find(x=>x.art==='einsatz' && x.gsl);
+    if(nA && !ziel){ const h = heimat(); ziel = {id:rid('i'), art:'einsatz', min:0, stichwort:'UNWETTER', meldebild:'Unwetter – zahlreiche Einsatzstellen im Gemeindegebiet', adresse:h.name||'', lat:h.lat, lon:h.lon, gsl:true, meldender:'Leitstelle'}; neu.push(ziel); }
+    const kats = kategorien().filter(k=>AUFTRAG_VORLAGEN[k]); const katListe = kats.length ? kats : Object.keys(AUFTRAG_VORLAGEN);
+    for(let i=0;i<nA;i++){
+      fort(`Auftrag ${i+1} von ${nA} …`);
+      const kat = zuf(katListe), [text, prio] = zuf(AUFTRAG_VORLAGEN[kat]);
+      const o = await ort();
+      neu.push({id:rid('i'), art:'auftrag', min: 1+Math.round(Math.random()*Math.max(1,Z-1)), ziel:ziel.id, kat, prio:String(prio), adresse:o.adresse, lat:o.lat, lon:o.lon, text, meldender:zuf(MELDENDE), telefon:''});
+    }
+    s.items.push(...neu); s.geaendert = Date.now(); speichern();
+    d.close(); render(); toast(`${neu.length} Einträge erzeugt – vor dem Verschicken prüfen und anpassen.`);
+  };
+}
+
+/* ---------- Übergabe, Export, Import ---------- */
+function b64u(bytes){ let s=''; bytes.forEach(b=>s+=String.fromCharCode(b)); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function unb64u(t){ const s = atob(t.replace(/-/g,'+').replace(/_/g,'/')); return Uint8Array.from(s, c=>c.charCodeAt(0)); }
+async function packen(obj){
+  const roh = new TextEncoder().encode(JSON.stringify(obj));
+  if(window.CompressionStream){ const cs = new Blob([roh]).stream().pipeThrough(new CompressionStream('deflate-raw')); return 'z'+b64u(new Uint8Array(await new Response(cs).arrayBuffer())); }
+  return 'j'+b64u(roh);
+}
+async function entpacken(t){
+  const bytes = unb64u(t.slice(1));
+  if(t[0]==='z'){ const ds = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw')); return JSON.parse(await new Response(ds).text()); }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+async function uebergeben(s){
+  let a = String(einst.piAdr||'').trim().replace(/\/+$/,''); if(!a) return;
+  if(!/^https?:\/\//.test(a)) a = 'http://'+a;
+  const url = a+'/uebung/#import='+await packen({szenarien:[s]});
+  window.open(url, '_blank', 'noopener');
+}
+function exportieren(liste){
+  const blob = new Blob([JSON.stringify({typ:'uebungsgenerator', version:1, szenarien:liste}, null, 1)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = (liste.length===1 ? 'uebung-'+liste[0].name.replace(/[^\wäöüÄÖÜß-]+/g,'-') : 'uebungen')+'.json';
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function importieren(obj, quelle){
+  const liste = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.szenarien)) ? obj.szenarien : (obj && obj.items ? [obj] : []);
+  let n = 0;
+  liste.forEach(x=>{
+    if(!x || !Array.isArray(x.items)) return;
+    const vorh = szen.findIndex(y=>y.id===x.id);
+    const k = {id:x.id||rid('s'), name:String(x.name||'Szenario').slice(0,80), beschreibung:String(x.beschreibung||'').slice(0,2000), geaendert:Date.now(), items:x.items.slice(0,300).filter(i=>i && (i.art==='einsatz'||i.art==='auftrag'))};
+    if(vorh>=0){ if(!confirm(`„${k.name}“ gibt es auf diesem Gerät schon. Ersetzen?`)) return; szen[vorh] = k; } else szen.unshift(k);
+    aktivId = k.id; n++;
+  });
+  speichern(); render();
+  toast(n ? `${n} Szenario${n===1?'':'s'} übernommen${quelle?' ('+quelle+')':''}.` : 'Keine Szenarien gefunden.');
+}
+async function piListe(){
+  const h = $('#piListe'); if(!NET.ok){ h.innerHTML = ''; return; }
+  try{
+    const l = await (await fetch('/api/uebung/szenarien', {cache:'no-store'})).json();
+    h.innerHTML = l.length ? `<h3>Auf dem Pi abgelegt</h3>${l.map(x=>`<div class="row" style="margin-bottom:6px"><span style="flex:1"><b>${esc(x.name)}</b><br><span class="hint">${x.items.length} Einträge · ${new Date(x.abgelegt).toLocaleDateString('de-DE')}</span></span><button class="btn klein" data-pilade="${esc(x.id)}">Laden</button><button class="btn klein" data-pidel="${esc(x.id)}">✕</button></div>`).join('')}` : '';
+    h.querySelectorAll('[data-pilade]').forEach(b=>b.onclick = ()=>importieren([l.find(x=>x.id===b.dataset.pilade)], 'vom Pi'));
+    h.querySelectorAll('[data-pidel]').forEach(b=>b.onclick = async ()=>{ if(!confirm('Vom Pi löschen?')) return; await fetch('/api/uebung/szenarien/'+encodeURIComponent(b.dataset.pidel), {method:'DELETE'}); piListe(); });
+  }catch(e){ h.innerHTML = ''; }
+}
+
+/* ---------- Verschicken (nur im Netzwerk) ---------- */
+function laufHTML(s){
+  if(!NET.ok) return '';
+  const laeuft = lauf && lauf.szId===s.id && lauf.t0;
+  const einsaetze = (NET.status && NET.status.einsaetze) || [];
+  const brauchtZiel = s.items.some(i=>i.art==='auftrag' && i.ziel==='laufend');
+  const jetzt = Date.now();
+  const verstrichen = laeuft ? ((lauf.pause||jetzt) - lauf.t0) : 0;
+  const offen = s.items.filter(i=>!(lauf && lauf.szId===s.id && lauf.sent[i.id] && lauf.sent[i.id].ok));
+  return `<div class="panel lauf" style="margin-bottom:12px">
+    <h2>Verschicken an die Einsatzverwaltung</h2>
+    ${brauchtZiel ? `<label class="f">Aufträge „laufender Einsatz“ gehen an<select id="zielEz"><option value="">– bitte wählen –</option>${einsaetze.map(e=>`<option value="${esc(e.id)}" ${lauf&&lauf.ziel===e.id?'selected':''}>${esc(e.nummer)} · ${esc([e.stichwort,e.meldebild].filter(Boolean).join(' – '))}</option>`).join('')}</select></label>` : ''}
+    ${laeuft ? `<div class="row"><span class="lauf-uhr">${mmss(verstrichen)}</span><span class="hint">${lauf.pause?'angehalten':'läuft seit '+hm(lauf.t0)} · ${offen.length} von ${s.items.length} noch offen</span></div>
+      <div id="plan">${s.items.map(it=>{ const st = lauf.sent[it.id]; const due = lauf.t0 + (+it.min||0)*60000 + (lauf.pause?jetzt-lauf.pause:0); return `<div class="plan-row"><span class="t">+${+it.min||0}′</span><span class="b">${esc(itemLabel(it))}<small>${st ? (st.ok?'gesendet '+hm(st.t):'Fehler: '+esc(st.text||'')) : 'in '+mmss(due-jetzt)}</small></span>${st&&st.ok?'<span class="st ok">✓</span>':st?'<span class="st err">!</span>':'<span class="st wart">wartet</span>'}</div>`; }).join('')}</div>
+      <div class="row" style="margin-top:8px">${lauf.pause?'<button class="btn pri" id="weiter">Fortsetzen</button>':'<button class="btn" id="pause">Anhalten</button>'}<button class="btn rot" id="stopp">Ablauf beenden</button></div>`
+    : `<div class="row"><button class="btn pri" id="start" ${s.items.length?'':'disabled'}>▶ Ablauf starten (nach Zeitplan)</button><button class="btn" id="alles" ${s.items.length?'':'disabled'}>Alles sofort senden</button>${lauf && lauf.szId===s.id && Object.keys(lauf.sent).length ? '<button class="btn" id="reset">Versandstatus zurücksetzen</button>' : ''}</div>
+      <p class="hint">„Ablauf starten“ schickt jeden Eintrag zu seiner Zeit (Minuten ab Start). Diese Seite muss dafür geöffnet bleiben. Einsätze erscheinen in der Einsatzverwaltung mit „ÜBUNG:“ im Meldebild und einem Tagebucheintrag.</p>`}
+    ${s.items.some(i=>i.art==='einsatz' && String(i.alarmieren||'').trim()) ? '<div class="warn">Achtung: In diesem Szenario werden Fahrzeuge alarmiert (Status A). Das sehen alle Geräte der Einsatzverwaltung – nur im Übungsbetrieb verwenden.</div>' : ''}
+  </div>`;
+}
+function wireLauf(s){
+  const z = $('#zielEz'); if(z) z.onchange = ()=>{ lauf = lauf && lauf.szId===s.id ? lauf : {szId:s.id, t0:null, pause:null, sent:{}, ziel:''}; lauf.ziel = z.value; LS.set('lauf', lauf); };
+  const st = $('#start'); if(st) st.onclick = ()=>{ if(!pruefeZiel(s)) return; if(!confirm(`Übung „${s.name}“ jetzt starten? Die Einträge werden nach Zeitplan an die Einsatzverwaltung geschickt.`)) return; const alt = lauf && lauf.szId===s.id ? lauf : null; lauf = {szId:s.id, t0:Date.now(), pause:null, sent:alt?alt.sent:{}, ziel:alt?alt.ziel:(z?z.value:'')}; LS.set('lauf', lauf); render(); laufTick(); };
+  const al = $('#alles'); if(al) al.onclick = async ()=>{ if(!pruefeZiel(s)) return; if(!confirm(`Alle ${s.items.length} Einträge von „${s.name}“ sofort senden?`)) return; lauf = lauf && lauf.szId===s.id ? lauf : {szId:s.id, t0:null, pause:null, sent:{}, ziel:z?z.value:''}; for(const it of s.items){ if(!(lauf.sent[it.id]&&lauf.sent[it.id].ok)) await senden(s, it); } render(); };
+  const pa = $('#pause'); if(pa) pa.onclick = ()=>{ lauf.pause = Date.now(); LS.set('lauf', lauf); render(); };
+  const we = $('#weiter'); if(we) we.onclick = ()=>{ lauf.t0 += Date.now()-lauf.pause; lauf.pause = null; LS.set('lauf', lauf); render(); };
+  const sp = $('#stopp'); if(sp) sp.onclick = ()=>{ if(!confirm('Ablauf beenden? Bereits gesendete Einsätze bleiben in der Einsatzverwaltung.')) return; lauf.t0 = null; lauf.pause = null; LS.set('lauf', lauf); render(); };
+  const rs = $('#reset'); if(rs) rs.onclick = ()=>{ if(!confirm('Versandstatus zurücksetzen? Danach kann das Szenario erneut verschickt werden.')) return; lauf = null; LS.set('lauf', null); render(); };
+}
+function pruefeZiel(s){
+  if(s.items.some(i=>i.art==='auftrag' && i.ziel==='laufend') && !($('#zielEz')||{}).value){ toast('Bitte wählen, an welchen laufenden Einsatz die Aufträge gehen.'); return false; }
+  return true;
+}
+async function senden(s, it, einzeln){
+  if(!NET.ok){ toast('Verschicken geht nur im Netzwerk der Wehr.'); return; }
+  const merk = r=>{ lauf.sent[it.id] = {t:Date.now(), ...r}; LS.set('lauf', lauf); };
+  const daten = {...it};
+  if(it.art==='einsatz') daten.alarmieren = String(it.alarmieren||'').split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+  let einsatzId = null;
+  if(it.art==='auftrag'){
+    if(it.ziel==='laufend') einsatzId = lauf.ziel || ($('#zielEz')||{}).value || '';
+    else { const z = lauf.sent[it.ziel]; einsatzId = z && z.ok ? z.einsatzId : null;
+      if(!einsatzId && einzeln){ const ez = s.items.find(x=>x.id===it.ziel); if(ez && confirm('Der zugehörige Einsatz wurde noch nicht gesendet. Jetzt zuerst den Einsatz senden?')){ await senden(s, ez, true); const z2 = lauf.sent[it.ziel]; einsatzId = z2 && z2.ok ? z2.einsatzId : null; } } }
+    if(!einsatzId){ merk({ok:false, text:'Ziel-Einsatz fehlt (erst den Einsatz senden bzw. laufenden Einsatz wählen)'}); return; }
+  }
+  try{
+    const r = await fetch('/api/uebung/senden', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({art:it.art, daten, einsatzId, szenario:s.name, leitung:einst.leitung})});
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok || !j.ok) throw new Error(j.text || j.error || 'HTTP '+r.status);
+    merk({ok:true, einsatzId:j.einsatzId, nummer:j.nummer, nr:j.nr});
+    if(j.fehlt && j.fehlt.length) toast('Nicht alarmiert (Funkrufname unbekannt oder besetzt): '+j.fehlt.join(', '));
+    else toast(it.art==='einsatz' ? `Einsatz ${j.nummer} gesendet${j.alarmiert&&j.alarmiert.length?' – alarmiert: '+j.alarmiert.join(', '):''}` : `Auftrag ${j.nr} an ${j.nummer} gesendet`);
+    netzPruefen();
+  }catch(e){ merk({ok:false, text:e.message}); toast('Fehler: '+e.message); }
+}
+let tickLaeuft = false;
+async function laufTick(){
+  if(tickLaeuft || !lauf || !lauf.t0 || lauf.pause || !NET.ok) return;
+  const s = szen.find(x=>x.id===lauf.szId); if(!s) return;
+  tickLaeuft = true;
+  try{
+    for(const it of s.items.slice().sort((a,b)=>(+a.min||0)-(+b.min||0))){
+      if(lauf.sent[it.id]) continue;
+      if(Date.now() < lauf.t0 + (+it.min||0)*60000) break;
+      await senden(s, it);
+    }
+  } finally { tickLaeuft = false; }
+  if(aktivId===lauf.szId && $('#plan')) sanftRender();
+  if(s.items.every(i=>lauf.sent[i.id])){ lauf.t0 = null; LS.set('lauf', lauf); render(); toast('Alle Einträge verschickt – Übung läuft in der Einsatzverwaltung weiter.'); }
+}
+function sanftRender(){ const a = document.activeElement; if($('#dlg').open || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return; render(); }
+setInterval(()=>{ if(lauf && lauf.t0 && !lauf.pause){ laufTick(); if(aktivId===lauf.szId && document.querySelector('.lauf-uhr')) sanftRender(); } }, 1000);
+
+/* ---------- Start ---------- */
+$('#neu').onclick = ()=>{ neuesSzenario(); render(); };
+$('#imp').onclick = ()=>$('#impDatei').click();
+$('#impDatei').onchange = async e=>{ const f = e.target.files[0]; if(!f) return; try{ importieren(JSON.parse(await f.text()), f.name); }catch(err){ toast('Datei nicht lesbar.'); } e.target.value = ''; };
+$('#piAdr').value = einst.piAdr; $('#leitung').value = einst.leitung; $('#radius').value = einst.radius;
+$('#piAdr').onchange = e=>{ einst.piAdr = e.target.value.trim(); LS.set('einst', einst); render(); };
+$('#leitung').onchange = e=>{ einst.leitung = e.target.value.trim(); LS.set('einst', einst); };
+$('#radius').onchange = e=>{ einst.radius = Math.max(0.5, Math.min(30, +e.target.value||3)); LS.set('einst', einst); };
+(async ()=>{
+  await netzPruefen();
+  if(!szen.length && !location.hash.includes('import=')) neuesSzenario('Meine erste Übung');
+  const m = /#import=([A-Za-z0-9_-]+)/.exec(location.hash);
+  if(m){ try{ importieren(await entpacken(m[1]), 'Übergabe'); }catch(e){ toast('Übergabe-Link beschädigt.'); } try{ history.replaceState(null, '', location.pathname); }catch(e){} }
+  render(); piListe();
+  setInterval(netzPruefen, 30000);
+})();
+})();
+</script>
+</body>
+</html>
