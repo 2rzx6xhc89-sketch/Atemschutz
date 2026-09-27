@@ -59,6 +59,11 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .dlg{padding:16px;display:grid;gap:10px}
 .chk{display:flex;gap:8px;align-items:center;font-weight:600;min-height:36px}.chk input{width:20px;height:20px}
 .warn{background:var(--amber-soft);border:1px solid var(--amber);border-radius:10px;padding:8px 10px;font-size:14px}
+.ausw-kacheln{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+.ausw-k{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--panel-2)}.ausw-k small{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2)}.ausw-k b{font:700 24px var(--f-mono)}.ausw-k span{display:block;font-size:12px;color:var(--ink-2)}
+.ausw-scroll{overflow-x:auto}.ausw{border-collapse:collapse;width:100%;font-size:14px}.ausw th,.ausw td{border-top:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}.ausw th{font-size:12px;text-transform:uppercase;color:var(--ink-2)}.ausw td{font-family:var(--f-mono)}.ausw td:first-child,.ausw td small{font-family:var(--f-body)}
+.ausw tr.offen td{background:var(--amber-soft)}
+@media print{ body.druck-ausw .top, body.druck-ausw section:first-child, body.druck-ausw #haupt > :not(#auswertungBox){display:none !important} body.druck-ausw .wrap{display:block;padding:0} body.druck-ausw #auswertungBox{border:0} body.druck-ausw #auswertungBox .btn{display:none} }
 .badge-uebung{background:var(--red);color:#fff;border-radius:6px;padding:1px 7px;font:700 13px var(--f-body);letter-spacing:.04em}
 </style>
 </head>
@@ -130,7 +135,7 @@ let szen = LS.get('szenarien', []);
 let aktivId = LS.get('aktiv', szen[0] && szen[0].id);
 let einst = Object.assign({piAdr:'', leitung:'', radius:3}, LS.get('einst', {}));
 let lauf = LS.get('lauf', null);   // {szId, t0, pause, sent:{itemId:{t, ok, text, einsatzId, nummer, nr}}, ziel}
-const NET = {ok:false, status:null};
+const NET = {ok:false, status:null, anmelden:false};
 const aktiv = ()=>szen.find(s=>s.id===aktivId) || null;
 function speichern(){ LS.set('szenarien', szen); LS.set('aktiv', aktivId); }
 function heimat(){ return (NET.status && NET.status.heimat) || HEIMAT_STD; }
@@ -139,14 +144,38 @@ function kategorien(){ return (NET.status && NET.status.kategorien) || KAT_STD; 
 /* ---------- Verbindung: nur wenn diese Seite von der Einsatzverwaltung selbst kommt ---------- */
 async function netzPruefen(){
   try{
-    const r = await fetch('/api/uebung/status', {cache:'no-store'});
+    const r = await fetch('/api/uebung/status', {cache:'no-store', credentials:'same-origin'});
+    NET.anmelden = r.status===401 && /json/.test(r.headers.get('content-type')||'');
     const j = r.ok ? await r.json() : null;
     NET.ok = !!(j && j.ok && j.name==='Einsatzverwaltung'); NET.status = NET.ok ? j : null;
-  }catch(e){ NET.ok = false; NET.status = null; }
+  }catch(e){ NET.ok = false; NET.status = null; NET.anmelden = false; }
   const p = $('#netz');
   p.className = 'pill '+(NET.ok?'ok':'aus');
-  p.textContent = NET.ok ? 'Im Netzwerk – Verschicken möglich' : 'Nur Vorbereiten – Verschicken im Netzwerk der Wehr';
+  p.textContent = NET.ok ? 'Im Netzwerk – Verschicken möglich' : NET.anmelden ? 'Im Netzwerk – bitte anmelden' : 'Nur Vorbereiten – Verschicken im Netzwerk der Wehr';
+  p.style.cursor = NET.anmelden ? 'pointer' : '';
+  p.onclick = NET.anmelden ? anmeldenDialog : null;
   p.title = NET.ok ? 'Verbunden mit der Einsatzverwaltung' : 'Diese Seite ist nicht mit der Einsatzverwaltung verbunden. Szenarien werden auf diesem Gerät gespeichert.';
+}
+
+/* Anmeldung an der Einsatzverwaltung (gleiche Benutzer und PINs) */
+async function anmeldenDialog(){
+  let l = [];
+  try{ l = await (await fetch('/api/auth/benutzer', {cache:'no-store'})).json(); }catch(e){ toast('Server nicht erreichbar.'); return; }
+  const d = $('#dlg');
+  d.innerHTML = `<form class="dlg" method="dialog"><h2>Anmelden</h2><p class="hint">Mit dem Benutzer der Einsatzverwaltung (Einsatzleitung oder Admin), um Übungen zu verschicken.</p>
+    <label class="f">Benutzer<select id="anU">${l.map(u=>`<option value="${esc(u.id)}">${esc(u.username)}</option>`).join('')}</select></label>
+    <label class="f">PIN<input id="anP" type="password" inputmode="numeric" autocomplete="current-password"></label>
+    <div class="hint" id="anE" style="color:var(--red)"></div>
+    <div class="row"><button class="btn pri" id="anOk" type="button">Anmelden</button><button class="btn" value="ab">Abbrechen</button></div></form>`;
+  d.showModal();
+  const los = async ()=>{
+    const r = await fetch('/api/auth/login', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body:JSON.stringify({userId:$('#anU').value, pin:$('#anP').value})});
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok){ $('#anE').textContent = j.text || 'Anmeldung fehlgeschlagen.'; return; }
+    d.close(); await netzPruefen(); render(); piListe(); toast('Angemeldet als '+j.user.username+'.');
+  };
+  $('#anOk').onclick = los; $('#anP').onkeydown = e=>{ if(e.key==='Enter'){ e.preventDefault(); los(); } };
+  setTimeout(()=>$('#anP').focus(), 50);
 }
 
 /* ---------- Adressen ---------- */
@@ -241,6 +270,7 @@ function render(){
   const laeuft = lauf && lauf.szId===s.id;
   h.innerHTML = `
     ${laufHTML(s)}
+    ${NET.ok && lauf && lauf.szId===s.id && Object.values(lauf.sent).some(x=>x.ok) ? `<div class="panel" style="margin-bottom:12px" id="auswertungBox"><h2>Auswertung <button class="btn klein" id="ausLaden">${AUSW && AUSW.szId===s.id ? 'Aktualisieren' : 'Zeiten laden'}</button>${AUSW && AUSW.szId===s.id ? '<button class="btn klein" id="ausCsv">CSV</button><button class="btn klein" id="ausDruck">Drucken / PDF</button>' : ''}</h2><div id="ausInhalt">${AUSW && AUSW.szId===s.id ? auswertungHTML(s, AUSW.daten) : '<p class="hint">Zeigt, wie schnell Einsätze und Aufträge bearbeitet wurden: Alarm → Status 3 → Status 4 → erste Lagemeldung, bei Aufträgen Eingang → disponiert → in Arbeit → erledigt.</p>'}</div></div>` : ''}
     <div class="panel">
       <h2><span class="badge-uebung">ÜBUNG</span> <input class="inp" id="szName" value="${esc(s.name)}" style="flex:1;min-width:200px;font:700 20px var(--f-disp)"></h2>
       <label class="f">Beschreibung / Lage für die Übungsleitung<textarea id="szBeschr" placeholder="z. B. Unwetterübung Ortswehr, 60 Minuten, 2 Gruppen">${esc(s.beschreibung||'')}</textarea></label>
@@ -269,6 +299,62 @@ function render(){
   $('#delSz').onclick = ()=>{ if(!confirm(`Szenario „${s.name}“ auf diesem Gerät löschen?`)) return; szen = szen.filter(x=>x.id!==s.id); if(lauf && lauf.szId===s.id){ lauf = null; LS.set('lauf', null); } aktivId = szen[0] && szen[0].id; speichern(); render(); };
   wireItems(s);
   wireLauf(s);
+  const al = $('#ausLaden'); if(al) al.onclick = ()=>auswertungLaden(s);
+  const ac = $('#ausCsv'); if(ac) ac.onclick = ()=>auswertungCsv(s);
+  const ad = $('#ausDruck'); if(ad) ad.onclick = ()=>{ document.body.classList.add('druck-ausw'); window.print(); setTimeout(()=>document.body.classList.remove('druck-ausw'), 500); };
+}
+/* ---------- Auswertung der Übung ---------- */
+let AUSW = null;
+async function auswertungLaden(s){
+  const ids = [...new Set(Object.values(lauf.sent).filter(x=>x.ok && x.einsatzId).map(x=>x.einsatzId))];
+  try{
+    const r = await fetch('/api/uebung/auswertung?ids='+encodeURIComponent(ids.join(',')), {cache:'no-store', credentials:'same-origin'});
+    if(!r.ok) throw new Error(r.status===401 ? 'nicht angemeldet' : 'HTTP '+r.status);
+    AUSW = {szId:s.id, t:Date.now(), daten: await r.json()};
+    render();
+  }catch(e){ toast('Auswertung nicht abrufbar: '+e.message); }
+}
+const dauer = (a, b) => a && b ? mmss(b-a) : '–';
+const plus = (a, b) => a && b ? '+'+mmss(b-a) : '–';
+function median(l){ const x = l.filter(v=>v!=null && v>=0).sort((a,b)=>a-b); if(!x.length) return null; const m = Math.floor(x.length/2); return x.length%2 ? x[m] : (x[m-1]+x[m])/2; }
+function auswertungWerte(s, daten){
+  const e = daten.filter(x=>!x.fehlt);
+  const eZeilen = e.map(x=>{
+    const erst = k => { const l = x.fahrzeuge.map(f=>f[k]).filter(Boolean); return l.length ? Math.min(...l) : null; };
+    return {x, a:erst('a'), s3:erst('s3'), s4:erst('s4'), lage:(x.lagen||[]).length ? Math.min(...x.lagen) : null};
+  });
+  // nur Aufträge aus diesem Szenario (per Nummer aus dem Versandstatus)
+  const eigene = new Set(Object.values(lauf.sent).filter(v=>v.ok && v.nr).map(v=>v.einsatzId+'|'+v.nr));
+  const aZeilen = [];
+  e.forEach(x=>(x.auftraege||[]).forEach(a=>{ if(eigene.has(x.id+'|'+a.nr)) aZeilen.push({x, a}); }));
+  return {eZeilen, aZeilen,
+    mS3: median(eZeilen.map(z=>z.s3 && z.s3-z.x.alarmzeit)), mS4: median(eZeilen.map(z=>z.s4 && z.s4-z.x.alarmzeit)), mLage: median(eZeilen.map(z=>z.lage && z.lage-z.x.alarmzeit)),
+    mDisp: median(aZeilen.map(z=>z.a.zeiten.disponiert && z.a.zeiten.disponiert-z.a.eingang)), mErl: median(aZeilen.map(z=>z.a.zeiten.erledigt && z.a.zeiten.erledigt-z.a.eingang)),
+    offen: aZeilen.filter(z=>!['erledigt','storniert'].includes(z.a.status)).length};
+}
+function auswertungHTML(s, daten){
+  const w = auswertungWerte(s, daten);
+  const k = (l, v, sub) => `<div class="ausw-k"><small>${l}</small><b>${v}</b>${sub?`<span>${sub}</span>`:''}</div>`;
+  const m = v => v==null ? '–' : mmss(v);
+  return `<div class="ausw-kacheln">
+      ${k('Einsätze', w.eZeilen.length, w.eZeilen.filter(z=>z.x.laufend).length+' laufen noch')}
+      ${k('Alarm → Status 3', m(w.mS3), 'Median, erstes Fahrzeug')}
+      ${k('Alarm → Status 4', m(w.mS4), 'Median, erstes Fahrzeug')}
+      ${k('Alarm → 1. Lagemeldung', m(w.mLage), 'Median')}
+      ${w.aZeilen.length ? k('Aufträge', w.aZeilen.length, w.offen+' noch offen') + k('Eingang → disponiert', m(w.mDisp), 'Median') + k('Eingang → erledigt', m(w.mErl), 'Median') : ''}
+    </div>
+    ${w.eZeilen.length ? `<h3>Einsätze</h3><div class="ausw-scroll"><table class="ausw"><thead><tr><th>Einsatz</th><th>Alarm</th><th>1. alarmiert</th><th>1. Status 3</th><th>1. Status 4</th><th>1. Lagemeldung</th><th>Lagemeldungen</th><th>Fahrzeuge</th></tr></thead><tbody>${w.eZeilen.map(z=>`<tr><td><b>${esc(z.x.nummer)}</b> ${esc(z.x.stichwort||'')}<br><small>${esc(String(z.x.meldebild||'').replace(/^ÜBUNG:\s*/,''))}</small>${z.x.laufend?'':' <small>(beendet)</small>'}</td><td>${hm(z.x.alarmzeit)}</td><td>${plus(z.x.alarmzeit, z.a)}</td><td>${plus(z.x.alarmzeit, z.s3)}</td><td>${plus(z.x.alarmzeit, z.s4)}</td><td>${plus(z.x.alarmzeit, z.lage)}</td><td>${(z.x.lagen||[]).length}</td><td>${z.x.fahrzeuge.length}<br><small>${esc(z.x.fahrzeuge.map(f=>f.name).join(', '))}</small></td></tr>`).join('')}</tbody></table></div>` : ''}
+    ${w.aZeilen.length ? `<h3>Aufträge</h3><div class="ausw-scroll"><table class="ausw"><thead><tr><th>Nr</th><th>Kategorie</th><th>Adresse</th><th>Eingang</th><th>disponiert</th><th>in Arbeit</th><th>erledigt</th><th>Fahrzeuge</th></tr></thead><tbody>${w.aZeilen.sort((a,b)=>a.a.eingang-b.a.eingang).map(({x,a})=>`<tr class="${['erledigt','storniert'].includes(a.status)?'':'offen'}"><td><b>${a.nr}</b><br><small>${esc(x.nummer)}</small></td><td>${esc(a.kat||'')}<br><small>Prio ${a.prio}</small></td><td>${esc(a.adresse||'–')}</td><td>${hm(a.eingang)}</td><td>${plus(a.eingang, a.zeiten.disponiert)}</td><td>${plus(a.eingang, a.zeiten.inArbeit)}</td><td>${a.status==='storniert'?'storniert':plus(a.eingang, a.zeiten.erledigt)}</td><td><small>${esc(a.fahrzeuge.join(', ')||'–')}</small></td></tr>`).join('')}</tbody></table></div>` : ''}
+    <p class="hint">Zeiten ab Alarm bzw. Eingang (Minuten:Sekunden). Stand ${hm(AUSW.t)} – „Aktualisieren“ holt die neuesten Zeiten aus der Einsatzverwaltung, auch nach Einsatzende aus dem Archiv.</p>`;
+}
+function auswertungCsv(s){
+  const w = auswertungWerte(s, AUSW.daten);
+  const min = (a,b) => a && b ? ((b-a)/60000).toFixed(1).replace('.',',') : '';
+  const z = [['Art','Nummer','Stichwort/Kategorie','Adresse/Meldebild','Start','Min bis alarmiert/disponiert','Min bis S3/in Arbeit','Min bis S4/erledigt','Min bis 1. Lagemeldung','Fahrzeuge']];
+  w.eZeilen.forEach(q=>z.push(['Einsatz', q.x.nummer, q.x.stichwort||'', q.x.meldebild||'', new Date(q.x.alarmzeit).toLocaleString('de-DE'), min(q.x.alarmzeit,q.a), min(q.x.alarmzeit,q.s3), min(q.x.alarmzeit,q.s4), min(q.x.alarmzeit,q.lage), q.x.fahrzeuge.map(f=>f.name).join(', ')]));
+  w.aZeilen.forEach(({x,a})=>z.push(['Auftrag', x.nummer+'/'+a.nr, a.kat||'', a.adresse||'', new Date(a.eingang).toLocaleString('de-DE'), min(a.eingang,a.zeiten.disponiert), min(a.eingang,a.zeiten.inArbeit), min(a.eingang,a.zeiten.erledigt), '', a.fahrzeuge.join(', ')]));
+  const csv = '\ufeff'+z.map(r=>r.map(v=>{ const t = String(v); return /[;"\n]/.test(t) ? '"'+t.replace(/"/g,'""')+'"' : t; }).join(';')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'})); a.download = 'auswertung-'+s.name.replace(/[^\wäöüÄÖÜß-]+/g,'-')+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
 }
 function naechsteMin(s){ const m = Math.max(0, ...s.items.map(i=>+i.min||0)); return s.items.length ? m+5 : 0; }
 function wireItems(s){
@@ -441,6 +527,7 @@ async function senden(s, it, einzeln){
   try{
     const r = await fetch('/api/uebung/senden', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({art:it.art, daten, einsatzId, szenario:s.name, leitung:einst.leitung})});
     const j = await r.json().catch(()=>({}));
+    if(r.status===401){ NET.ok = false; netzPruefen(); throw new Error('Nicht angemeldet – oben auf „bitte anmelden“ tippen'); }
     if(!r.ok || !j.ok) throw new Error(j.text || j.error || 'HTTP '+r.status);
     merk({ok:true, einsatzId:j.einsatzId, nummer:j.nummer, nr:j.nr});
     if(j.fehlt && j.fehlt.length) toast('Nicht alarmiert (Funkrufname unbekannt oder besetzt): '+j.fehlt.join(', '));
@@ -476,6 +563,7 @@ $('#leitung').onchange = e=>{ einst.leitung = e.target.value.trim(); LS.set('ein
 $('#radius').onchange = e=>{ einst.radius = Math.max(0.5, Math.min(30, +e.target.value||3)); LS.set('einst', einst); };
 (async ()=>{
   await netzPruefen();
+  if(NET.anmelden) setTimeout(anmeldenDialog, 300);
   if(!szen.length && !location.hash.includes('import=')) neuesSzenario('Meine erste Übung');
   const m = /#import=([A-Za-z0-9_-]+)/.exec(location.hash);
   if(m){ try{ importieren(await entpacken(m[1]), 'Übergabe'); }catch(e){ toast('Übergabe-Link beschädigt.'); } try{ history.replaceState(null, '', location.pathname); }catch(e){} }
