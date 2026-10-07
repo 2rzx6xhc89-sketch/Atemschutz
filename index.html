@@ -200,6 +200,9 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:700;margin:0;letter-spacing:.01em
 .banner{border-radius:var(--r);padding:12px 14px;font-weight:700;font-size:16px;margin-bottom:12px}
 .banner.alarm{background:var(--red);color:var(--red-ink)}
 @media (prefers-reduced-motion:no-preference){ .banner.alarm{animation:blink 1.2s steps(2,start) infinite} }
+.stb.csa{background:#6A1B9A}
+.banner .bq{margin-left:10px;background:#fff!important;color:#8a0f19!important;border:1px solid #8a0f19;border-radius:8px;padding:6px 10px;font-weight:700;cursor:pointer}
+.st-aus{font-size:13px;color:var(--ink-3);margin:-4px 0 8px}.st-aus button{background:none;border:0;color:var(--blue);text-decoration:underline;cursor:pointer;font:inherit}
 .stb{display:inline-block;font-family:var(--f-body);font-size:12px;font-weight:700;letter-spacing:.05em;background:var(--blue);color:#fff;border-radius:5px;padding:1px 6px;margin-right:8px;vertical-align:middle}
 .stb.may{background:var(--red);margin-left:6px}
 .maydaybar{appearance:none;border:0;width:100%;text-align:left;background:var(--red);color:var(--red-ink);font-family:var(--f-disp);font-weight:700;font-size:18px;letter-spacing:.03em;padding:10px 14px;cursor:pointer}
@@ -241,6 +244,11 @@ dialog.qrdlg .dlg-body{justify-items:stretch}
 .syncbadge.lesen{border-style:dashed}
 .banner.lesen,.banner.vorschlag{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-weight:500;font-size:15px}
 .banner.lesen{background:var(--blue-soft);border:1px solid var(--blue);color:var(--ink)}
+.wehrbar{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-left:5px solid var(--ink);border-radius:var(--r);padding:8px 12px;margin:0 0 10px;font-size:15px;background:var(--panel);color:var(--ink)}
+.wehrbar b{font-weight:800}.wehrbar small{display:block;font-size:13px;margin-top:2px;color:var(--ink-2)}.wehrbar .wb-dim{color:var(--ink-2);font-size:13px}
+.wehrbar.fremd{border-color:var(--amber);border-left-color:var(--amber);background:var(--amber-soft)}
+.wehrbar.unbekannt{border-left-color:var(--line-2)}
+.wb-wappen{width:26px;height:34px;object-fit:contain;flex:none}
 .banner.vorschlag{background:var(--amber-soft);border:1px solid var(--amber);color:var(--ink)}
 .banner.lesen span,.banner.vorschlag span{flex:1 1 260px}
 .fuehrbox{display:grid;gap:8px;border:1px solid var(--line-2);border-radius:var(--r);padding:12px;background:var(--panel-2)}
@@ -261,6 +269,12 @@ details.adm summary{cursor:pointer}
 
 /* Forms */
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.pool{margin:0 0 14px;padding:12px}.pool-kopf{gap:10px;flex-wrap:wrap;margin-bottom:8px}.pool-liste{display:flex;flex-wrap:wrap;gap:8px}
+.pool-p{display:flex;align-items:stretch;border:2px solid var(--line);border-radius:var(--r);background:var(--panel)}.pool-p.on{border-color:var(--red);background:var(--red-soft)}
+.pool-wahl{display:flex;align-items:center;gap:10px;padding:8px 10px;min-height:52px;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}.pool-wahl small{display:block;color:var(--ink-2);font-size:13px}
+.pool-haken{width:24px;height:24px;border:2px solid var(--line);border-radius:6px;display:grid;place-items:center;font-weight:800;flex:none}.pool-p.on .pool-haken{background:var(--red);border-color:var(--red);color:#fff}
+.tf-wahl{display:grid;gap:8px}.tf-opt{display:flex;align-items:center;gap:12px;padding:12px;border:2px solid var(--line);border-radius:var(--r);background:var(--panel);color:inherit;font:inherit;text-align:left;cursor:pointer;min-height:56px}.tf-opt small{display:block;color:var(--ink-2);font-size:13px}
+.tf-opt.on{border-color:var(--red)}.tf-kreis{width:38px;height:38px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-weight:800;flex:none}.tf-opt.on .tf-kreis{background:var(--red);border-color:var(--red);color:#fff}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 label.f{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em}
 .inp{width:100%;min-height:44px;border:1px solid var(--line-2);border-radius:8px;background:var(--panel);padding:8px 10px;font-size:17px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink)}
@@ -560,7 +574,7 @@ const CAM_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 
 /* ---------- Zustand ---------- */
 const uid = () => Math.random().toString(36).slice(2,10);
-const defaultConfig = () => ({maxBar:330, verbrauch:8.3, minRueckzug:50, uebergabeUrl:'', abfragen:[10,20], sprache:false, stPruefung:true, verbrauchWarn:12, funkName:'frei', druckModus:'niedrigster', syncUrl:'', syncKey:'', autoSync:true, abfrageModus:'drittel', drittelMax:10, rausNach:10});
+const defaultConfig = () => ({maxBar:330, verbrauch:8.3, minRueckzug:50, uebergabeUrl:'', abfragen:[10,20], sprache:false, stPruefung:true, csaMin:20, verbrauchWarn:12, funkName:'frei', druckModus:'niedrigster', syncUrl:'', syncKey:'', autoSync:true, abfrageModus:'drittel', drittelMax:10, rausNach:10});
 function blankState(keepConfig){
   return {
     version:1, sample:false,
@@ -768,6 +782,15 @@ function toast(msg){ const d=document.createElement('div'); d.className='toast';
 /* ---------- Berechnung (Faustformel wie Überwachungsbogen) ---------- */
 // Rückzugsdruck = doppelter Verbrauch für den Hinweg, mindestens 50 bar.
 // Rückzug nach Minuten = (Druck am Einsatzort − Rückzugsdruck) / Verbrauch (8,3 bar/min ≙ Tabelle 290→29 min … 210→4 min).
+const csaMinuten = ()=>{ const m = Number(S.config.csaMin); return m>0 && m<=120 ? m : 20; };
+function csaGrenze(t){ return t.ev.beginn ? t.ev.beginn.t + csaMinuten()*60000 : null; }
+// Rückzug: Druck-Rechnung (r.soll) und bei CSA die Zeitgrenze – es gilt das Frühere
+function rzOf(t, r){
+  const g = t.csa ? csaGrenze(t) : null;
+  if(r.soll && (r.soll.sofort || g==null || r.soll.t <= g)) return {t:r.soll.t, sofort:r.soll.sofort, csa:false};
+  if(g!=null) return {t:g, sofort:false, csa:true};
+  return null;
+}
 function calc(t, now=nowT()){
   const c = S.config, ev = t.ev, n = t.mitglieder.length;
   const r = {elapsed:null, soll:null, prog:null, lowest:null, lastT:null, status:'idle', alarms:[], warns:[], rates:[], high:[]};
@@ -811,6 +834,12 @@ function calc(t, now=nowT()){
       }
     }
     if(last && r.lowest != null && r.lowest <= c.minRueckzug) r.alarms.push('Druck ≤ '+c.minRueckzug+' bar');
+    // CSA (ab 3.40): höchstens csaMin Minuten im Einsatz, ab 5 Minuten vorher Warnung
+    if(t.csa){
+      const grenze = csaGrenze(t);
+      if(now >= grenze) r[ev.rueckzug?'warns':'alarms'].push('CSA: '+csaMinuten()+' Minuten erreicht'+(ev.rueckzug?' – Trupp noch nicht draußen':' – Rückzug sofort!'));
+      else if(!ev.rueckzug && grenze - now <= 5*60000) r.warns.push('CSA: noch '+Math.ceil((grenze-now)/60000)+' min – Rückzug einleiten');
+    }
   }
   // Luftverbrauch je Person (bar/min): Mittel seit Beginn und letzter Abschnitt
   if(ev.beginn){
@@ -868,13 +897,15 @@ function stCheck(){
   const st = S.trupps.filter(t=>t.st && !t.ev.ende);
   if(st.some(t=>!t.ev.ziel)) return null;
   if(st.length) return 'Sicherheitstrupp im Einsatz – neuen Sicherheitstrupp bereitstellen!';
+  if(S.einsatz && S.einsatz.stAus) return null;   // für diesen Einsatz bestätigt: kein Sicherheitstrupp nötig (ab 3.40)
   return 'Kein Sicherheitstrupp bereit – '+aktiv.length+(aktiv.length===1?' Trupp':' Trupps')+' unter Atemschutz';
 }
 
 /* ---------- Kopfzeile ---------- */
 function renderMeta(){
   const e = S.einsatz;
-  $('#artLabel').textContent = (ident()?ident().name+' · ':'') + (e.evNummer ? 'Einsatz '+e.evNummer : e.art) + (e.datum ? ' · ' + new Date(e.datum+'T12:00').toLocaleDateString('de-DE') : '');
+  const uw=ueWehr();
+  $('#artLabel').textContent = (uw?uw.name+' · ':(ident()?ident().name+' · ':'')) + (e.evNummer ? 'Einsatz '+e.evNummer : e.art) + (e.datum ? ' · ' + new Date(e.datum+'T12:00').toLocaleDateString('de-DE') : '');
   $('#meta').innerHTML =
     '<span>Einsatzstelle: <b>'+esc(e.einsatzstelle||'–')+'</b></span>'+
     '<span>Einheitsführer: <b>'+esc(e.einheitsfuehrer||'–')+'</b></span>'+
@@ -920,9 +951,10 @@ function kpiHTML(t, r){
   let cls='', v='--:--', s='nach „Einsatzort an“';
   if(t.ev.ende){ v='–'; s='beendet'; }
   else if(t.ev.rueckzug){ v=hm(t.ev.rueckzug.t); s='Rückzug angetreten · „draußen?“ um '+hm(t.ev.rueckzug.t+(S.config.rausNach||10)*60000); }
-  else if(r.soll){
-    if(r.soll.sofort){ cls='alarm'; v='sofort!'; s='Druck zu gering'; }
-    else { const left=r.soll.t-now; cls = left<=0?'alarm':(left<120000?'warn':''); v=dur(left); s='um '+hm(r.soll.t)+(r.prog?' · Prognose '+hm(r.prog.t):''); }
+  else if(rzOf(t, r)){
+    const rz = rzOf(t, r);
+    if(rz.sofort){ cls='alarm'; v='sofort!'; s='Druck zu gering'; }
+    else { const left=rz.t-now; cls = left<=0?'alarm':(left<(rz.csa?300000:120000)?'warn':''); v=dur(left); s='um '+hm(rz.t)+(rz.csa?' · CSA-Grenze '+csaMinuten()+' min':'')+(r.prog?' · Prognose '+hm(r.prog.t):''); }
   }
   const k3 = '<div class="kpi '+cls+'"><div class="l">Rückzug in</div><div class="v" data-live="soll" data-t="'+t.id+'">'+v+'</div><div class="s">'+esc(s)+'</div></div>';
   return '<div class="kpis k3">'+k1+k2+k3+'</div>';
@@ -961,7 +993,7 @@ function cardHTML(t){
   const mcount = t.mayday ? MAYDAY_ITEMS.filter(([k])=>t.mayday.items && t.mayday.items[k]).length : 0;
   return '<article class="card '+st+'" id="card-'+t.id+'">'+
     (t.notfall?'<button class="maydaybar" data-act="mayday" data-t="'+t.id+'">MAYDAY seit '+hm(t.notfall)+' · Checkliste '+mcount+'/'+MAYDAY_ITEMS.length+' ›</button>':'')+
-    '<div class="card-head"><div style="flex:1;min-width:0"><h3>'+(t.st?'<span class="stb" title="Sicherheitstrupp">ST</span>':'')+esc(tName(t))+'</h3><div class="auftrag">'+esc(tSub(t)||'Auftrag offen')+'</div></div>'+statusPill(r)+'</div>'+
+    '<div class="card-head"><div style="flex:1;min-width:0"><h3>'+(t.st?'<span class="stb" title="Sicherheitstrupp">ST</span>':'')+(t.csa?'<span class="stb csa" title="Chemikalienschutzanzug – höchstens '+csaMinuten()+' Minuten">CSA</span>':'')+esc(tName(t))+'</h3><div class="auftrag">'+esc(tSub(t)||'Auftrag offen')+'</div></div>'+statusPill(r)+'</div>'+
     alerts + kpiHTML(t,r) + membersHTML(t,r) +
     '<div class="tl">'+evSteps(t).map(s=>tlStep(t,s,r,nxt)).join('')+'</div>'+
     (t.bemerkung?'<div class="note">'+esc(t.bemerkung)+'</div>':'')+
@@ -987,12 +1019,12 @@ function ovRowHTML(t){
   if(t.ev.ende) rzH='<div class="tm"><b>'+hm(t.ev.ende.t)+'</b><span>Ende</span></div>';
   else if(t.ev.rueckzug) rzH='<div class="tm"><b>'+hm(t.ev.rueckzug.t)+'</b><span>Rückzug angetreten</span></div>';
   else if(r.soll && r.soll.sofort) rzH='<div class="tm alarm"><b>sofort!</b><span>Druck zu gering</span></div>';
-  else if(r.soll){ const left=r.soll.t-now; rzH='<div class="tm'+(left<=0?' alarm':left<120000?' warn':'')+'"><b>'+hm(r.soll.t)+'</b><span data-live="soll" data-t="'+t.id+'">'+dur(left)+'</span></div>'; }
+  else if(rzOf(t, r)){ const rz=rzOf(t, r), left=rz.t-now; rzH='<div class="tm'+(left<=0?' alarm':left<(rz.csa?300000:120000)?' warn':'')+'"><b>'+hm(rz.t)+(rz.csa?' CSA':'')+'</b><span data-live="soll" data-t="'+t.id+'">'+dur(left)+'</span></div>'; }
   else rzH='<div class="tm"><b>–</b><span>'+(t.ev.beginn?'nach Einsatzort an':'–')+'</span></div>';
   const msgs = r.alarms.map(x=>'<div class="alm">⚠ '+esc(x)+'</div>').join('') + (r.alarms.length?'':r.warns.map(x=>'<div class="alm w">'+esc(x)+'</div>').join(''));
   return '<button class="ovrow g'+g+' '+st+'" data-act="detail" data-t="'+t.id+'" aria-label="Detailansicht '+esc(tName(t))+'">'+
     '<div>'+statusPill(r)+'</div>'+
-    '<div class="rg">'+(t.st?'<span class="stb">ST</span>':'')+esc(tName(t))+(t.notfall?' <span class="stb may">MAYDAY</span>':'')+'</div>'+
+    '<div class="rg">'+(t.st?'<span class="stb">ST</span>':'')+(t.csa?'<span class="stb csa">CSA</span>':'')+esc(tName(t))+(t.notfall?' <span class="stb may">MAYDAY</span>':'')+'</div>'+
     '<div class="au">'+esc(tSub(t)||'–')+'</div>'+
     nqH + rzH + '<div class="chev" aria-hidden="true">›</div>' + msgs + '</button>';
 }
@@ -1003,16 +1035,18 @@ function renderUeb(){
   const det = detailId && S.trupps.find(t=>t.id===detailId);
   if(detailId && !det) detailId=null;
   if(det){
-    v.innerHTML = '<div class="backbar sticky-tb"><button class="btn" data-act="back">‹ Zur Übersicht</button><span class="spacer"></span><button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn primary" data-act="newtrupp">+ '+neuLabel()+'</button></div>'+fuehrungBannerHTML()+
+    v.innerHTML = '<div class="backbar sticky-tb"><button class="btn" data-act="back">‹ Zur Übersicht</button><span class="spacer"></span><button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn primary" data-act="newtrupp">+ '+neuLabel()+'</button></div>'+wehrBarHTML()+fuehrungBannerHTML()+
       '<div class="grid single">'+cardHTML(det)+'</div>';
   } else {
     const useList = S.trupps.length >= OV_AB && ovMode==='liste';
     const toggle = S.trupps.length >= OV_AB ? '<div class="seg" role="group" aria-label="Ansicht"><button data-ov="liste" aria-pressed="'+(ovMode==='liste')+'">Übersicht</button><button data-ov="karten" aria-pressed="'+(ovMode==='karten')+'">Alle Karten</button></div>' : '';
     const stw = stCheck();
     v.innerHTML = '<div class="toolbar sticky-tb"><h2>'+S.trupps.length+' Trupps · '+active+' unter Atemschutz</h2>'+toggle+
-      '<button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn primary" data-act="newtrupp">+ '+neuLabel()+'</button></div>'+fuehrungBannerHTML()+
-      (stw?'<div class="banner alarm" role="alert">⚠ '+esc(stw)+'</div>':'')+
-      (!S.trupps.length ? '<div class="empty"><p><b>Noch kein Trupp angelegt.</b></p><p>Trupp anlegen, Namen, Gerätenummern und Flaschendruck erfassen, dann die Zeitpunkte per Knopfdruck bestätigen.</p><button class="btn primary" data-act="newtrupp">+ '+(nurLesen()?'Trupp vorschlagen':'Ersten Trupp anlegen')+'</button></div>' :
+      '<button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn" data-act="newperson">+ Person</button><button class="btn primary" data-act="newtrupp">+ '+neuLabel()+'</button></div>'+wehrBarHTML()+fuehrungBannerHTML()+
+      poolHTML()+
+      (stw?'<div class="banner alarm" role="alert">⚠ '+esc(stw)+(/^Kein Sicherheitstrupp/.test(stw) && !nurLesen()?'<button class="bq" data-act="st-aus">Bestätigen – hier nicht nötig</button>':'')+'</div>'
+          :(S.config.stPruefung && S.einsatz && S.einsatz.stAus && S.trupps.some(t=>!t.st && t.ev.beginn && !t.ev.ende) ? '<div class="st-aus">Sicherheitstrupp-Warnung für diesen Einsatz bestätigt'+(S.einsatz.stAus.t?' ('+hm(S.einsatz.stAus.t)+')':'')+'. '+(nurLesen()?'':'<button data-act="st-an">Wieder einblenden</button>')+'</div>' : ''))+
+      (!S.trupps.length ? '<div class="empty"><p><b>Noch kein Trupp angelegt.</b></p><p>Trupp anlegen, Namen, Gerätenummern und Flaschendruck erfassen, dann die Zeitpunkte per Knopfdruck bestätigen. Oder mit „+ Person“ Geräteträger einzeln erfassen und später zu Trupps zusammenstellen.</p><button class="btn primary" data-act="newtrupp">+ '+(nurLesen()?'Trupp vorschlagen':'Ersten Trupp anlegen')+'</button></div>' :
        useList ? '<div class="ovlist"><div class="ovhead"><span>Status</span><span>'+(S.config.funkName==='tf'?'Funkrufname':'Rufgruppe')+'</span><span>Auftrag</span><span>Nächste Abfrage</span><span>Rückzug um</span><span></span></div>'+list.map(ovRowHTML).join('')+'</div>'
                : '<div class="grid">'+list.map(cardHTML).join('')+'</div>');
   }
@@ -1033,7 +1067,7 @@ function renderGer(){
         '<td class="camc"><button class="cam" tabindex="-1" data-act="scan" data-t="'+t.id+'" data-m="'+m.id+'" aria-label="Mit Kamera einlesen" title="Mit Kamera einlesen">'+CAM_SVG+'</button></td></tr>';
     });
   });
-  v.innerHTML = '<div class="toolbar"><h2>Geräteerfassung</h2><button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn primary" data-act="newtrupp">+ '+neuLabel()+'</button></div>'+fuehrungBannerHTML()+
+  v.innerHTML = '<div class="toolbar"><h2>Geräteerfassung</h2><button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn" data-act="newperson">+ Person</button><button class="btn primary" data-act="newtrupp">+ '+neuLabel()+'</button></div>'+wehrBarHTML()+fuehrungBannerHTML()+poolHTML()+
     '<p class="hint" style="margin-top:0">Kamera-Symbol antippen, Etikett, Namensschild oder Geräteplakette fotografieren, dann erkannte Werte den Feldern zuordnen.</p>'+
     (S.trupps.length ? '<div class="table-wrap"><table><thead><tr><th>Funktion</th>'+EFIELDS.map(f=>'<th>'+f.l+'</th>').join('')+'<th>Flaschendruck</th><th>Kamera</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
       : '<div class="empty">Noch keine Trupps angelegt.</div>');
@@ -1048,7 +1082,7 @@ function spaeterZeichnen(el, fn){ if(el._zeichnenAus) return; el._zeichnenAus=tr
 function renderEin(){
   const tf=tippFeld('view-ein'); if(tf){ spaeterZeichnen(tf, ()=>{ if(view==='ein') renderEin(); }); renderSyncInfo(); return; }
   const e = S.einsatz, c = S.config;
-  $('#view-ein').innerHTML = fuehrungBannerHTML()+
+  $('#view-ein').innerHTML = wehrBarHTML()+fuehrungBannerHTML()+
   '<h2 class="section-title">Truppstatus</h2><div id="statusWrap">'+statusStripHTML()+'</div>'+
   evPanelHTML()+
   '<h2 class="section-title">Einsatzdaten</h2><div class="panel"><div class="fgrid">'+
@@ -1086,7 +1120,7 @@ function renderSet(){
     '<div class="set"><div><b>Sprachansage</b><div class="hint">Warnungen und fällige Abfragen werden angesagt, z. B. „Angriffstrupp. Druckabfrage 10 Minuten“.</div></div>'+
       '<div class="setctl"><div class="seg half" role="group"><button data-cfg="sprache" data-v="1" aria-pressed="'+!!c.sprache+'">Ein</button><button data-cfg="sprache" data-v="0" aria-pressed="'+!c.sprache+'">Aus</button></div>'+
       '<button type="button" class="btn small" data-act="speaktest"'+(('speechSynthesis' in window)?'':' disabled')+'>Test-Ansage</button></div></div>'+
-    '<div class="set"><div><b>Sicherheitstrupp-Prüfung</b><div class="hint">Warnt, wenn Trupps unter Atemschutz sind und kein Sicherheitstrupp bereitsteht. Sicherheitstrupp im Fenster „Trupp anlegen“ ankreuzen.</div></div>'+
+    '<div class="set"><div><b>Sicherheitstrupp-Prüfung</b><div class="hint">Warnt, wenn Trupps unter Atemschutz sind und kein Sicherheitstrupp bereitsteht. Sicherheitstrupp im Fenster „Trupp anlegen“ ankreuzen. Wird im Einsatz kein Sicherheitstrupp gebraucht, die Warnung dort mit „Bestätigen – hier nicht nötig“ für diesen Einsatz ausblenden.</div></div>'+
       '<div class="setctl"><div class="seg half" role="group"><button data-cfg="stPruefung" data-v="1" aria-pressed="'+!!c.stPruefung+'">Ein</button><button data-cfg="stPruefung" data-v="0" aria-pressed="'+!c.stPruefung+'">Aus</button></div></div></div>'+
     '<div class="set"><div><b>Warnung bei hohem Luftverbrauch</b><div class="hint">Ab diesem Verbrauch je Person (bar/min). Faustformel: '+String(c.verbrauch).replace('.',',')+' bar/min. 0 = aus.</div></div>'+
       '<div class="setctl"><input class="inp mono" id="c-verbrauchWarn" data-c="verbrauchWarn" inputmode="decimal" value="'+String(c.verbrauchWarn).replace('.',',')+'"></div></div>'+
@@ -1098,6 +1132,7 @@ function renderSet(){
     '<label class="f">Maximaler Flaschendruck (bar)<input class="inp mono" id="c-maxBar" inputmode="numeric" data-c="maxBar" value="'+c.maxBar+'"></label>'+
     '<label class="f">Verbrauch Faustformel (bar/min)<input class="inp mono" id="c-verbrauch" inputmode="decimal" data-c="verbrauch" value="'+String(c.verbrauch).replace('.',',')+'"></label>'+
     '<label class="f">Mindest-Rückzugsdruck (bar)<input class="inp mono" id="c-minRueckzug" inputmode="numeric" data-c="minRueckzug" value="'+c.minRueckzug+'"></label>'+
+    '<label class="f">CSA: höchste Einsatzzeit (Minuten)<input class="inp mono" id="c-csaMin" inputmode="numeric" data-c="csaMin" value="'+csaMinuten()+'"></label>'+
   '</div><p class="hint">Rückzugsdruck = doppelter Verbrauch bis zum Einsatzort, mindestens '+c.minRueckzug+' bar. Rückzugszeit = (Druck am Einsatzort − Rückzugsdruck) ÷ '+String(c.verbrauch).replace('.',',')+' bar/min. Maßgeblich ist das Truppmitglied mit der kürzesten Zeit. Mit 8,3 bar/min entspricht das genau der Richtwerttabelle auf dem Papierbogen.</p>'+
   refTable()+'</div>'+
   '<h2 class="section-title">Übergabe an Einsatzverwaltung</h2><div class="panel" style="display:grid;gap:12px">'+
@@ -1240,6 +1275,7 @@ function noteText(t, pdf){
   const parts=[];
   if(t.bemerkung) parts.push(t.bemerkung);
   if(t.st) parts.push('Sicherheitstrupp');
+  if(t.csa) parts.push('CSA');
   if(pdf){ // Abfragen, die nicht in die zwei Spalten des Bogens passen
     const qs=queries(t).filter(q=>t.ev[q.k]).slice(2);
     qs.forEach(q=>parts.push('Druck '+q.short+': '+(t.ev[q.k].single?lowOf(t.ev[q.k]):t.ev[q.k].p.join('/'))+' bar ('+hm(t.ev[q.k].t)+')'));
@@ -1680,16 +1716,18 @@ function openStep(tid, k, edit){
 }
 
 /* ---------- Dialog: Trupp anlegen / bearbeiten ---------- */
-function openTrupp(tid){
+function openTrupp(tid, neuVorlage, nachSpeichern){
   const isNew = !tid;
   const vorlage = isNew ? null : (S.trupps.find(x=>x.id===tid) || (S.vorschlaege||[]).find(x=>x.id===tid));
   if(!isNew && !vorlage) return;
   const alsVorschlag = nurLesen() || (!isNew && !S.trupps.some(x=>x.id===tid));
-  const t = isNew ? {id:uid(), rufgruppe:'', auftrag:'', bemerkung:'', mitglieder:[member('','Truppführer','','','',''), member('','Truppmann','','','','')], ev:{}, notfall:null} : JSON.parse(JSON.stringify(vorlage));
+  const t = isNew ? {id:uid(), rufgruppe:'', auftrag:'', bemerkung:'', mitglieder:(neuVorlage && neuVorlage.mitglieder) || [member('','Truppführer','','','',''), member('','Truppmann','','','','')], ev:{}, notfall:null} : JSON.parse(JSON.stringify(vorlage));
+  const ausPool = !!(neuVorlage && neuVorlage.mitglieder);
   const draw = () => {
     const mem = t.mitglieder.map((m,i)=>'<div class="panel" style="padding:12px;display:grid;gap:10px">'+
       '<div class="row"><b style="font-family:var(--f-disp);font-size:18px">'+esc(m.funktion)+'</b><span class="spacer"></span>'+
       '<button type="button" class="btn small" tabindex="-1" data-act="scan-dlg" data-i="'+i+'">'+CAM_SVG.replace('<svg','<svg width="18" height="18"')+' Kamera</button>'+
+      (i>0?'<button type="button" class="btn small ghost" tabindex="-1" data-act="mk-tf" data-i="'+i+'" title="Diese Person wird Truppführer">Zum Truppführer</button>':'')+
       (i===2?'<button type="button" class="btn small ghost" tabindex="-1" data-act="rm-mem">Entfernen</button>':'')+'</div>'+
       '<div class="mgrid">'+EFIELDS.map(f=>'<label class="f'+(f.nm?' halb':'')+'">'+f.l+'<input class="inp'+(f.nm?'':' mono num')+'" id="tm-'+i+'-'+f.k+'" data-i="'+i+'" data-f="'+f.k+'"'+(f.nm?' autocapitalize="words" autocomplete="off" enterkeyhint="next"':' inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next"')+' value="'+esc(feldWert(m,f))+'"></label>').join('')+
       '<label class="f druck">Flaschendruck (bar)'+pressureSelect('tm-'+i+'-druck', m.druck, m, 'data-i="'+i+'" data-f="druck" style="font-size:18px;min-height:44px"')+'</label></div></div>').join('');
@@ -1698,13 +1736,14 @@ function openTrupp(tid){
         '<div class="fgrid"><label class="f">'+(S.config.funkName==='tf'?'Trupp-Bezeichnung (optional)':'Rufgruppe / Trupp')+'<input class="inp" id="t-rufgruppe" list="rgList" value="'+esc(t.rufgruppe)+'"></label>'+
         '<label class="f">Auftrag<input class="inp" id="t-auftrag" value="'+esc(t.auftrag)+'"></label></div>'+
         (S.config.funkName==='tf'?'<div class="calcbox">Funkrufname: <b id="fnPrev">'+esc(previewName(t))+'</b> <span class="hint">(Nachname des Truppführers)</span></div>':'')+
-        '<label class="chk"><input type="checkbox" id="t-st"'+(t.st?' checked':'')+'> Sicherheitstrupp</label>'+
+        '<div class="row" style="gap:18px;flex-wrap:wrap"><label class="chk"><input type="checkbox" id="t-st"'+(t.st?' checked':'')+'> Sicherheitstrupp</label>'+
+        '<label class="chk"><input type="checkbox" id="t-csa"'+(t.csa?' checked':'')+'> CSA (Chemikalienschutzanzug) – höchstens '+csaMinuten()+' Minuten</label></div>'+
         '<datalist id="rgList"><option>Angriffstrupp</option><option>Wassertrupp</option><option>Schlauchtrupp</option><option>Sicherheitstrupp</option><option>Trupp 1</option><option>Trupp 2</option><option>Trupp 3</option></datalist>'+
         mem +
         (t.mitglieder.length<3?'<button type="button" class="btn" data-act="add-mem">+ Dritte Person</button>':'')+
         '<label class="f">Zusatz / Bemerkung<textarea class="inp" id="t-bemerkung" rows="2">'+esc(t.bemerkung)+'</textarea></label>'+
         '<div class="err" id="truppErr" role="alert"></div>'+
-      '</div><div class="dlg-foot">'+(isNew?'':'<button type="button" class="btn danger" data-act="del-trupp">'+(alsVorschlag?'Vorschlag zurückziehen':'Trupp löschen')+'</button><span class="spacer"></span>')+
+      '</div><div class="dlg-foot">'+(isNew?'':'<button type="button" class="btn danger" data-act="del-trupp">'+(alsVorschlag?'Vorschlag zurückziehen':'Trupp löschen')+'</button>'+(!alsVorschlag && !(t.ev&&t.ev.beginn)?'<button type="button" class="btn" data-act="aufloesen" title="Personen wieder einzeln führen">Trupp auflösen</button>':'')+'<span class="spacer"></span>')+
       '<button type="submit" class="btn" data-qrafter="1">'+(isNew?'Anlegen':'Speichern')+' &amp; QR zeigen</button><button type="submit" class="btn primary">'+(alsVorschlag?(isNew?'Vorschlag senden':'Vorschlag speichern'):(isNew?'Trupp anlegen':'Speichern'))+'</button></div></form><div id="delConfirm"></div>');
     const f = $('#truppForm');
     setTimeout(()=>{ const first = S.config.funkName==='tf' ? $('#tm-0-name') : $('#t-rufgruppe'); if(first && isNew && !first.value) first.focus(); }, 60);
@@ -1713,6 +1752,7 @@ function openTrupp(tid){
       if(el.dataset.f){ const mm=t.mitglieder[+el.dataset.i]; if(el.dataset.f==='nachname'||el.dataset.f==='vorname') setNameTeil(mm, el.dataset.f, el.value); else mm[el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; const fp=$('#fnPrev'); if(fp) fp.textContent=previewName(t); }
       else if(el.id==='t-rufgruppe'){ t.rufgruppe=el.value; if(isNew && /sicherheit/i.test(el.value) && !t.stTouched){ t.st=true; const c=$('#t-st'); if(c) c.checked=true; } }
       else if(el.id==='t-st'){ t.st=el.checked; t.stTouched=true; }
+      else if(el.id==='t-csa') t.csa=el.checked;
       else if(el.id==='t-auftrag') t.auftrag=el.value;
       else if(el.id==='t-bemerkung') t.bemerkung=el.value;
     });
@@ -1720,6 +1760,16 @@ function openTrupp(tid){
       const b=e.target.closest('[data-act]'); if(!b) return;
       const a=b.dataset.act;
       if(a==='add-mem'){ t.mitglieder.push(member('','Truppmann 2','','','','')); draw(); }
+      if(a==='mk-tf'){   // Truppführer wechseln: Person nach vorn, erfasste Drücke je Person mitnehmen
+        const i=+b.dataset.i; if(!(i>0)) return;
+        const tausch = arr=>{ if(Array.isArray(arr) && arr.length>i){ const x=arr[i]; arr[i]=arr[0]; arr[0]=x; } };
+        tausch(t.mitglieder); Object.values(t.ev||{}).forEach(x=>{ if(x && !x.single) tausch(x.p); });
+        t.mitglieder.forEach((m,j)=>m.funktion=FUNKTIONEN[j]); draw(); toast('Truppführer: '+personName(t.mitglieder[0]));
+      }
+      if(a==='aufloesen'){
+        pool(); t.mitglieder.forEach(m=>{ const p=JSON.parse(JSON.stringify(m)); p.id=uid(); p.funktion='Person'; p.t=Date.now(); S.personen.push(p); });
+        S.trupps=S.trupps.filter(x=>x.id!==t.id); save(); closeDlg(); renderAll(); toast('Trupp aufgelöst – Personen stehen wieder einzeln bereit');
+      }
       if(a==='rm-mem'){ t.mitglieder.splice(2,1); Object.values(t.ev).forEach(x=>x.p.splice(2,1)); draw(); }
       if(a==='scan-dlg'){ const i=+b.dataset.i; openScan(t.mitglieder[i], ()=>openTruppAgain()); }
       if(a==='del-trupp'){
@@ -1730,6 +1780,7 @@ function openTrupp(tid){
     });
     f.addEventListener('submit', e=>{
       e.preventDefault();
+      if(t.mitglieder[0].funktion!=='Truppführer'){ t.mitglieder.forEach((m,j)=>m.funktion=FUNKTIONEN[j]); }
       if(S.config.funkName==='tf'){ const n=nameParts(tfOf(t)); if(!(n&&n.nach) && !t.rufgruppe.trim()){ $('#truppErr').textContent='Bitte den Namen des Truppführers oder eine Trupp-Bezeichnung eintragen.'; return; } }
       else if(!t.rufgruppe.trim()){ $('#truppErr').textContent='Bitte Rufgruppe bzw. Truppbezeichnung eintragen.'; return; }
       if(t.mitglieder.length < 3) Object.values(t.ev).forEach(x=>{ x.p = x.p.slice(0,t.mitglieder.length); });
@@ -1740,7 +1791,7 @@ function openTrupp(tid){
         const vs=S.vorschlaege=S.vorschlaege||[]; const i=vs.findIndex(x=>x.id===t.id);
         t.vorschlag=t.vorschlag||vorschlagMeta(); delete t.stTouched;
         if(i>=0) vs[i]=t; else vs.push(t);
-        syncState.vDirty.add(t.id); saveRaw(); syncSoon(); closeDlg(); renderAll();
+        syncState.vDirty.add(t.id); saveRaw(); syncSoon(); closeDlg(); if(nachSpeichern) nachSpeichern(); renderAll();
         toast(isNew?'Vorschlag gesendet – wartet auf Bestätigung':'Vorschlag geändert');
         if(e.submitter && e.submitter.dataset.qrafter) openQRSend(t.id);
         return;
@@ -1750,11 +1801,82 @@ function openTrupp(tid){
         ['rufgruppe','auftrag','bemerkung','st','mitglieder'].forEach(f=>live[f]=t[f]);
         const n=t.mitglieder.length; Object.values(live.ev).forEach(x=>{ if(x&&x.p){ x.p=x.p.slice(0,n); while(x.p.length<n) x.p.push(x.single?x.p[0]:null); } });
       } else S.trupps.push(t);
-      S.sample=false; save(); closeDlg(); renderAll(); toast(isNew?'Trupp angelegt':'Gespeichert');
+      S.sample=false; save(); closeDlg(); if(nachSpeichern) nachSpeichern(); renderAll(); toast(isNew?(ausPool?'Trupp gebildet – Truppführer '+personName(tfOf(t)):'Trupp angelegt'):'Gespeichert');
       if(e.submitter && e.submitter.dataset.qrafter) openQRSend(t.id);
     });
   };
   const openTruppAgain = () => draw();
+  draw();
+}
+
+/* ---------- Einzelne Geräteträger: erst erfassen, dann zu Trupps zusammenstellen (ab 3.52) ----------
+   S.personen = [{id, nachname, vorname, name, geraetNr, laNr, flascheNr, maskeNr, druck, t}] – liegt auf diesem Gerät,
+   bis die Person einem Trupp zugeordnet wird. */
+let poolAuswahl = new Set();
+function pool(){ return (S.personen = Array.isArray(S.personen) ? S.personen : []); }
+function personName(m){ const n=nameParts(m); return n ? [n.nach, n.vor].filter(Boolean).join(', ') : (m.name||'(ohne Namen)'); }
+function poolHTML(){
+  const l = pool(); [...poolAuswahl].forEach(id=>{ if(!l.some(p=>p.id===id)) poolAuswahl.delete(id); });
+  if(!l.length) return '';
+  const n = poolAuswahl.size;
+  return '<div class="panel pool"><div class="row pool-kopf"><b>Einzelne Geräteträger ('+l.length+')</b><span class="hint">2 oder 3 antippen, dann „Trupp bilden“</span><span class="spacer"></span>'+
+    (n?'<button class="btn small ghost" data-act="poolleer">Auswahl aufheben</button>':'')+
+    '<button class="btn small'+(n>=2&&n<=3?' primary':'')+'" data-act="poolbilden"'+(n>=2&&n<=3?'':' disabled')+'>Trupp bilden'+(n?' ('+n+')':'')+'</button></div>'+
+    '<div class="pool-liste">'+l.map(p=>'<div class="pool-p'+(poolAuswahl.has(p.id)?' on':'')+'"><button class="pool-wahl" data-act="poolwahl" data-p="'+p.id+'" aria-pressed="'+poolAuswahl.has(p.id)+'"><span class="pool-haken">'+(poolAuswahl.has(p.id)?'✓':'')+'</span><span><b>'+esc(personName(p))+'</b><small>'+
+      [p.geraetNr?'Gerät '+esc(p.geraetNr):'', p.druck!=null?p.druck+' bar':'Druck fehlt'].filter(Boolean).join(' · ')+'</small></span></button>'+
+      '<button class="btn small ghost" data-act="person" data-p="'+p.id+'" aria-label="'+esc(personName(p))+' bearbeiten">✎</button></div>').join('')+'</div></div>';
+}
+function openPerson(pid){
+  const alt = pid ? pool().find(x=>x.id===pid) : null; if(pid && !alt) return;
+  const m = alt ? JSON.parse(JSON.stringify(alt)) : Object.assign(member('','','','','',''), {funktion:'Person'});
+  const draw = ()=>{
+    openDlg('<form id="persForm"><div class="dlg-head"><h2>'+(alt?'Person bearbeiten':'Person erfassen')+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div>'+
+      '<div class="dlg-body"><div class="panel" style="padding:12px;display:grid;gap:10px"><div class="row"><b style="font-family:var(--f-disp);font-size:18px">Geräteträger</b><span class="spacer"></span>'+
+      '<button type="button" class="btn small" tabindex="-1" data-pact="scan">'+CAM_SVG.replace('<svg','<svg width="18" height="18"')+' Kamera</button></div>'+
+      '<div class="mgrid">'+EFIELDS.map(f=>'<label class="f'+(f.nm?' halb':'')+'">'+f.l+'<input class="inp'+(f.nm?'':' mono num')+'" data-f="'+f.k+'"'+(f.nm?' autocapitalize="words" autocomplete="off"':' inputmode="numeric" pattern="[0-9]*" autocomplete="off"')+' value="'+esc(feldWert(m,f))+'"></label>').join('')+
+      '<label class="f druck">Flaschendruck (bar)'+pressureSelect('pp-druck', m.druck, m, 'data-f="druck" style="font-size:18px;min-height:44px"')+'</label></div></div>'+
+      '<p class="hint">Die Person steht danach unter „Einzelne Geräteträger“. Zwei oder drei Personen auswählen und „Trupp bilden“ – dort wird der Truppführer festgelegt.</p>'+
+      '<div class="err" id="persErr" role="alert"></div></div>'+
+      '<div class="dlg-foot">'+(alt?'<button type="button" class="btn danger" data-pact="del">Person entfernen</button><span class="spacer"></span>':'')+
+      (alt?'':'<button type="submit" class="btn" data-weiter="1">Speichern &amp; nächste Person</button>')+'<button type="submit" class="btn primary">Speichern</button></div></form>');
+    const f=$('#persForm');
+    setTimeout(()=>{ const i=f.querySelector('[data-f="nachname"]'); if(i && !alt) i.focus(); }, 60);
+    f.addEventListener('input', e=>{ const el=e.target; if(!el.dataset.f) return; if(el.dataset.f==='nachname'||el.dataset.f==='vorname') setNameTeil(m, el.dataset.f, el.value); else m[el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; });
+    f.addEventListener('click', e=>{
+      const b=e.target.closest('[data-pact]'); if(!b) return;
+      if(b.dataset.pact==='scan') openScan(m, ()=>draw());
+      if(b.dataset.pact==='del'){ S.personen=pool().filter(x=>x.id!==m.id); poolAuswahl.delete(m.id); saveRaw(); closeDlg(); renderAll(); toast('Person entfernt'); }
+    });
+    f.addEventListener('submit', e=>{
+      e.preventDefault();
+      if(!nameParts(m) || !(nameParts(m).nach||nameParts(m).vor)){ $('#persErr').textContent='Bitte mindestens den Nachnamen eintragen.'; return; }
+      m.t = m.t || Date.now();
+      const l=pool(), i=l.findIndex(x=>x.id===m.id); if(i>=0) l[i]=m; else l.push(m);
+      saveRaw(); renderAll(); toast((alt?'Gespeichert: ':'Erfasst: ')+personName(m));
+      if(e.submitter && e.submitter.dataset.weiter) openPerson(null); else closeDlg();
+    });
+  };
+  draw();
+}
+/* Trupp aus 2 oder 3 einzeln erfassten Personen bilden: Truppführer muss gewählt werden */
+function openTruppBilden(ids){
+  const pers = ids.map(id=>pool().find(x=>x.id===id)).filter(Boolean);
+  if(pers.length<2 || pers.length>3){ toast('Bitte 2 oder 3 Personen auswählen'); return; }
+  let tf = null;
+  const draw = ()=>{
+    openDlg('<div class="dlg-head"><h2>Trupp bilden</h2><button type="button" class="btn small ghost" data-close>Abbrechen</button></div>'+
+      '<div class="dlg-body"><p style="margin-top:0"><b>Wer ist Truppführer?</b></p><div class="tf-wahl" role="radiogroup" aria-label="Truppführer">'+
+      pers.map(p=>'<button type="button" class="tf-opt'+(tf===p.id?' on':'')+'" role="radio" aria-checked="'+(tf===p.id)+'" data-tf="'+p.id+'"><span class="tf-kreis">'+(tf===p.id?'TF':'')+'</span><span><b>'+esc(personName(p))+'</b><small>'+[p.geraetNr?'Gerät '+esc(p.geraetNr):'', p.druck!=null?p.druck+' bar':''].filter(Boolean).join(' · ')+'</small></span></button>').join('')+'</div>'+
+      (tf?'<p class="hint">Reihenfolge im Trupp: '+esc(ordnung().map((p,i)=>FUNKTIONEN[i]+': '+personName(p)).join(' · '))+'</p>':'<p class="hint">Bitte den Truppführer antippen.</p>')+
+      '</div><div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn primary" data-tfweiter="1"'+(tf?'':' disabled')+'>Weiter: Rufgruppe und Auftrag</button></div>');
+    dlg.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{ tf=b.dataset.tf; draw(); });
+    const w=dlg.querySelector('[data-tfweiter]'); if(w) w.onclick=()=>{
+      if(!tf) return;
+      const mitglieder = ordnung().map((p,i)=>{ const m=JSON.parse(JSON.stringify(p)); delete m.t; m.id=uid(); m.funktion=FUNKTIONEN[i]; return m; });
+      openTrupp(null, {mitglieder}, ()=>{ const weg=new Set(pers.map(p=>p.id)); S.personen=pool().filter(x=>!weg.has(x.id)); weg.forEach(id=>poolAuswahl.delete(id)); saveRaw(); renderAll(); });
+    };
+  };
+  const ordnung = ()=>[pers.find(p=>p.id===tf), ...pers.filter(p=>p.id!==tf)];
   draw();
 }
 
@@ -2085,7 +2207,7 @@ async function api(method, path, body){
   const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(), 8000);
   let r;
   try{
-    r=await fetch(base+path,{method, headers:Object.assign({'Content-Type':'application/json', 'X-ASUE-Geraet':GERAET.id, 'X-ASUE-Name':encodeURIComponent(geraetName())}, authHdr()), body:body?JSON.stringify(body):undefined, cache:'no-store', signal:ctl.signal});
+    r=await fetch(base+path,{method, headers:Object.assign({'Content-Type':'application/json', 'X-ASUE-Geraet':GERAET.id, 'X-ASUE-Name':encodeURIComponent(geraetName()), 'X-ASUE-Wehr':(ident()&&ident().rolle!=='admin')?ident().user:''}, authHdr()), body:body?JSON.stringify(body):undefined, cache:'no-store', signal:ctl.signal});
   }catch(e){ clearTimeout(to); nachFehlerSuchen(); throw new Error(e.name==='AbortError'?'Server antwortet nicht':'Server nicht erreichbar'); }
   clearTimeout(to);
   let j=null; try{ j = r.status===204 ? null : await r.json(); }catch(e){ j=null; }
@@ -2198,6 +2320,7 @@ async function syncTick(){
     if(r && fuehrungAktualisieren(r.fuehrung)) r=await api('GET','/einsaetze/'+code+'?since=0');
     if(r){
       S.sync.geraete=Array.isArray(r.geraete)?r.geraete:[];
+      if('wehr' in r){ const alt=JSON.stringify(S.sync.wehr||null); S.sync.wehr=r.wehr||null; if(alt!==JSON.stringify(S.sync.wehr)){ saveRaw(); if(view==='ueb'||view==='ein') renderAll(); } }
       // älterer Einsatz ohne Führung: das freigebende Gerät übernimmt sie beim nächsten Senden
       if(!r.fuehrung && S.sync.host && r.rev>0) syncState.einsatzDirty=true;
       applyRemote(r); if(typeof r.rev==='number'){ S.sync.rev=r.rev; saveRaw(); }
@@ -2327,6 +2450,27 @@ function openUebernahme(){
 }
 
 /* ---------- Trupp-Vorschläge ---------- */
+/* Von welcher Feuerwehr ist die angezeigte Überwachung? (ab 3.31) */
+function ueWehr(){
+  if(S.sync && S.sync.wehr) return S.sync.wehr;
+  if(S.sync && !S.sync.host) return null;          // beigetreten, Server hat (noch) keine Angabe
+  const b=ident(); if(!b || b.rolle==='admin') return null;
+  const g=gemeindeOf(b);
+  return {user:b.user, name:b.name, gemeinde:g.name||'', wappen:b.wappen||g.wappen||''};
+}
+function wehrBarHTML(){
+  const w=ueWehr(), f=fuehrung();
+  if(!w){
+    if(!S.sync) return '';
+    return '<div class="wehrbar unbekannt" role="note"><span>Überwachung '+(f?'geführt von <b>'+esc(f.name)+'</b>':'mit Code <b>'+esc(S.sync.code||'')+'</b>')+'<small>Die Feuerwehr wird angezeigt, sobald das führende Gerät die aktuelle ASÜ-Version nutzt.</small></span></div>';
+  }
+  const ich=ident();
+  const fremd=!!(S.sync && w.user && ich && ich.rolle!=='admin' && w.user!==ich.user);
+  const img=w.wappen?'<img class="wb-wappen" src="'+esc(w.wappen)+'" alt="" onerror="this.remove()">':'';
+  return '<div class="wehrbar'+(fremd?' fremd':'')+'" role="note">'+img+'<span>Überwachung der <b>'+esc(w.name)+'</b>'+(w.gemeinde?' · '+esc(w.gemeinde):'')+
+    (S.sync && f && f.name?' <span class="wb-dim">· führt: '+esc(f.name)+'</span>':'')+
+    (fremd?'<small>Dieses Gerät ist für '+esc(ich.name)+' angemeldet – angezeigt wird die Überwachung einer anderen Feuerwehr.</small>':'')+'</span></div>';
+}
 function fuehrungBannerHTML(){
   if(!S.sync) return '';
   const vs=S.vorschlaege||[];
@@ -2562,7 +2706,7 @@ document.addEventListener('click', e=>{
   const fnb=e.target.closest('[data-fn]'); if(fnb){ S.config.funkName=fnb.dataset.fn; save(); renderAll(); toast(S.config.funkName==='tf'?'Funkrufname = Nachname Truppführer':'Funkrufname = Rufgruppe'); return; }
   const pre=e.target.closest('[data-preset]'); if(pre){ S.config.abfragen=pre.dataset.preset.split(',').map(Number); save(); renderAll(); toast('Abfragen: '+S.config.abfragen.join(' / ')+' min'); return; }
   const spd=e.target.closest('[data-speed]'); if(spd && nurLesen()){ sperrHinweis(); return; } if(spd){ const f=+spd.dataset.speed; setSpeed(f); if(f>1 && S.einsatz.art!=='Übung'){ S.einsatz.art='Übung'; save(); toast('Art auf „Übung“ gesetzt'); } renderAll(); return; }
-  const b=e.target.closest('[data-act]'); if(!b || dlg.contains(b) && ['scan-dlg','add-mem','rm-mem','del-trupp','del-no','del-yes'].includes(b.dataset.act)) return;
+  const b=e.target.closest('[data-act]'); if(!b || dlg.contains(b) && ['scan-dlg','add-mem','rm-mem','mk-tf','aufloesen','del-trupp','del-no','del-yes'].includes(b.dataset.act)) return;
   const a=b.dataset.act, tid=b.dataset.t;
   if(nurLesen() && (['step','edit','delstep','notfall','mayday','scan'].includes(a) || (a==='trupp' && !(S.vorschlaege||[]).some(v=>v.id===tid)))){ sperrHinweis(); return; }
   if(a==='vorschlaege'){ openVorschlaege(); return; }
@@ -2571,7 +2715,14 @@ document.addEventListener('click', e=>{
   if(a==='step') openStep(tid, b.dataset.s, false);
   else if(a==='edit') openStep(tid, b.dataset.s, true);
   else if(a==='delstep'){ const t=S.trupps.find(x=>x.id===tid); delete t.ev[b.dataset.s]; save(); closeDlg(); renderAll(); toast('Eintrag gelöscht'); }
+  else if(a==='st-aus'){ if(nurLesen()){ sperrHinweis(); return; } S.einsatz.stAus = {t:nowT()}; save(); renderAll(); toast('Sicherheitstrupp-Warnung für diesen Einsatz ausgeblendet'); }
+  else if(a==='st-an'){ if(nurLesen()){ sperrHinweis(); return; } delete S.einsatz.stAus; save(); renderAll(); }
   else if(a==='newtrupp') openTrupp(null);
+  else if(a==='newperson') openPerson(null);
+  else if(a==='person') openPerson(b.dataset.p);
+  else if(a==='poolwahl'){ const id=b.dataset.p; poolAuswahl.has(id)?poolAuswahl.delete(id):poolAuswahl.add(id); renderAll(); }
+  else if(a==='poolbilden') openTruppBilden([...poolAuswahl]);
+  else if(a==='poolleer'){ poolAuswahl.clear(); renderAll(); }
   else if(a==='trupp') openTrupp(tid);
   else if(a==='notfall' || a==='mayday'){
     const t=S.trupps.find(x=>x.id===tid);
@@ -2739,7 +2890,7 @@ function tick(){
     if(ne && nq && nq.t>now){ ne.textContent=dur(nq.t-now); const bl=document.querySelector('[data-blink="'+t.id+'"]'); if(bl) bl.classList.toggle('blink', nq.t-now<=10000); }
     else if(ne && nq && ne.textContent!=='fällig'){ renderUeb(); return; }
     const so=document.querySelector('[data-live="soll"][data-t="'+t.id+'"]');
-    if(so && r.soll && !r.soll.sofort && !t.ev.rueckzug && !t.ev.ende) so.textContent=dur(r.soll.t-now);
+    const rz=rzOf(t, r); if(so && rz && !rz.sofort && !t.ev.rueckzug && !t.ev.ende) so.textContent=dur(rz.t-now);
   });
 }
 
