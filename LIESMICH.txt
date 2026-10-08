@@ -1,35 +1,20 @@
-Atemschutzüberwachung – Web-App (PWA) für Tablets
+Atemschutzüberwachung (ASÜ) – Paket für https://2rzx6xhc89-sketch.github.io/Atemschutz/
+Version 3.78.0, erzeugt 8.10.2026, 16:11:31
 
-Installation
-1. Den Ordner auf einen beliebigen Webserver mit HTTPS legen (z. B. Vereins-Webspace, NAS, interner Server).
-   HTTPS ist Pflicht, sonst funktionieren Offline-Betrieb und Installation nicht.
-2. Die Adresse auf dem Tablet öffnen:
-   - Android/Chrome: Menü > "App installieren" bzw. "Zum Startbildschirm hinzufügen"
-   - iPad/Safari: Teilen > "Zum Home-Bildschirm"
-3. Einmal mit Internet die Kamera-Texterkennung ausprobieren. Danach liegen Erkennung und
-   Sprachdaten im Cache und die App läuft komplett offline.
+ERSTES MAL
+1. Auf GitHub ein Repository anlegen (z. B. "asue"), unter Settings > Pages "Deploy from a branch" (main, / root) einschalten.
+2. ALLE Dateien und den Ordner "wappen" aus diesem Paket hochladen (Add file > Upload files).
+3. Nach 1-2 Minuten ist die App unter https://2rzx6xhc89-sketch.github.io/Atemschutz/ erreichbar.
+4. Den Feuerwehren die Adresse geben (bzw. den Zettel mit Startcode und QR-Code aus der Einsatzverwaltung).
 
-Daten
-- Alle Einsatzdaten bleiben auf dem Tablet (Browser-Speicher), bis ein neuer Einsatz begonnen wird.
-- Knopf "Einsatzende" (Reiter Einsatzdaten): speichert das Protokoll-PDF und löscht danach alle Einsatzdaten.
-  Sind noch Trupps unter Atemschutz, muss das extra bestätigt werden.
-- Reiter "Protokoll": "PDF öffnen & drucken" erzeugt den Überwachungsbogen als PDF (A4 quer, wie der Papierbogen,
-  plus Seite Geräteerfassung). Das PDF wird direkt im Tablet erzeugt, auch offline.
-- Übergabe an die Fahrzeugverwaltung: im Reiter "Einsatzdaten" die Empfangsadresse eintragen.
-  Gesendet wird der Truppstatus (bereit / im Einsatz / waren im Einsatz, als Trupps und Personen).
-  Format und Anforderungen an den Empfänger: siehe DATENMODELL.md
+NEUE VERSION
+- In der Einsatzverwaltung unter Verwaltung > ASÜ-Zugänge > "Paket für GitHub" ein neues Paket erzeugen
+  und wieder ALLE Dateien hochladen (vorhandene ersetzen).
+- Die Kennwörter bleiben gleich: Sie liegen auf dem Pi, nicht in diesem Paket.
+  Jedes Gerät merkt sich außerdem den Zugang seiner Feuerwehr und meldet sich damit auch ohne Verbindung an.
 
-Lokaler Test am PC:  python3 -m http.server 8080  im Ordner starten, dann http://localhost:8080 öffnen.
+ANMELDEN
+- Erste Anmeldung auf einem Gerät: mit Verbindung zum Pi (Internet). Danach geht es auch ohne Verbindung.
+- Kennwort/Startcode ändern geht nur mit Verbindung zum Pi.
 
-Anmeldung und Wappen
-- Jede Feuerwehr meldet sich mit ihrem Zugang an (Liste: ASUE_Zugaenge.csv – nicht auf GitHub hochladen!).
-  Die Einsatzdaten werden je Zugang getrennt auf dem Gerät gespeichert.
-- Wappen: Ordner "wappen" im Repository. Dateinamen:
-    Gemeinde:  flecken-aerzen.png (liegt bei), stadt-blomberg.png
-    Orte:      aerzen.png, dehmke.png, dehmkerbrock.png, egge.png, gellersen.png, griessem.png,
-               gross-berkel.png, grupenhagen.png, herkendorf.png, koenigsfoerde-selxen.png,
-               multhoepen.png, reher.png, reinerbeck.png, eschenbruch.png
-  PNG mit transparentem Hintergrund, ca. 200–400 px hoch. Fehlt ein Ortswappen, nimmt die App das Gemeindewappen.
-  Ortswappen erscheint oben links in App und PDF, Gemeindewappen oben rechts im PDF.
-- Passwort ändern: als admin anmelden → Einstellungen → „Passwort ändern / Zugang anlegen“,
-  Eintrag in benutzer.js ersetzen und benutzer.js neu hochladen.
+Adressen des Pi: https://raspberrypi.tail924a5a.ts.net:8443/api
