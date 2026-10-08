@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-512.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>Atemschutzüberwachung</title>
@@ -490,6 +490,7 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
 <dialog id="dlg"></dialog>
 <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
 
+<script src="asue-config.js"></script>
 <script src="benutzer.js"></script>
 <script>
 (() => {
@@ -601,6 +602,52 @@ function sampleState(){
 let S;
 /* ---------- Anmeldung (Benutzer je Feuerwehr, siehe benutzer.js) ---------- */
 const BEN = window.ASUE_BENUTZER || {benutzer:[], gemeinden:{}, iterationen:150000};
+/* ab 3.78: Verteilung über GitHub – Adressen des Pi (asue-config.js, ?pi=… oder von Hand) und gemerkte Zugänge dieses Geräts */
+const CFG = window.ASUE_CONFIG || {};
+function geraetAdressen(){
+  let l=[]; try{ l=JSON.parse(localStorage.getItem('asue.pi')||'[]'); }catch(e){}
+  (Array.isArray(CFG.pi)?CFG.pi:[]).forEach(x=>{ if(!l.includes(x)) l.push(x); });
+  return l.map(x=>String(x).trim().replace(/\/+$/,'')).filter(Boolean);
+}
+function geraetAdressenSetzen(l){ try{ localStorage.setItem('asue.pi', JSON.stringify(l.map(x=>String(x).trim().replace(/\/+$/,'')).filter(Boolean).slice(0,4))); }catch(e){} }
+try{ const q=new URLSearchParams(location.search); const pi=q.get('pi'); if(pi) geraetAdressenSetzen([...pi.split(/[\s,;]+/), ...geraetAdressen()]); }catch(e){}
+function geraetSchluessel(){ try{ return localStorage.getItem('asue.key')||''; }catch(e){ return ''; } }
+function zugCache(){ try{ return JSON.parse(localStorage.getItem('asue.zugaenge')||'null') || {benutzer:[], gemeinden:{}}; }catch(e){ return {benutzer:[], gemeinden:{}}; } }
+function zugMischen(c){   // gemerkte Zugänge in die Liste übernehmen – der neuere Stand gewinnt
+  Object.entries(c.gemeinden||{}).forEach(([k,g])=>{ if(!BEN.gemeinden[k]) BEN.gemeinden[k]=g; });
+  (c.benutzer||[]).forEach(u=>{ const i=BEN.benutzer.findIndex(x=>x.user===u.user); if(i<0) BEN.benutzer.push(u); else if((u.geaendert||0) > (BEN.benutzer[i].geaendert||0)) BEN.benutzer[i]=u; });
+  if(c.iterationen && !((window.ASUE_BENUTZER||{}).benutzer||[]).length) BEN.iterationen=c.iterationen;
+}
+function zugMerken(r){
+  const c=zugCache(); c.benutzer=(c.benutzer||[]).filter(x=>x.user!==r.benutzer.user); c.benutzer.push(r.benutzer);
+  c.gemeinden=Object.assign({}, c.gemeinden||{}, r.gemeinden||{}); if(r.iterationen) c.iterationen=r.iterationen; c.t=Date.now();
+  try{ localStorage.setItem('asue.zugaenge', JSON.stringify(c)); }catch(e){}
+  if(r.schluessel){ try{ localStorage.setItem('asue.key', r.schluessel); }catch(e){} }
+  const i=BEN.benutzer.findIndex(x=>x.user===r.benutzer.user); if(i<0) BEN.benutzer.push(r.benutzer); else BEN.benutzer[i]=r.benutzer;
+  Object.entries(r.gemeinden||{}).forEach(([k,g])=>{ BEN.gemeinden[k]=g; });
+}
+zugMischen(zugCache());
+/* Anmeldung beim Pi: {ok, benutzer…} | {falsch|abgelaufen|gesperrt, text} | {offline} */
+async function zugangAnmelden(user, pw){
+  const kand=piKandidaten(); if(!kand.length) return {offline:true};
+  const versuch=async base=>{
+    const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(), 6000);
+    try{
+      const r=await fetch(base+'/zugang/anmelden',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user, passwort:pw}), cache:'no-store', signal:ctl.signal});
+      const j=await r.json().catch(()=>null);
+      if(!j) throw new Error('keine Antwort');
+      return {status:r.status, j};
+    }finally{ clearTimeout(to); }
+  };
+  let erg=null;
+  try{ erg=await Promise.any(kand.map(versuch)); }catch(e){ return {offline:true}; }
+  const {status, j}=erg;
+  if(status===200 && j.ok && j.benutzer) return Object.assign({ok:true}, j);
+  if(status===403) return {falsch:true, text:j.text};
+  if(status===410) return {abgelaufen:true, text:j.text};
+  if(status===429) return {gesperrt:true, text:j.text};
+  return {offline:true};
+}
 let CUR = null, ALS = null;          // angemeldeter Benutzer / beim Admin: „arbeiten als“
 try{ const ss=JSON.parse(localStorage.getItem('asue.session')||'null'); if(ss){ CUR=BEN.benutzer.find(b=>b.user===ss.user)||null; if(CUR && CUR.rolle==='admin' && ss.als) ALS=BEN.benutzer.find(b=>b.user===ss.als)||null; } }catch(e){}
 function ident(){ return ALS || CUR; }                 // Feuerwehr, für die gearbeitet wird (Name, Wappen)
@@ -678,28 +725,121 @@ function showLogin(msg){
   o.innerHTML='<form class="login-box" id="loginForm" autocomplete="on">'+
     '<img class="login-wappen" id="loginWappen" src="'+NEUTRAL_SVG+'" alt="">'+
     '<h1>Atemschutzüberwachung</h1><p class="hint" id="loginName">Bitte mit dem Zugang Ihrer Feuerwehr anmelden.</p>'+
-    (noUsers?'<div class="err">Die Benutzerdatei (benutzer.js) fehlt. Bitte die App vollständig auf den Server kopieren (Ordner asue).</div>':'')+
+    (noUsers && !geraetAdressen().length && CFG.vomPi===undefined?'<div class="err">Die Benutzerdatei (benutzer.js) fehlt und es ist keine Adresse des Pi bekannt. Bitte die App vollständig kopieren oder unten die Adresse des Pi eintragen.</div>':'')+
     '<label class="f">Benutzer<input class="inp" id="lgUser" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>'+
-    '<label class="f">Passwort<input class="inp" id="lgPass" type="password" autocomplete="current-password" required></label>'+
+    '<label class="f">Passwort bzw. Startcode<input class="inp" id="lgPass" type="password" autocomplete="current-password" required></label>'+
     '<div class="err" id="lgErr" role="alert">'+esc(msg||'')+'</div>'+
     '<button class="btn primary" type="submit" style="min-height:52px;font-size:18px">Anmelden</button>'+
-    '<p class="hint" style="margin:0">Die Anmeldung bleibt auf diesem Gerät gespeichert, bis Sie sich unter Einstellungen abmelden.</p></form>';
+    '<p class="hint" style="margin:0">Die Anmeldung bleibt auf diesem Gerät gespeichert, bis Sie sich unter Einstellungen abmelden.</p>'+
+    (CFG.vomPi ? '' : '<details class="adm"><summary>Adresse des Pi'+(geraetAdressen().length?'':' (fehlt)')+'</summary><label class="f" style="margin-top:8px">Internetadresse(n) der Einsatzverwaltung, z. B. https://name.tailXXXX.ts.net:8443/api<input class="inp mono" id="lgPi" value="'+esc(geraetAdressen().join(' '))+'" autocapitalize="none" spellcheck="false"></label><div class="hint">Steht im Paket bereits drin; nur ändern, wenn der Administrator es sagt.</div></details>')+
+    '</form>';
   o.hidden=false;
   const u=$('#lgUser');
+  try{ const vu=new URLSearchParams(location.search).get('u'); if(vu && !u.value) u.value=vu.toLowerCase(); }catch(e){}
+  const lp=$('#lgPi'); if(lp) lp.addEventListener('change', ()=>{ geraetAdressenSetzen(lp.value.split(/[\s,;]+/)); });
+  $('#lgPass').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); const f=$('#loginForm'); if(f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event('submit', {cancelable:true})); } });
   u.addEventListener('input', async ()=>{ const b=BEN.benutzer.find(x=>x.user===u.value.trim().toLowerCase()); const im=$('#loginWappen'); $('#loginName').textContent = b ? b.name+(gemeindeOf(b).name?' · '+gemeindeOf(b).name:'') : 'Bitte mit dem Zugang Ihrer Feuerwehr anmelden.'; if(b){ const i=await loadImg(b.wappen) || await loadImg(gemeindeOf(b).wappen) || (b.gemeinde==='aerzen'?{src:$('.wappen').dataset.fallback}:null); im.src = i ? i.src : NEUTRAL_SVG; } else im.src=NEUTRAL_SVG; });
   setTimeout(()=>u.focus(), 50);
   $('#loginForm').addEventListener('submit', async e=>{
     e.preventDefault();
     const err=$('#lgErr'); err.textContent='';
-    const b=BEN.benutzer.find(x=>x.user===u.value.trim().toLowerCase());
-    const btn=e.target.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent='Prüfe …';
-    let ok=false;
-    try{ if(b) ok = (await pbkdf2($('#lgPass').value, b.salt, BEN.iterationen||150000)) === b.hash; }
-    catch(x){ err.textContent='Anmeldung auf diesem Gerät nicht möglich.'; btn.disabled=false; btn.textContent='Anmelden'; return; }
-    await new Promise(r=>setTimeout(r, ok?0:700));   // Rateversuche etwas bremsen
-    if(!ok){ err.textContent='Benutzer oder Passwort falsch.'; btn.disabled=false; btn.textContent='Anmelden'; $('#lgPass').select(); return; }
+    let b=BEN.benutzer.find(x=>x.user===u.value.trim().toLowerCase());
+    const btn=e.target.querySelector('button[type=submit]'); if(btn.disabled) return; btn.disabled=true; btn.textContent='Prüfe …';
+    let ok=false, b2=b;
+    const nm=u.value.trim().toLowerCase(), pw=$('#lgPass').value;
+    const fertig=t=>{ err.textContent=t; btn.disabled=false; btn.textContent='Anmelden'; const lp2=$('#lgPass'); if(lp2) lp2.select(); };
+    // ab 3.78: zuerst beim Pi anmelden (maßgeblich, auch für ein neues Gerät); ohne Verbindung mit dem gemerkten Zugang
+    const p=await zugangAnmelden(nm, pw);
+    if(p.ok){ zugMerken(p); b2=BEN.benutzer.find(x=>x.user===p.benutzer.user); ok=true; }
+    else if(p.falsch || p.abgelaufen || p.gesperrt){ await new Promise(r=>setTimeout(r,500)); fertig(p.text||'Benutzer oder Passwort falsch.'); return; }
+    else{
+      try{ if(b) ok = (await pbkdf2(pw, b.salt, BEN.iterationen||150000)) === b.hash; }
+      catch(x){ fertig('Anmeldung auf diesem Gerät nicht möglich.'); return; }
+      await new Promise(r=>setTimeout(r, ok?0:700));   // Rateversuche etwas bremsen
+      if(!ok){ fertig(b ? 'Benutzer oder Passwort falsch.' : (geraetAdressen().length || location.protocol!=='file:' ? 'Dieser Zugang ist auf diesem Gerät noch nicht bekannt. Für die erste Anmeldung muss das Gerät mit dem Pi verbunden sein (Internet).' : 'Benutzer oder Passwort falsch.')); return; }
+    }
+    b=b2;
+    if(b.muss){   // ab 3.77: Startcode – eigenes Kennwort festlegen
+      if(b.startBis && Date.now()>b.startBis){ err.textContent='Der Startcode ist abgelaufen – bitte beim Administrator einen neuen anfordern.'; btn.disabled=false; btn.textContent='Anmelden'; return; }
+      showKwSetzen(b, pw); return;
+    }
     loginAs(b);
   });
+}
+/* ---------- ab 3.77: Erstanmeldung mit Startcode / eigenes Kennwort ändern (über den Pi) ---------- */
+function piKandidaten(){
+  const k=[];
+  try{ if(PI.ok && PI.base) k.push(PI.base); }catch(e){}
+  const eigen=new URL('api', location.href).href.replace(/\/+$/,''); if(!k.includes(eigen)) k.push(eigen);
+  try{ adressen().forEach(x=>{ if(!k.includes(x)) k.push(x); }); }catch(e){}
+  geraetAdressen().forEach(x=>{ if(!k.includes(x)) k.push(x); });
+  if(location.protocol==='https:') return k.filter(x=>/^https:/i.test(x));   // von https (z. B. GitHub) aus nur https-Adressen
+  return k;
+}
+async function kennwortAmPi(user, alt, neu){
+  let alterPi=false;
+  for(const base of piKandidaten()){
+    const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(), 9000);
+    try{
+      const r=await fetch(base+'/zugang/kennwort',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user, alt, neu}), cache:'no-store', signal:ctl.signal});
+      const j=await r.json().catch(()=>({}));
+      if(r.ok) return {ok:true};
+      if(r.status===404 && !j.text){ alterPi=true; continue; }
+      return {ok:false, text:j.text||('Fehler '+r.status)};
+    }catch(e){ /* nächste Adresse */ } finally{ clearTimeout(to); }
+  }
+  return {ok:false, text: alterPi ? 'Der Pi kennt diese Funktion noch nicht – bitte die Einsatzverwaltung aktualisieren.' : 'Keine Verbindung zum Pi. Zum Festlegen des Kennworts muss das Gerät mit dem Pi verbunden sein (Gerätehaus-WLAN oder Internetadresse).'};
+}
+async function benutzerNeuLaden(){
+  try{
+    const r=await fetch(new URL('benutzer.js', location.href).href, {cache:'no-store'});
+    const t=await r.text(); const d=JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}')+1));
+    if(Array.isArray(d.benutzer) && d.benutzer.length){ BEN.benutzer=d.benutzer; if(d.gemeinden) BEN.gemeinden=d.gemeinden; if(d.iterationen) BEN.iterationen=d.iterationen; }
+  }catch(e){}
+}
+function showKwSetzen(b, startcode){
+  let o=$('#login'); if(!o){ o=document.createElement('div'); o.id='login'; document.body.appendChild(o); }
+  o.innerHTML='<form class="login-box" id="kwForm" autocomplete="on">'+
+    '<img class="login-wappen" id="loginWappen" src="'+NEUTRAL_SVG+'" alt="">'+
+    '<h1>Eigenes Kennwort festlegen</h1>'+
+    '<p class="hint"><b>'+esc(b.name)+'</b> – Sie haben sich mit dem Startcode angemeldet. Bitte jetzt ein eigenes Kennwort festlegen (mindestens 8 Zeichen). Es gilt danach für alle Geräte Ihrer Feuerwehr; der Startcode verfällt.</p>'+
+    '<input type="text" autocomplete="username" value="'+esc(b.user)+'" hidden>'+
+    '<label class="f">Neues Kennwort<input class="inp" id="kwNeu" type="password" autocomplete="new-password" minlength="8" required></label>'+
+    '<label class="f">Neues Kennwort wiederholen<input class="inp" id="kwNeu2" type="password" autocomplete="new-password" minlength="8" required></label>'+
+    '<div class="err" id="kwErr" role="alert"></div>'+
+    '<button class="btn primary" type="submit" style="min-height:52px;font-size:18px">Kennwort speichern und anmelden</button>'+
+    '<button class="btn" type="button" id="kwZurueck">Zurück zur Anmeldung</button></form>';
+  o.hidden=false;
+  loadImg(b.wappen).then(i=>{ if(i) $('#loginWappen').src=i.src; });
+  setTimeout(()=>$('#kwNeu').focus(), 50);
+  $('#kwZurueck').onclick=()=>showLogin();
+  $('#kwForm').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const err=$('#kwErr'), n1=$('#kwNeu').value, n2=$('#kwNeu2').value; err.textContent='';
+    if(n1.length<8){ err.textContent='Das Kennwort muss mindestens 8 Zeichen haben.'; return; }
+    if(n1!==n2){ err.textContent='Die beiden Eingaben stimmen nicht überein.'; return; }
+    if(n1===startcode){ err.textContent='Bitte nicht den Startcode als Kennwort verwenden.'; return; }
+    const btn=e.target.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent='Speichere …';
+    const r=await kennwortAmPi(b.user, startcode, n1);
+    if(!r.ok){ err.textContent=r.text; btn.disabled=false; btn.textContent='Kennwort speichern und anmelden'; return; }
+    const p=await zugangAnmelden(b.user, n1); if(p.ok) zugMerken(p); else await benutzerNeuLaden();
+    loginAs(BEN.benutzer.find(x=>x.user===b.user) || b);
+    toast('Eigenes Kennwort gespeichert – bitte merken.');
+  });
+}
+async function kwSelbstAendern(){
+  const alt=($('#kwAlt')||{}).value||'', n1=($('#kwN1')||{}).value||'', n2=($('#kwN2')||{}).value||'', out=$('#kwAOut');
+  const zeig=(t,ok)=>{ if(out){ out.textContent=t; out.style.color=ok?'var(--green)':'var(--red)'; } };
+  if(!alt){ zeig('Bitte das bisherige Kennwort eingeben.'); return; }
+  if(n1.length<8){ zeig('Das neue Kennwort muss mindestens 8 Zeichen haben.'); return; }
+  if(n1!==n2){ zeig('Die beiden neuen Eingaben stimmen nicht überein.'); return; }
+  zeig('Speichere …', true);
+  const r=await kennwortAmPi(CUR.user, alt, n1);
+  if(!r.ok){ zeig(r.text); return; }
+  const p=await zugangAnmelden(CUR.user, n1); if(p.ok) zugMerken(p); else await benutzerNeuLaden();
+  CUR=BEN.benutzer.find(x=>x.user===CUR.user)||CUR;
+  ['kwAlt','kwN1','kwN2'].forEach(id=>{ const i=$('#'+id); if(i) i.value=''; });
+  zeig('✓ Kennwort geändert. Es gilt jetzt für alle Geräte Ihrer Feuerwehr.', true);
 }
 function loginAs(b){
   CUR=b; ALS=null;
@@ -724,6 +864,13 @@ function userPanelHTML(){
     '<div class="row"><img src="'+(WAP.ortSrc||WAP.gemSrc||NEUTRAL_SVG)+'" alt="" style="width:40px;height:52px;object-fit:contain"><div style="flex:1;min-width:0"><b style="font-size:18px">'+esc(b.name)+'</b><div class="hint">'+esc(gemeindeOf(b).name)+' · angemeldet als <span class="mono">'+esc(CUR.user)+'</span>'+(isAdmin()?' (Administrator)':'')+'</div></div>'+
     '<button type="button" class="btn danger" data-act="logout">Abmelden</button></div><div id="logoutConfirm"></div>';
   if(!(WAP.ortSrc) && b.rolle!=='admin') h+='<div class="hint">Kein eigenes Ortswappen gefunden (<span class="mono">'+esc(b.wappen)+'</span>). Es wird das Wappen der Gemeinde verwendet.</div>';
+  h+='<details class="adm"><summary><b>Eigenes Kennwort ändern</b></summary><div style="display:grid;gap:10px;margin-top:8px">'+
+    '<p class="hint" style="margin:0">Gilt für alle Geräte der Feuerwehr <b>'+esc(CUR.name)+'</b>. Das Gerät muss dafür mit dem Pi verbunden sein.</p>'+
+    '<input type="text" autocomplete="username" value="'+esc(CUR.user)+'" hidden>'+
+    '<div class="fgrid"><label class="f">Bisheriges Kennwort<input class="inp" id="kwAlt" type="password" autocomplete="current-password"></label>'+
+    '<label class="f">Neues Kennwort (mind. 8 Zeichen)<input class="inp" id="kwN1" type="password" autocomplete="new-password"></label>'+
+    '<label class="f">Neues Kennwort wiederholen<input class="inp" id="kwN2" type="password" autocomplete="new-password"></label></div>'+
+    '<div class="row"><button type="button" class="btn primary" data-act="kwaendern">Kennwort ändern</button></div><div class="hint" id="kwAOut" role="status"></div></div></details>';
   if(isAdmin()){
     h+='<label class="f">Arbeiten als (Wappen und Name in App und Protokoll)<select class="inp" id="alsSel"><option value="">Administrator</option>'+
       BEN.benutzer.filter(x=>x.rolle!=='admin').map(x=>'<option value="'+esc(x.user)+'"'+(ALS&&ALS.user===x.user?' selected':'')+'>'+esc(x.name)+' ('+esc(gemeindeOf(x).name)+')</option>').join('')+'</select></label>'+
@@ -1225,12 +1372,13 @@ function canSend(){ try{ return window.self===window.top && /^https?:/.test(loca
 const PI={ok:null, base:'', key:false};
 function statusUrl(){ return ((S.config.uebergabeUrl||'').trim()) || (PI.ok ? PI.base+'/status' : ''); }
 function syncBase(){ if(PI.ok) return PI.base; const a=String(S.config.syncUrl||'').split(/[\s,;]+/).map(x=>x.trim().replace(/\/+$/,'')).filter(Boolean); return a[0]||''; }
-function authHdr(){ const k=(S.config.syncKey||'').trim(); return k ? {'Authorization':'Bearer '+k} : {}; }
+function authHdr(){ const k=(S.config.syncKey||'').trim() || geraetSchluessel(); return k ? {'Authorization':'Bearer '+k} : {}; }
 async function detectPi(){
   if(!canSend()){ PI.ok=false; return; }
   // 1. App wurde vom Pi geladen (…/api neben der App)  2. eingetragene Server-Adresse(n), z. B. WLAN und Internet
   const kandidaten=[new URL('api', location.href).href.replace(/\/+$/,'')];
   String(S.config.syncUrl||'').split(/[\s,;]+/).map(x=>x.trim().replace(/\/+$/,'')).filter(Boolean).forEach(x=>{ if(!kandidaten.includes(x)) kandidaten.push(x); });
+  geraetAdressen().forEach(x=>{ if(!kandidaten.includes(x)) kandidaten.push(x); });   // ab 3.78: Adressen aus asue-config.js / ?pi=
   const probe = async base => {
     const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(), 4500);
     try{ const r=await fetch(base+'/health',{cache:'no-store', signal:ctl.signal}); const j=r.ok ? await r.json() : null; return j && j.name==='Einsatzverwaltung' ? j : null; }
@@ -2738,6 +2886,7 @@ document.addEventListener('click', e=>{
   else if(a==='logoutyes') logout();
   else if(a==='nbgen'){ $('#nbPass').value=genPw(); }
   else if(a==='nbmake') makeEntry();
+  else if(a==='kwaendern') kwSelbstAendern();
   else if(a==='syncshare') shareEinsatz();
   else if(a==='syncjoin') joinEinsatz(($('#joinCode')||{}).value);
   else if(a==='syncleave') leaveSync();
@@ -2900,7 +3049,8 @@ window.addEventListener('resize', setTopH); setTimeout(setTopH, 50); setTimeout(
 try{ const v=sessionStorage.getItem('asue.view'); if(v && ['ueb','ger','ein','pro','set'].includes(v)) view=v; }catch(e){}
 { const w=$('.wappen'); if(w) w.dataset.fallback=w.src; }
 setView(view);
-if(CUR) loadWappen(); else showLogin();
+if(CUR && CUR.muss){ try{ localStorage.removeItem('asue.session'); }catch(e){} CUR=null; ALS=null; S=sampleState(); showLogin('Der Zugang wurde vom Administrator zurückgesetzt – bitte mit dem Startcode anmelden und ein eigenes Kennwort festlegen.'); }
+else if(CUR) loadWappen(); else showLogin();
 tick(); setInterval(tick, 250);
 detectPi().then(loadEvList); setInterval(()=>{ if(!PI.ok) detectPi().then(loadEvList); else loadEvList(); }, 30000);
 try{
