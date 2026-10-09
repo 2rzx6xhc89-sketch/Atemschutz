@@ -449,6 +449,8 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
   .sttile .n span{font-size:12px;align-self:center}
   .scanbtns{grid-template-columns:1fr}
 }
+dialog.evfrage .evf-z{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;margin-top:8px;text-align:left;padding:12px 14px}
+dialog.evfrage .evf-z span{font-weight:400;font-size:14px;opacity:.9}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
 </head>
@@ -1315,9 +1317,30 @@ async function loadEvList(){
     if(!r.ok) throw 0;
     EV.list=await r.json(); EV.at=Date.now();
   }catch(e){ return; }
-  // genau ein laufender Einsatz und dieser Einsatz noch nicht verknüpft → automatisch übernehmen
-  if(CUR && !S.sample && !S.einsatz.evId && !S.einsatz.evAus && EV.list.length===1){ evLink(EV.list[0], true); }
+  // ab 3.83: läuft ein Einsatz und ist dieser ASÜ-Einsatz noch nicht verknüpft → fragen, ob man sich anschließen möchte
+  evFrage();
   if(view==='ein') renderEin();
+}
+let evFrageSpaeter = 0;
+function evFrage(){
+  const e = S.einsatz;
+  if(!CUR || S.sample || nurLesen() || e.evId || e.evAus || e.evGefragt || !EV.list || !EV.list.length || dlg.open || Date.now() < evFrageSpaeter) return;
+  const l = EV.list;
+  openDlg('<div class="dlg-head"><h2>Einsatz anschließen?</h2><button type="button" class="btn small ghost" data-evf="spaeter">Später</button></div>'+
+    '<div class="dlg-body"><p style="margin:0 0 8px">'+(l.length===1 ? 'In der Einsatzverwaltung läuft dieser Einsatz. Möchtest du dich mit der Atemschutzüberwachung <b>diesem Einsatz anschließen</b>?' : 'In der Einsatzverwaltung laufen '+l.length+' Einsätze. Welchem möchtest du dich mit der Atemschutzüberwachung <b>anschließen</b>?')+'</p>'+
+    l.map(x=>'<button type="button" class="btn primary evf-z" data-evf="'+esc(x.id)+'"><b>Ja – Einsatz '+esc(x.nummer)+'</b><span>'+esc([evTitel(x), x.adresse].filter(Boolean).join(' · '))+'</span></button>').join('')+
+    '<p class="hint" style="margin:10px 0 0">Angeschlossen: Der Truppstatus erscheint in der Einsatzverwaltung beim Einsatz und im Einsatztagebuch.<br><b>Nein:</b> Die Überwachung läuft eigenständig und erscheint dort nicht. Die Atemschutzzeiten werden trotzdem im Atemschutz-Nachweis dokumentiert. Später änderbar unter Einsatz → „Einsatz der Einsatzverwaltung“.</p></div>'+
+    '<div class="dlg-foot"><button type="button" class="btn" data-evf="nein">Nein, eigenständig überwachen</button></div>', 'evfrage');
+  dlg.onclick = ev=>{
+    const b = ev.target.closest('[data-evf]'); if(!b) return;
+    dlg.onclick = null; closeDlg();
+    const w = b.dataset.evf;
+    if(w==='spaeter'){ evFrageSpaeter = Date.now() + 3*60000; return; }
+    S.einsatz.evGefragt = true;
+    if(w==='nein'){ evLink(null); toast('Eigenständige Überwachung – nicht in der Einsatzverwaltung sichtbar, Zeiten gehen in den Atemschutz-Nachweis.'); return; }
+    const x = (EV.list||[]).find(y=>y.id===w); if(x) evLink(x, false);
+  };
+  dlg.addEventListener('cancel', ()=>{ dlg.onclick = null; evFrageSpaeter = Date.now() + 3*60000; }, {once:true});
 }
 function evTitel(x){ return [x.stichwort, x.meldebild].filter(Boolean).join(' · '); }
 function evLink(x, auto){
@@ -1335,7 +1358,7 @@ function evPanelHTML(){
   if(!PI.ok) return '';
   const e=S.einsatz, list=EV.list||[];
   const aktiv = e.evId && list.some(x=>x.id===e.evId);
-  const opts='<option value="">– keinem Einsatz zuordnen –</option>'+list.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===e.evId?' selected':'')+'>'+esc(x.nummer+(evTitel(x)?' · '+evTitel(x):'')+(x.adresse?' · '+x.adresse:''))+'</option>').join('');
+  const opts='<option value="">– keinem Einsatz zuordnen (eigenständig, nicht in der Einsatzverwaltung sichtbar) –</option>'+list.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===e.evId?' selected':'')+'>'+esc(x.nummer+(evTitel(x)?' · '+evTitel(x):'')+(x.adresse?' · '+x.adresse:''))+'</option>').join('');
   return '<h2 class="section-title">Einsatz der Einsatzverwaltung</h2><div class="panel" style="display:grid;gap:10px">'+
     (EV.list===null ? '<p class="hint" style="margin:0">Lade laufende Einsätze …</p>' :
       '<label class="f">Laufender Einsatz<select class="inp" id="evSel" data-nosave="1">'+opts+'</select></label>'+
@@ -1349,9 +1372,11 @@ function statusEinsatzId(){ return S.sync && S.sync.code ? 'sync-'+S.sync.code :
 function statusPayload(abgeschlossen){
   const e=S.einsatz;
   return {schema:'asue.status/1', zeitpunkt:new Date().toISOString(),
-    einsatz:{id:statusEinsatzId(), ersetzt:(sendState.lastId && sendState.lastId!==statusEinsatzId()) ? sendState.lastId : undefined, art:e.art, einsatzstelle:e.einsatzstelle||null, datum:e.datum, abgeschlossen:!!abgeschlossen, evId:e.evId||null},
+    einsatz:{id:statusEinsatzId(), ersetzt:(sendState.lastId && sendState.lastId!==statusEinsatzId()) ? sendState.lastId : undefined, art:e.art, einsatzstelle:e.einsatzstelle||null, datum:e.datum, abgeschlossen:!!abgeschlossen, evId:e.evId||null, evAus:!!e.evAus},
     feuerwehr: ident() ? {user:ident().user, name:ident().name, gemeinde:gemeindeOf(ident()).name} : null,
-    status:truppStatus()};
+    status:truppStatus(),
+    // ab 3.83: Zeiten je Trupp für den Atemschutz-Nachweis (auch bei eigenständiger Überwachung)
+    doku:{evNummer:e.evNummer||'', trupps:S.trupps.filter(t=>t.ev && t.ev.beginn).map(t=>({id:t.id, rufgruppe:t.rufgruppe||'', st:!!t.st, csa:!!t.csa, notfall:!!t.notfall, ev:{beginn:t.ev.beginn?{t:t.ev.beginn.t}:null, ende:t.ev.ende?{t:t.ev.ende.t}:null}, mitglieder:(t.mitglieder||[]).map(m=>({id:m.id, name:m.name||'', vorname:m.vorname||'', nachname:m.nachname||'', funktion:m.funktion||'', geraetNr:m.geraetNr||''}))}))}};
 }
 function statusStripHTML(){
   const z=truppStatus();
@@ -1396,7 +1421,7 @@ function sendStatus(final){
   if(!url || !canSend() || S.sample || nurLesen() || (sendState.busy && !final)) return Promise.resolve(false);   // Truppstatus meldet nur das führende Gerät
   const body=JSON.stringify(statusPayload(final));
   sendState.busy=true; sendState.tried=nowT();
-  const sig=JSON.stringify(truppStatus())+statusEinsatzId(); const sentId=statusEinsatzId();
+  const sig=JSON.stringify(truppStatus())+statusEinsatzId()+(S.einsatz.evAus?'a':''); const sentId=statusEinsatzId();
   return fetch(url,{method:'POST', headers:Object.assign({'Content-Type':'application/json'}, authHdr()), body, keepalive:true, cache:'no-store'})
     .then(r=>{ sendState.ok=r.ok; if(r.ok){ sendState.sig=sig; sendState.lastId=sentId; } })
     .catch(()=>{ sendState.ok=false; if(PI.ok && !(S.config.uebergabeUrl||'').trim()) nachFehlerSuchen(); })
@@ -1405,7 +1430,7 @@ function sendStatus(final){
 function refreshStrip(){ const w=$('#statusWrap'); if(w) w.innerHTML=statusStripHTML(); }
 function sendTick(now){
   if(!statusUrl() || !canSend() || sendState.busy || S.sample || nurLesen()) return;   // Beispieldaten nie melden
-  const sig=JSON.stringify(truppStatus())+statusEinsatzId();
+  const sig=JSON.stringify(truppStatus())+statusEinsatzId()+(S.einsatz.evAus?'a':'');
   const wait = sendState.ok===false ? 30000 : 300000;   // Fehler: alle 30 s, sonst Lebenszeichen alle 5 min
   if(sig!==sendState.sig || now-sendState.tried > wait) sendStatus(false);
 }
@@ -3020,7 +3045,7 @@ function tick(){
   zuschauenTick();
   sendTick(now);
   autoShareTick();
-  if(PI.ok && CUR && !S.sample && !S.einsatz.evId && !S.einsatz.evAus && Date.now()-EV.at>10000){ EV.at=Date.now(); loadEvList(); }
+  if(PI.ok && CUR && !S.sample && !S.einsatz.evId && !S.einsatz.evAus && !S.einsatz.evGefragt && Date.now()-EV.at>10000){ EV.at=Date.now(); loadEvList(); }
   if(syncOn() && Date.now()-(syncState.at||0) > 2000) syncTick();
   renderSyncBadge();
   if(view!=='ueb') return;
