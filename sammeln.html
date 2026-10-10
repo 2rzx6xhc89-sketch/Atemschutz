@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atemschutz – Sammeln</title>
+<meta name="theme-color" content="#B3121F">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--ground:#EEF0EE;--panel:#fff;--panel-2:#F6F7F6;--ink:#15191C;--ink-2:#4A5358;--line:#D3D8D6;--red:#B3121F;--red-soft:#FBE7E8;--green:#1D6B45;--green-soft:#E1F2E8;--amber:#B86E00;--amber-soft:#FFF1D6;--blue:#1F4E79;--blue-soft:#E3EDF6}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--ground:#0F1214;--panel:#181D20;--panel-2:#1F2528;--ink:#E7ECEA;--ink-2:#AAB4B8;--line:#2B3337;--red:#E0414B;--red-soft:#3A1719;--green:#4CC08A;--green-soft:#12301F;--amber:#F0A83A;--amber-soft:#3A2A10;--blue:#7FB2E3;--blue-soft:#15283A}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ground);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px}
+button,input,select{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:5;background:var(--red);color:#fff;padding:10px 14px calc(10px + 0px);display:flex;align-items:center;gap:10px}
+.top h1{margin:0;font-size:20px}.top small{display:block;font-size:12px;opacity:.85}
+main{padding:12px;max-width:720px;margin:0 auto;display:grid;gap:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+h2{font-size:18px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:10px 14px;font-weight:600;min-height:46px;cursor:pointer}
+.btn.pri{background:var(--red);border-color:var(--red);color:#fff}.btn.klein{min-height:36px;padding:6px 10px;font-size:14px}
+.btn:disabled{opacity:.45}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.sp{flex:1}
+.hint{font-size:14px;color:var(--ink-2);line-height:1.4}
+.inp{border:1px solid var(--line);border-radius:10px;background:var(--panel);min-height:46px;padding:8px 10px;width:100%}
+label.f{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--ink-2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pers{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--panel)}
+.pers.sel{border-color:var(--red);box-shadow:0 0 0 2px var(--red-soft)}
+.pers input[type=checkbox]{width:24px;height:24px}
+.pers .bd{flex:1;min-width:0}.pers b{font-size:17px}
+.mono{font-family:ui-monospace,Menlo,monospace}
+.tag{display:inline-block;border-radius:6px;padding:1px 6px;font-size:12px;font-weight:700;background:var(--blue-soft);color:var(--blue)}
+.tag.qr{background:var(--green-soft);color:var(--green)}
+.trupp{border:2px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:var(--panel)}
+.trupp.ueb{opacity:.6}
+dialog{border:0;border-radius:14px;padding:0;width:calc(100% - 20px);max-width:520px;background:var(--panel);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.dlg{padding:14px;display:grid;gap:10px}
+.qrwrap{display:grid;place-items:center}.qrwrap canvas{width:min(80vw,360px);height:auto;background:#fff;padding:8px;border-radius:8px}
+video{width:100%;border-radius:10px;background:#000;max-height:50vh}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:12px;font-weight:600;z-index:50}
+.err{color:var(--red);font-weight:600}
+.leer{color:var(--ink-2);padding:6px 0}
+</style>
+</head>
+<body>
+<header class="top"><div style="font-size:26px">🫁</div><div><h1>Atemschutz – Sammeln</h1><small>Personen und Trupps erfassen · Übergabe nur per QR-Code</small></div></header>
+<main id="main"></main>
+<dialog id="dlg"></dialog>
+<input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=()=>'s'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const dlg=$('#dlg');
+function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2600); }
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=()=>rej(new Error('Skript nicht ladbar')); document.head.appendChild(s); }); }
+/* ---------- QR-Codes und Strichcodes ---------- */
+const ZXING_URL = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+const FMT_NAMES = {qr_code:'QR-Code', QR_CODE:'QR-Code', data_matrix:'DataMatrix', DATA_MATRIX:'DataMatrix', code_128:'Code 128', CODE_128:'Code 128', code_39:'Code 39', CODE_39:'Code 39', ean_13:'EAN-13', EAN_13:'EAN-13', ean_8:'EAN-8', EAN_8:'EAN-8', itf:'ITF', ITF:'ITF', pdf417:'PDF417', PDF_417:'PDF417', aztec:'Aztec', AZTEC:'Aztec', upc_a:'UPC-A', UPC_A:'UPC-A', codabar:'Codabar', CODABAR:'Codabar'};
+async function detectCodes(canvas){
+  const found = [];
+  // 1. Eingebaute Erkennung des Browsers (Chrome/Android), schnell und offline
+  if('BarcodeDetector' in window){
+    try{
+      const bd = new BarcodeDetector();
+      const res = await bd.detect(canvas);
+      res.forEach(r=>found.push({text:r.rawValue, format:FMT_NAMES[r.format]||r.format}));
+    }catch(e){}
+  }
+  if(found.length) return found;
+  // 2. Ersatz über ZXing (auch iPad/Safari)
+  try{
+    if(!window.ZXing) await loadScript(ZXING_URL);
+    const Z = window.ZXing;
+    const hints = new Map(); hints.set(Z.DecodeHintType.TRY_HARDER, true);
+    const reader = new Z.MultiFormatReader(); reader.setHints(hints);
+    const lumSource = c => {
+      const w=c.width, h=c.height, d=c.getContext('2d').getImageData(0,0,w,h).data, l=new Uint8ClampedArray(w*h);
+      for(let i=0,j=0;j<l.length;i+=4,j++) l[j]=(d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114)|0;
+      return new Z.RGBLuminanceSource(l, w, h);
+    };
+    const tryDecode = c => { try{ return reader.decode(new Z.BinaryBitmap(new Z.HybridBinarizer(lumSource(c)))); }catch(e){ return null; } };
+    let r = tryDecode(canvas);
+    if(!r){ // um 90° gedreht erneut versuchen (Strichcodes hochkant)
+      const c2=document.createElement('canvas'); c2.width=canvas.height; c2.height=canvas.width;
+      const x=c2.getContext('2d'); x.translate(c2.width/2,c2.height/2); x.rotate(Math.PI/2); x.drawImage(canvas,-canvas.width/2,-canvas.height/2);
+      r = tryDecode(c2);
+    }
+    if(r){ const f=r.getBarcodeFormat(); const fn = Z.BarcodeFormat[f] || f; found.push({text:r.getText(), format:FMT_NAMES[fn]||String(fn)}); }
+  }catch(e){}
+  return found;
+}
+
+const QRGEN = (()=>{
+  const ECC = {L:[-1,7,10,15,20,26,18,20,24,30,18,20,24,26,30,22,24,28,30,28,28,28,28,30,30,26,28,30,30,30,30,30,30,30,30,30,30,30,30,30,30],
+               M:[-1,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24,28,28,26,26,26,26,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28]};
+  const BLK = {L:[-1,1,1,1,1,1,2,2,2,2,4,4,4,4,4,6,6,6,6,7,8,8,9,9,10,12,12,12,13,14,15,16,17,18,19,19,20,21,22,24,25],
+               M:[-1,1,1,1,2,2,4,4,4,5,5,5,8,9,9,10,10,11,13,14,16,17,17,18,20,21,23,25,26,28,29,31,33,35,37,38,40,43,45,47,49]};
+  const FMT = {L:1, M:0};
+  const rawMods = v => { let r=(16*v+128)*v+64; if(v>=2){ const n=Math.floor(v/7)+2; r-=(25*n-10)*n-55; if(v>=7) r-=36; } return r; };
+  const dataCw = (v,e) => Math.floor(rawMods(v)/8) - ECC[e][v]*BLK[e][v];
+  const gmul = (x,y) => { let z=0; for(let i=7;i>=0;i--){ z=(z<<1)^((z>>>7)*0x11D); z^=((y>>>i)&1)*x; } return z&255; };
+  const rsDiv = d => { const r=new Array(d).fill(0); r[d-1]=1; let root=1; for(let i=0;i<d;i++){ for(let j=0;j<d;j++){ r[j]=gmul(r[j],root); if(j+1<d) r[j]^=r[j+1]; } root=gmul(root,2); } return r; };
+  const rsRem = (data,div) => { const r=new Array(div.length).fill(0); for(const b of data){ const f=b^r.shift(); r.push(0); div.forEach((c,i)=>r[i]^=gmul(c,f)); } return r; };
+  const alignPos = (v,size) => { if(v===1) return []; const n=Math.floor(v/7)+2; const step=(v===32)?26:Math.ceil((v*4+4)/(n*2-2))*2; const r=[6]; for(let p=size-7; r.length<n; p-=step) r.splice(1,0,p); return r; };
+  function encode(text, ecl='M'){
+    const bytes=[...new TextEncoder().encode(text)];
+    let v=1, cap;
+    for(;v<=40;v++){ cap=dataCw(v,ecl)*8; const cc=v<10?8:16; if(4+cc+bytes.length*8<=cap) break; }
+    if(v>40) throw new Error('Daten zu lang für einen QR-Code');
+    const bits=[]; const put=(val,n)=>{ for(let i=n-1;i>=0;i--) bits.push((val>>>i)&1); };
+    put(4,4); put(bytes.length, v<10?8:16); bytes.forEach(b=>put(b,8));
+    put(0, Math.min(4, cap-bits.length)); while(bits.length%8) bits.push(0);
+    const data=[]; for(let i=0;i<bits.length;i+=8){ let b=0; for(let j=0;j<8;j++) b=(b<<1)|bits[i+j]; data.push(b); }
+    for(let p=0xEC; data.length<cap/8; p^=0xEC^0x11) data.push(p);
+    // Blöcke + Fehlerkorrektur
+    const nb=BLK[ecl][v], el=ECC[ecl][v], raw=Math.floor(rawMods(v)/8), nShort=nb-raw%nb, shortLen=Math.floor(raw/nb), div=rsDiv(el);
+    const blocks=[]; for(let i=0,k=0;i<nb;i++){ const dat=data.slice(k,k+shortLen-el+(i<nShort?0:1)); k+=dat.length; const ec=rsRem(dat,div); if(i<nShort) dat.push(0); blocks.push(dat.concat(ec)); }
+    const cw=[]; for(let i=0;i<blocks[0].length;i++) blocks.forEach((b,j)=>{ if(i!==shortLen-el || j>=nShort) cw.push(b[i]); });
+    // Matrix
+    const size=v*4+17, M=[...Array(size)].map(()=>new Array(size).fill(false)), F=[...Array(size)].map(()=>new Array(size).fill(false));
+    const set=(x,y,d)=>{ M[y][x]=d; F[y][x]=true; };
+    for(let i=0;i<size;i++){ set(6,i,i%2===0); set(i,6,i%2===0); }
+    const finder=(cx,cy)=>{ for(let dy=-4;dy<=4;dy++) for(let dx=-4;dx<=4;dx++){ const x=cx+dx,y=cy+dy; if(x>=0&&x<size&&y>=0&&y<size){ const d=Math.max(Math.abs(dx),Math.abs(dy)); set(x,y,d!==2&&d!==4); } } };
+    finder(3,3); finder(size-4,3); finder(3,size-4);
+    const ap=alignPos(v,size), na=ap.length;
+    for(let i=0;i<na;i++) for(let j=0;j<na;j++){ if((i===0&&j===0)||(i===0&&j===na-1)||(i===na-1&&j===0)) continue; for(let dy=-2;dy<=2;dy++) for(let dx=-2;dx<=2;dx++) set(ap[i]+dx,ap[j]+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1); }
+    const drawFormat=(mask)=>{
+      const d=(FMT[ecl]<<3)|mask; let r=d; for(let i=0;i<10;i++) r=(r<<1)^((r>>>9)*0x537); const b=((d<<10)|r)^0x5412; const g=i=>((b>>>i)&1)===1;
+      for(let i=0;i<=5;i++) set(8,i,g(i)); set(8,7,g(6)); set(8,8,g(7)); set(7,8,g(8)); for(let i=9;i<15;i++) set(14-i,8,g(i));
+      for(let i=0;i<8;i++) set(size-1-i,8,g(i)); for(let i=8;i<15;i++) set(8,size-15+i,g(i)); set(8,size-8,true);
+    };
+    drawFormat(0);
+    if(v>=7){ let r=v; for(let i=0;i<12;i++) r=(r<<1)^((r>>>11)*0x1F25); const b=(v<<12)|r; for(let i=0;i<18;i++){ const bit=((b>>>i)&1)===1, a=size-11+i%3, c=Math.floor(i/3); set(a,c,bit); set(c,a,bit); } }
+    // Datenbits
+    let i=0;
+    for(let right=size-1; right>=1; right-=2){ if(right===6) right=5; for(let vert=0;vert<size;vert++) for(let j=0;j<2;j++){ const x=right-j, up=((right+1)&2)===0, y=up?size-1-vert:vert; if(!F[y][x] && i<cw.length*8){ M[y][x]=((cw[i>>>3]>>>(7-(i&7)))&1)===1; i++; } } }
+    const maskFn=[(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,(x,y)=>x%3===0,(x,y)=>(x+y)%3===0,(x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2===0,(x,y)=>x*y%2+x*y%3===0,(x,y)=>(x*y%2+x*y%3)%2===0,(x,y)=>((x+y)%2+x*y%3)%2===0];
+    const apply=m=>{ for(let y=0;y<size;y++) for(let x=0;x<size;x++) if(!F[y][x] && maskFn[m](x,y)) M[y][x]=!M[y][x]; };
+    const penalty=()=>{ let p=0, dark=0;
+      for(let y=0;y<size;y++){ let run=1; for(let x=1;x<size;x++){ if(M[y][x]===M[y][x-1]){ run++; if(run===5) p+=3; else if(run>5) p++; } else run=1; } }
+      for(let x=0;x<size;x++){ let run=1; for(let y=1;y<size;y++){ if(M[y][x]===M[y-1][x]){ run++; if(run===5) p+=3; else if(run>5) p++; } else run=1; } }
+      for(let y=0;y<size-1;y++) for(let x=0;x<size-1;x++){ const c=M[y][x]; if(c===M[y][x+1]&&c===M[y+1][x]&&c===M[y+1][x+1]) p+=3; }
+      for(let y=0;y<size;y++) for(let x=0;x<size;x++) if(M[y][x]) dark++;
+      p += Math.floor(Math.abs(dark*20-size*size*10)/(size*size))*10; return p; };
+    let best=0, bestP=Infinity;
+    for(let m=0;m<8;m++){ apply(m); drawFormat(m); const pe=penalty(); if(pe<bestP){ bestP=pe; best=m; } apply(m); }
+    apply(best); drawFormat(best);
+    return {size, M, version:v};
+  }
+  function toCanvas(text, px){
+    const q=encode(text,'L'), border=4, n=q.size+border*2, scale=Math.max(2, Math.floor((px||480)/n));
+    const c=document.createElement('canvas'); c.width=c.height=n*scale; const x=c.getContext('2d');
+    x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.fillStyle='#000';
+    for(let y=0;y<q.size;y++) for(let xx=0;xx<q.size;xx++) if(q.M[y][xx]) x.fillRect((xx+border)*scale,(y+border)*scale,scale,scale);
+    c.dataset.version=q.version; return c;
+  }
+  return {encode, toCanvas};
+})();
+/* ---------- Zustand (nur auf diesem Handy) ---------- */
+const FUNKTIONEN=['Truppführer','Truppmann','Truppmann 2'];
+const FELDER=[{k:'geraetNr', l:'Gerät'},{k:'flascheNr', l:'Flasche'},{k:'laNr', l:'LA'},{k:'maskeNr', l:'Maske'}];
+let S=(()=>{ try{ return JSON.parse(localStorage.getItem('sammeln.v1')||'null')||{personen:[], trupps:[]}; }catch(e){ return {personen:[], trupps:[]}; } })();
+const save=()=>{ try{ localStorage.setItem('sammeln.v1', JSON.stringify(S)); }catch(e){} };
+const wahl=new Set();
+const pName=p=>[p.nach, p.vor].filter(Boolean).join(', ')||'(ohne Namen)';
+const asciiJson=o=>JSON.stringify(o).replace(/[\u007f-￿]/g, c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
+// Trupp-QR im Format der ASÜ („Trupp per QR übernehmen“)
+function truppQR(t){
+  const o={v:1, id:t.id, r:t.rufgruppe||'', a:t.auftrag||'', m:t.mitglieder.map(p=>[pName(p), p.geraetNr||'', p.laNr||'', p.flascheNr||'', p.maskeNr||'', p.druck??null, p.nach||'', p.vor||'', p.pid||''])};
+  if(t.st) o.s=1;
+  return 'ASUE1:'+asciiJson(o);
+}
+function render(){
+  const frei=S.personen;
+  $('#main').innerHTML=
+    '<div class="panel"><h2>1 · Personen erfassen</h2><p class="hint" style="margin-top:0">QR-Code vom Namensschild bzw. Etikett der Atemschutz-Datenbank scannen – oder von Hand eintragen. Geräte-QR-Codes (Gerät, Flasche, LA, Maske) werden der zuletzt gescannten Person zugeordnet.</p>'+
+    '<div class="row"><button class="btn pri" data-a="scan">📷 QR scannen</button><button class="btn" data-a="hand">+ Von Hand</button></div></div>'+
+    '<div class="panel"><h2>Einzelne Geräteträger <span class="hint">'+frei.length+'</span></h2>'+
+    (frei.length ? frei.map(p=>'<div class="pers'+(wahl.has(p.id)?' sel':'')+'"><input type="checkbox" data-w="'+p.id+'" '+(wahl.has(p.id)?'checked':'')+'><div class="bd" data-a="edit" data-id="'+p.id+'"><b>'+esc(pName(p))+'</b> '+(p.pid?'<span class="tag qr">QR</span>':'')+'<div class="hint mono">'+esc(FELDER.filter(f=>p[f.k]).map(f=>f.l+' '+p[f.k]).join(' · ')+(p.druck!=null?' · '+p.druck+' bar':''))+'</div></div></div>').join('')
+      : '<div class="leer">Noch niemand erfasst.</div>')+
+    '<div class="row"><span class="hint sp">'+wahl.size+' gewählt</span><button class="btn pri" data-a="trupp" '+(wahl.size>=2&&wahl.size<=3?'':'disabled')+'>2 · Trupp bilden</button></div></div>'+
+    '<div class="panel"><h2>3 · Trupps übergeben</h2>'+
+    (S.trupps.length ? S.trupps.map(t=>'<div class="trupp'+(t.uebergeben?' ueb':'')+'"><div class="row"><b style="font-size:18px">'+esc(t.rufgruppe||'Trupp')+'</b>'+(t.st?' <span class="tag">ST</span>':'')+(t.uebergeben?' <span class="tag qr">übergeben '+new Date(t.uebergeben).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+'</span>':'')+'<span class="sp"></span><button class="btn pri klein" data-a="qr" data-id="'+t.id+'">QR zeigen</button></div>'+
+      '<div class="hint">'+t.mitglieder.map((p,i)=>FUNKTIONEN[i]+': '+esc(pName(p))).join(' · ')+'</div>'+
+      '<div class="row" style="margin-top:6px"><button class="btn klein" data-a="aufl" data-id="'+t.id+'">Auflösen</button><button class="btn klein" data-a="weg" data-id="'+t.id+'">Entfernen</button></div></div>').join('')
+      : '<div class="leer">Noch kein Trupp. Zwei oder drei Personen ankreuzen und „Trupp bilden“.</div>')+
+    '<p class="hint">Übergabe nur per QR-Code: an der Atemschutzüberwachung <b>„Trupps &amp; Geräte“ → „QR übernehmen“</b> und den Code dieses Trupps scannen. Diese App sendet nichts ins Netz.</p></div>'+
+    '<div class="row"><span class="sp"></span><button class="btn klein" data-a="leeren">Alles löschen</button></div>';
+}
+function personDlg(p0){
+  const p=p0?{...p0}:{id:uid(), nach:'', vor:'', druck:300};
+  dlg.innerHTML='<div class="dlg"><h2>'+(p0?'Person bearbeiten':'Person von Hand')+'</h2>'+
+    (p.pid?'<div class="hint">Aus dem QR-Code der Atemschutz-Datenbank. Wird der Name geändert, entfällt die Verknüpfung.</div>':'')+
+    '<div class="grid2"><label class="f">Nachname<input class="inp" id="pN" value="'+esc(p.nach)+'"></label><label class="f">Vorname<input class="inp" id="pV" value="'+esc(p.vor)+'"></label></div>'+
+    '<div class="grid2">'+FELDER.map(f=>'<label class="f">'+f.l+'<input class="inp mono" id="p_'+f.k+'" inputmode="numeric" value="'+esc(p[f.k]||'')+'"></label>').join('')+'</div>'+
+    '<label class="f">Flaschendruck (bar)<input class="inp mono" id="pD" type="number" inputmode="numeric" min="0" max="330" value="'+esc(p.druck??'')+'"></label>'+
+    '<div class="row">'+(p0?'<button class="btn" data-d="del">Entfernen</button>':'')+'<span class="sp"></span><button class="btn" data-d="ab">Abbrechen</button><button class="btn pri" data-d="ok">Speichern</button></div></div>';
+  dlg.showModal();
+  dlg.onclick=e=>{ const b=e.target.closest('[data-d]'); if(!b) return; const a=b.dataset.d;
+    if(a==='ab'){ dlg.close(); return; }
+    if(a==='del'){ S.personen=S.personen.filter(x=>x.id!==p.id); wahl.delete(p.id); save(); dlg.close(); render(); return; }
+    const nach=$('#pN').value.trim(), vor=$('#pV').value.trim();
+    if(!nach){ toast('Bitte den Nachnamen eintragen'); return; }
+    if(p.pid && (nach!==p.nach || vor!==p.vor)) delete p.pid;
+    Object.assign(p,{nach, vor}); FELDER.forEach(f=>p[f.k]=$('#p_'+f.k).value.trim()); const d=$('#pD').value; p.druck=d===''?null:+d;
+    const i=S.personen.findIndex(x=>x.id===p.id); if(i>=0) S.personen[i]=p; else S.personen.push(p);
+    save(); dlg.close(); render(); };
+}
+let qrStream=null, qrTimer=null, letzte=null;
+function stopCam(){ if(qrTimer){ clearTimeout(qrTimer); qrTimer=null; } if(qrStream){ qrStream.getTracks().forEach(t=>t.stop()); qrStream=null; } }
+dlg.addEventListener('close', stopCam);
+function treffer(txt){
+  txt=String(txt||'').trim();
+  if(/^ASUEP1:/.test(txt)){ try{ const o=JSON.parse(txt.slice(7)); if(!o.n) return false;
+    if(S.personen.some(x=>x.pid===o.i) || S.trupps.some(t=>t.mitglieder.some(x=>x.pid===o.i))){ toast((o.v?o.v+' ':'')+o.n+' ist schon erfasst'); return true; }
+    const p={id:uid(), nach:o.n, vor:o.v||'', pid:String(o.i||''), druck:300}; S.personen.push(p); letzte=p.id; save(); render(); toast('✓ '+pName(p)); return true; }catch(e){ return false; } }
+  if(/^ASUEG1:/.test(txt)){ try{ const o=JSON.parse(txt.slice(7)); const f={geraet:'geraetNr', flasche:'flascheNr', la:'laNr', maske:'maskeNr'}[o.a];
+    const p=S.personen.find(x=>x.id===letzte) || S.personen[S.personen.length-1]; if(!f || !p){ toast('Erst die Person scannen, dann ihre Geräte'); return true; }
+    p[f]=String(o.n); save(); render(); toast('✓ '+(FELDER.find(x=>x.k===f)||{}).l+' '+o.n+' → '+pName(p)); return true; }catch(e){ return false; } }
+  return false;
+}
+function scanDlg(){
+  const live=(()=>{ try{ return navigator.mediaDevices && navigator.mediaDevices.getUserMedia; }catch(e){ return false; } })();
+  dlg.innerHTML='<div class="dlg"><h2>QR scannen</h2>'+(live?'<video id="vid" playsinline muted></video>':'')+'<div class="hint" id="sh">Person scannen, danach ihre Geräte. Mehrere Codes nacheinander möglich.</div>'+
+    '<div class="row"><button class="btn" data-s="foto">📷 Foto</button><span class="sp"></span><button class="btn pri" data-s="fertig">Fertig</button></div></div>';
+  dlg.showModal();
+  let zuletzt='', zt=0;
+  if(live) (async()=>{ const v=$('#vid'); try{ qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment', width:{ideal:1280}}, audio:false}); v.srcObject=qrStream; await v.play(); }catch(e){ v.hidden=true; $('#sh').textContent='Kamera nicht verfügbar – „Foto“ nutzen.'; return; }
+    const c=document.createElement('canvas');
+    const loop=async()=>{ if(!qrStream || !dlg.open) return; if(v.videoWidth){ const sc=Math.min(1,900/Math.max(v.videoWidth,v.videoHeight)); c.width=Math.round(v.videoWidth*sc); c.height=Math.round(v.videoHeight*sc); c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+      const codes=await detectCodes(c); for(const cd of codes){ if(cd.text===zuletzt && Date.now()-zt<3000) continue; if(treffer(cd.text)){ zuletzt=cd.text; zt=Date.now(); try{ navigator.vibrate&&navigator.vibrate(100); }catch(e){} $('#sh').textContent='Erfasst – nächsten Code scannen oder „Fertig“.'; } } }
+      qrTimer=setTimeout(loop, 300); };
+    loop(); })();
+  dlg.onclick=e=>{ const b=e.target.closest('[data-s]'); if(!b) return;
+    if(b.dataset.s==='fertig'){ dlg.close(); return; }
+    const fi=$('#fileCam'); fi.value=''; fi.onchange=async()=>{ const file=fi.files&&fi.files[0]; if(!file) return; const img=new Image(); img.onload=async()=>{ const c=document.createElement('canvas'); const sc=Math.min(1,1600/Math.max(img.width,img.height)); c.width=img.width*sc; c.height=img.height*sc; c.getContext('2d').drawImage(img,0,0,c.width,c.height); const codes=await detectCodes(c); if(!codes.some(cd=>treffer(cd.text))) toast(codes.length?'Kein Code der Atemschutz-Datenbank':'Kein QR-Code erkannt'); }; img.src=URL.createObjectURL(file); }; fi.click(); };
+}
+function truppDlg(){
+  const ps=S.personen.filter(p=>wahl.has(p.id));
+  dlg.innerHTML='<div class="dlg"><h2>Trupp bilden</h2><label class="f">Rufgruppe / Trupp<input class="inp" id="tR" list="rgL" placeholder="z. B. Angriffstrupp"></label><datalist id="rgL"><option>Angriffstrupp</option><option>Wassertrupp</option><option>Schlauchtrupp</option><option>Sicherheitstrupp</option></datalist>'+
+    '<label class="row"><input type="checkbox" id="tS" style="width:22px;height:22px"> Sicherheitstrupp</label>'+
+    '<label class="f">Truppführer<select class="inp" id="tF">'+ps.map(p=>'<option value="'+p.id+'">'+esc(pName(p))+'</option>').join('')+'</select></label>'+
+    '<div class="row"><span class="sp"></span><button class="btn" data-t="ab">Abbrechen</button><button class="btn pri" data-t="ok">Trupp bilden</button></div></div>';
+  dlg.showModal();
+  $('#tR').oninput=()=>{ if(/sicherheit/i.test($('#tR').value)) $('#tS').checked=true; };
+  dlg.onclick=e=>{ const b=e.target.closest('[data-t]'); if(!b) return; if(b.dataset.t==='ab'){ dlg.close(); return; }
+    const tf=$('#tF').value; const mit=[ps.find(p=>p.id===tf)].concat(ps.filter(p=>p.id!==tf));
+    const t={id:uid(), rufgruppe:$('#tR').value.trim()||'Trupp', st:$('#tS').checked, mitglieder:mit, t:Date.now()};
+    S.trupps.push(t); S.personen=S.personen.filter(p=>!wahl.has(p.id)); wahl.clear(); save(); dlg.close(); render(); qrDlg(t.id); };
+}
+function qrDlg(id){
+  const t=S.trupps.find(x=>x.id===id); if(!t) return;
+  let c; try{ c=QRGEN.toCanvas(truppQR(t), 520); }catch(e){ toast('QR-Code konnte nicht erzeugt werden'); return; }
+  dlg.innerHTML='<div class="dlg"><h2>'+esc(t.rufgruppe)+' übergeben</h2><div class="qrwrap" id="qw"></div><div class="hint">'+t.mitglieder.map((p,i)=>FUNKTIONEN[i]+': <b>'+esc(pName(p))+'</b>').join('<br>')+'</div>'+
+    '<p class="hint">An der Atemschutzüberwachung „Trupps &amp; Geräte“ → „QR übernehmen“ und diesen Code scannen.</p><div class="row"><button class="btn" data-q="zu">Schließen</button><span class="sp"></span><button class="btn pri" data-q="ok">Übernommen ✓</button></div></div>';
+  $('#qw').appendChild(c); dlg.showModal();
+  dlg.onclick=e=>{ const b=e.target.closest('[data-q]'); if(!b) return; if(b.dataset.q==='ok'){ t.uebergeben=Date.now(); save(); render(); } dlg.close(); };
+}
+document.addEventListener('click', e=>{
+  const b=e.target.closest('[data-a]'); if(!b || dlg.open) return;
+  const a=b.dataset.a, id=b.dataset.id;
+  if(a==='scan') scanDlg();
+  if(a==='hand') personDlg(null);
+  if(a==='edit') personDlg(S.personen.find(p=>p.id===id));
+  if(a==='trupp') truppDlg();
+  if(a==='qr') qrDlg(id);
+  if(a==='aufl'){ const t=S.trupps.find(x=>x.id===id); S.personen.push(...t.mitglieder); S.trupps=S.trupps.filter(x=>x.id!==id); save(); render(); }
+  if(a==='weg'){ if(confirm('Trupp entfernen?')){ S.trupps=S.trupps.filter(x=>x.id!==id); save(); render(); } }
+  if(a==='leeren'){ if(confirm('Alle Personen und Trupps auf diesem Handy löschen?')){ S={personen:[], trupps:[]}; wahl.clear(); save(); render(); } }
+});
+document.addEventListener('change', e=>{ const c=e.target.closest('[data-w]'); if(!c) return; c.checked?wahl.add(c.dataset.w):wahl.delete(c.dataset.w); render(); });
+render();
+if('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>

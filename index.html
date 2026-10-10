@@ -257,6 +257,25 @@ dialog.qrdlg .dlg-body{justify-items:stretch}
 .synccode{display:flex;align-items:baseline;gap:12px}
 .synccode b{font-size:32px;letter-spacing:.12em}
 .sticky-tb{position:sticky;top:var(--toph,0px);z-index:15;background:var(--ground);margin-inline:-16px;padding:10px 16px;margin-block:6px 10px;border-bottom:1px solid var(--line)}
+.dbsum{display:flex;gap:8px;flex-wrap:wrap}.dbsum span{border:1px solid var(--line);border-radius:10px;padding:6px 12px;background:var(--panel)}.dbsum b{font-size:18px}
+.dbsum .ja b{color:var(--green)}.dbsum .nein b{color:var(--red)}.dbsum .bald b{color:var(--amber)}
+.dbst{display:inline-block;border-radius:6px;padding:1px 7px;font-size:12px;font-weight:700;white-space:nowrap}
+.dbst.ja{background:var(--green-soft);color:var(--green)}.dbst.nein{background:var(--red-soft);color:var(--red)}.dbst.bald{background:var(--amber-soft);color:var(--amber)}
+table.dbtab{width:100%;border-collapse:collapse;font-size:14px}table.dbtab th{text-align:left;padding:8px;border-bottom:2px solid var(--line);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2)}
+table.dbtab td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+.dbnw{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;padding:8px 0;border-bottom:1px dashed var(--line)}
+@media(max-width:640px){.dbnw{grid-template-columns:1fr}}
+.dbwahl{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;max-height:420px;overflow:auto}.dbwahl label{display:flex;gap:8px;align-items:flex-start;padding:6px;border:1px solid var(--line);border-radius:8px}
+.tauglich-warn{display:block;margin-top:4px;background:var(--red-soft);color:var(--red);border-radius:6px;padding:3px 7px;font-size:12px;font-weight:700}
+.tauglich-bald{display:block;margin-top:4px;background:var(--amber-soft);color:var(--amber);border-radius:6px;padding:3px 7px;font-size:12px;font-weight:700}
+body[data-dbnur] .tabs .tab:not([data-view="db"]),body[data-dbnur] #sampleNote,body[data-dbnur] .top .meta,body[data-dbnur] #artLabel{display:none!important}
+.syncstep{display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:start}
+.syncnr{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--panel);display:grid;place-items:center;font-weight:700}
+.syncbody{display:grid;gap:8px}.syncrow{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}.syncrow>*{flex:1;min-width:200px}
+.syncwahl{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}.syncwahl .panel{display:grid;gap:6px;margin:0}
+table.geraetetab{width:100%;border-collapse:collapse;font-size:14px}table.geraetetab th{text-align:left;font-size:12px;color:var(--ink-2);padding:4px 6px;border-bottom:1px solid var(--line)}
+table.geraetetab td{padding:6px;border-bottom:1px solid var(--line)}table.geraetetab tr.ich td{background:var(--blue-soft)}
+.rolle{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;font-weight:700;background:var(--panel-2,#eee);color:var(--ink-2)}.rolle.fuehrt{background:var(--green-soft);color:var(--green)}
 #login{position:fixed;inset:0;z-index:200;background:var(--ground);display:grid;place-items:center;padding:24px 16px;overflow:auto}
 .login-box{width:min(420px,100%);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;display:grid;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.12)}
 .login-box h1{font-size:28px;text-align:center}
@@ -472,6 +491,7 @@ dialog.evfrage .evf-z span{font-weight:400;font-size:14px;opacity:.9}
     <button class="tab" role="tab" id="tab-ger" aria-selected="false" data-view="ger"><span class="lg">Trupps &amp; Geräte</span><span class="sm">Trupps</span></button>
     <button class="tab" role="tab" id="tab-ein" aria-selected="false" data-view="ein"><span class="lg">Einsatzdaten</span><span class="sm">Einsatz</span></button>
     <button class="tab" role="tab" id="tab-pro" aria-selected="false" data-view="pro"><span class="lg">Protokoll</span><span class="sm">Protokoll</span></button>
+    <button class="tab" role="tab" id="tab-db" aria-selected="false" data-view="db"><span class="lg">Atemschutz-DB</span><span class="sm">DB</span></button>
     <button class="tab" role="tab" id="tab-set" aria-selected="false" data-view="set"><span class="lg">Einstellungen</span><span class="sm">Optionen</span></button>
   </nav>
 </header>
@@ -487,6 +507,7 @@ dialog.evfrage .evf-z span{font-weight:400;font-size:14px;opacity:.9}
   <section id="view-ein" hidden></section>
   <section id="view-pro" hidden></section>
   <section id="view-set" hidden></section>
+  <section id="view-db" hidden></section>
 </main>
 
 <dialog id="dlg"></dialog>
@@ -733,6 +754,7 @@ function showLogin(msg){
     '<div class="err" id="lgErr" role="alert">'+esc(msg||'')+'</div>'+
     '<button class="btn primary" type="submit" style="min-height:52px;font-size:18px">Anmelden</button>'+
     '<p class="hint" style="margin:0">Die Anmeldung bleibt auf diesem Gerät gespeichert, bis Sie sich unter Einstellungen abmelden.</p>'+
+    '<button type="button" class="btn ghost" id="lgDb" style="justify-content:center">🗂 Atemschutzgerätewart: nur Atemschutz-Datenbank öffnen</button>'+
     (CFG.vomPi ? '' : '<details class="adm"><summary>Adresse des Pi'+(geraetAdressen().length?'':' (fehlt)')+'</summary><label class="f" style="margin-top:8px">Internetadresse(n) der Einsatzverwaltung, z. B. https://name.tailXXXX.ts.net:8443/api<input class="inp mono" id="lgPi" value="'+esc(geraetAdressen().join(' '))+'" autocapitalize="none" spellcheck="false"></label><div class="hint">Steht im Paket bereits drin; nur ändern, wenn der Administrator es sagt.</div></details>')+
     '</form>';
   o.hidden=false;
@@ -741,6 +763,7 @@ function showLogin(msg){
   const lp=$('#lgPi'); if(lp) lp.addEventListener('change', ()=>{ geraetAdressenSetzen(lp.value.split(/[\s,;]+/)); });
   $('#lgPass').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); const f=$('#loginForm'); if(f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event('submit', {cancelable:true})); } });
   u.addEventListener('input', async ()=>{ const b=BEN.benutzer.find(x=>x.user===u.value.trim().toLowerCase()); const im=$('#loginWappen'); $('#loginName').textContent = b ? b.name+(gemeindeOf(b).name?' · '+gemeindeOf(b).name:'') : 'Bitte mit dem Zugang Ihrer Feuerwehr anmelden.'; if(b){ const i=await loadImg(b.wappen) || await loadImg(gemeindeOf(b).wappen) || (b.gemeinde==='aerzen'?{src:$('.wappen').dataset.fallback}:null); im.src = i ? i.src : NEUTRAL_SVG; } else im.src=NEUTRAL_SVG; });
+  const ldb=$('#lgDb'); if(ldb) ldb.onclick=()=>dbNurOeffnen();
   setTimeout(()=>u.focus(), 50);
   $('#loginForm').addEventListener('submit', async e=>{
     e.preventDefault();
@@ -847,7 +870,7 @@ function loginAs(b){
   CUR=b; ALS=null;
   try{ localStorage.setItem('asue.session', JSON.stringify({user:b.user, t:Date.now()})); }catch(e){}
   S=load(); S.config=Object.assign(defaultConfig(), S.config||{}); shadow=null; saveRaw();
-  $('#login').hidden=true; alarmSig=''; loadWappen(); setView(view==='set'?'ueb':view); loadEvList();
+  $('#login').hidden=true; alarmSig=''; loadWappen(); setView(view==='set'?'ueb':view); loadEvList(); setTimeout(()=>tauglichLaden(true), 3000); setTimeout(()=>{ if(!eigenerGeraetName() && !dlg.open) geraetNameSicherstellen(null, true); }, 700);
   toast('Angemeldet: '+b.name);
 }
 function logout(){
@@ -1143,7 +1166,7 @@ function cardHTML(t){
   return '<article class="card '+st+'" id="card-'+t.id+'">'+
     (t.notfall?'<button class="maydaybar" data-act="mayday" data-t="'+t.id+'">MAYDAY seit '+hm(t.notfall)+' · Checkliste '+mcount+'/'+MAYDAY_ITEMS.length+' ›</button>':'')+
     '<div class="card-head"><div style="flex:1;min-width:0"><h3>'+(t.st?'<span class="stb" title="Sicherheitstrupp">ST</span>':'')+(t.csa?'<span class="stb csa" title="Chemikalienschutzanzug – höchstens '+csaMinuten()+' Minuten">CSA</span>':'')+esc(tName(t))+'</h3><div class="auftrag">'+esc(tSub(t)||'Auftrag offen')+'</div></div>'+statusPill(r)+'</div>'+
-    alerts + kpiHTML(t,r) + membersHTML(t,r) +
+    alerts + ((()=>{ const nt=(t.mitglieder||[]).map(m=>({m, x:tauglichFuer(m)})).filter(o=>o.x && !o.x.ok); return nt.length && !t.ev.ende ? '<div class="alert warn">⚠ Nicht einsatzbereit laut Atemschutz-DB: '+nt.map(o=>esc(personName(o.m))+' ('+esc(o.x.g[0]||'')+')').join(', ')+'</div>' : ''; })()) + kpiHTML(t,r) + membersHTML(t,r) +
     '<div class="tl">'+evSteps(t).map(s=>tlStep(t,s,r,nxt)).join('')+'</div>'+
     (t.bemerkung?'<div class="note">'+esc(t.bemerkung)+'</div>':'')+
     '<div class="card-foot">'+
@@ -1210,13 +1233,14 @@ function renderGer(){
   sortedTrupps().forEach((t,ti)=>{
     rows += '<tr class="grp"><td colspan="9"><button class="btn small ghost grpqr" tabindex="-1" data-act="qrsend" data-t="'+t.id+'">'+QR_SVG.replace(/width="20" height="20"/,'width="16" height="16"')+' QR-Übergabe</button>'+(ti+1)+' · '+esc(tName(t))+' <span style="font-weight:500;font-family:var(--f-body);font-size:14px;color:var(--ink-2)">'+esc(t.auftrag||'')+'</span></td></tr>';
     t.mitglieder.forEach(m=>{
+      { const tw=tauglichHTML(m); if(tw) rows += '<tr class="mem-warn"><td></td><td colspan="8">'+tw+'</td></tr>'; }
       rows += '<tr class="mem"><td class="fn" style="white-space:nowrap">'+esc(m.funktion)+'</td>'+
         EFIELDS.map(f=>'<td data-l="'+f.l+'"><input class="inp cell-inp'+(f.nm?'':' mono num')+'" id="g-'+m.id+'-'+f.k+'" data-m="'+m.id+'" data-t="'+t.id+'" data-f="'+f.k+'"'+(f.nm?' autocapitalize="words" autocomplete="off" enterkeyhint="next"':' inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next"')+' value="'+esc(feldWert(m,f))+'" aria-label="'+f.l+' '+esc(m.funktion)+'"></td>').join('')+
         '<td data-l="Flaschendruck">'+pressureSelect('g-'+m.id+'-druck', m.druck, m, 'data-m="'+m.id+'" data-t="'+t.id+'" data-f="druck" style="min-width:130px;font-size:18px;min-height:44px"')+'</td>'+
         '<td class="camc"><button class="cam" tabindex="-1" data-act="scan" data-t="'+t.id+'" data-m="'+m.id+'" aria-label="Mit Kamera einlesen" title="Mit Kamera einlesen">'+CAM_SVG+'</button></td></tr>';
     });
   });
-  v.innerHTML = '<div class="toolbar"><h2>Geräteerfassung</h2><button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn" data-act="newperson">+ Person</button><button class="btn primary" data-act="newtrupp">+ '+neuLabel()+'</button></div>'+wehrBarHTML()+fuehrungBannerHTML()+poolHTML()+
+  v.innerHTML = '<div class="toolbar"><h2>Geräteerfassung</h2><button class="btn" data-act="sammelqr" title="Link zur Sammel-App fürs Handy">📱 Sammel-App</button><button class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR übernehmen</button><button class="btn" data-act="newperson">+ Person</button><button class="btn primary" data-act="newtrupp">+ '+neuLabel()+'</button></div>'+wehrBarHTML()+fuehrungBannerHTML()+poolHTML()+
     '<p class="hint" style="margin-top:0">Kamera-Symbol antippen, Etikett, Namensschild oder Geräteplakette fotografieren, dann erkannte Werte den Feldern zuordnen.</p>'+
     (S.trupps.length ? '<div class="table-wrap"><table><thead><tr><th>Funktion</th>'+EFIELDS.map(f=>'<th>'+f.l+'</th>').join('')+'<th>Flaschendruck</th><th>Kamera</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
       : '<div class="empty">Noch keine Trupps angelegt.</div>');
@@ -1767,7 +1791,7 @@ function openMayday(tid){
 
 /* ---------- Views ---------- */
 let view='ueb';
-function renderAll(){ renderMeta(); ({ueb:renderUeb, ger:renderGer, ein:renderEin, pro:renderPro, set:renderSet})[view](); sperreAnwenden(); }
+function renderAll(){ renderMeta(); ({ueb:renderUeb, ger:renderGer, ein:renderEin, pro:renderPro, set:renderSet, db:renderDb})[view](); sperreAnwenden(); }
 // Anzeige-Gerät: Eingaben sperren, die den gemeinsamen Einsatz ändern würden
 function sperreAnwenden(){ const l=nurLesen(); document.body.classList.toggle('nurlesen', l); if(!l) return;
   document.querySelectorAll('#view-ger [data-m][data-f], #view-ein [data-e], #view-ein [data-art], #view-ein #evSel, [data-act="scan"], [data-act="step"], [data-act="edit"], [data-act="notfall"], [data-act="mayday"]').forEach(x=>{ x.disabled=true; x.setAttribute('aria-disabled','true'); }); }
@@ -1775,7 +1799,7 @@ function setView(v){
   view=v;
   $('.top').dataset.view=v;
   document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.view===v)));
-  ['ueb','ger','ein','pro','set'].forEach(k=>$('#view-'+k).hidden = k!==v);
+  ['ueb','ger','ein','pro','set','db'].forEach(k=>$('#view-'+k).hidden = k!==v);
   try{ sessionStorage.setItem('asue.view',v); }catch(e){}
   renderAll(); try{ setTopH(); }catch(e){}
 }
@@ -1889,6 +1913,27 @@ function openStep(tid, k, edit){
 }
 
 /* ---------- Dialog: Trupp anlegen / bearbeiten ---------- */
+/* ---------- Einsatzbereitschaft aus der Atemschutz-Datenbank (ab 4.0) ----------
+   Liste vom Pi (nur Name, Ortswehr, ja/nein, Grund) – zwischengespeichert, damit sie auch ohne Verbindung gilt. */
+const TAUG=(()=>{ try{ return JSON.parse(localStorage.getItem('asue.tauglich')||'{}')||{}; }catch(e){ return {}; } })();
+async function tauglichLaden(sofort){
+  if(!canSend() || !syncBase()) return;
+  if(!sofort && Date.now()-(TAUG.geholt||0) < 5*60000) return;
+  TAUG.geholt=Date.now();
+  try{ const r=await api('GET','/agw/tauglich'); TAUG.t=r.t; TAUG.l=r.personen||[]; try{ localStorage.setItem('asue.tauglich', JSON.stringify({t:TAUG.t, l:TAUG.l})); }catch(e){} }catch(e){}
+}
+function tauglichFuer(m){
+  if(!m || !Array.isArray(TAUG.l)) return null;
+  let x = m.pid ? TAUG.l.find(p=>p.i===m.pid) : null;
+  if(!x){ const n=nameParts(m); if(n && n.nach && n.vor){ const t=TAUG.l.filter(p=>String(p.n).toLowerCase()===n.nach.toLowerCase() && String(p.v).toLowerCase()===n.vor.toLowerCase()); if(t.length===1) x=t[0]; } }
+  return x||null;
+}
+function tauglichHTML(m){
+  const x=tauglichFuer(m); if(!x) return '';
+  if(!x.ok) return '<span class="tauglich-warn">⚠ Nicht einsatzbereit laut Atemschutz-DB: '+esc(x.g.join(' · '))+'</span>';
+  if(x.b && x.b.length) return '<span class="tauglich-bald">Läuft bald ab: '+esc(x.b.join(' · '))+'</span>';
+  return '';
+}
 function openTrupp(tid, neuVorlage, nachSpeichern){
   const isNew = !tid;
   const vorlage = isNew ? null : (S.trupps.find(x=>x.id===tid) || (S.vorschlaege||[]).find(x=>x.id===tid));
@@ -1903,7 +1948,7 @@ function openTrupp(tid, neuVorlage, nachSpeichern){
       (i>0?'<button type="button" class="btn small ghost" tabindex="-1" data-act="mk-tf" data-i="'+i+'" title="Diese Person wird Truppführer">Zum Truppführer</button>':'')+
       (i===2?'<button type="button" class="btn small ghost" tabindex="-1" data-act="rm-mem">Entfernen</button>':'')+'</div>'+
       '<div class="mgrid">'+EFIELDS.map(f=>'<label class="f'+(f.nm?' halb':'')+'">'+f.l+'<input class="inp'+(f.nm?'':' mono num')+'" id="tm-'+i+'-'+f.k+'" data-i="'+i+'" data-f="'+f.k+'"'+(f.nm?' autocapitalize="words" autocomplete="off" enterkeyhint="next"':' inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next"')+' value="'+esc(feldWert(m,f))+'"></label>').join('')+
-      '<label class="f druck">Flaschendruck (bar)'+pressureSelect('tm-'+i+'-druck', m.druck, m, 'data-i="'+i+'" data-f="druck" style="font-size:18px;min-height:44px"')+'</label></div></div>').join('');
+      '<label class="f druck">Flaschendruck (bar)'+pressureSelect('tm-'+i+'-druck', m.druck, m, 'data-i="'+i+'" data-f="druck" style="font-size:18px;min-height:44px"')+'</label></div><div id="tw-'+i+'">'+tauglichHTML(m)+'</div></div>').join('');
     openDlg('<form id="truppForm"><div class="dlg-head"><h2>'+(alsVorschlag?(isNew?'Trupp vorschlagen':'Vorschlag bearbeiten'):(isNew?'Trupp anlegen':'Trupp bearbeiten'))+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div>'+
       '<div class="dlg-body">'+
         '<div class="fgrid"><label class="f">'+(S.config.funkName==='tf'?'Trupp-Bezeichnung (optional)':'Rufgruppe / Trupp')+'<input class="inp" id="t-rufgruppe" list="rgList" value="'+esc(t.rufgruppe)+'"></label>'+
@@ -1922,7 +1967,7 @@ function openTrupp(tid, neuVorlage, nachSpeichern){
     setTimeout(()=>{ const first = S.config.funkName==='tf' ? $('#tm-0-name') : $('#t-rufgruppe'); if(first && isNew && !first.value) first.focus(); }, 60);
     f.addEventListener('input', e=>{
       const el=e.target;
-      if(el.dataset.f){ const mm=t.mitglieder[+el.dataset.i]; if(el.dataset.f==='nachname'||el.dataset.f==='vorname') setNameTeil(mm, el.dataset.f, el.value); else mm[el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; const fp=$('#fnPrev'); if(fp) fp.textContent=previewName(t); }
+      if(el.dataset.f){ const mm=t.mitglieder[+el.dataset.i]; if(el.dataset.f==='nachname'||el.dataset.f==='vorname'){ setNameTeil(mm, el.dataset.f, el.value); delete mm.pid; const tw=$('#tw-'+el.dataset.i); if(tw) tw.innerHTML=tauglichHTML(mm); } else mm[el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; const fp=$('#fnPrev'); if(fp) fp.textContent=previewName(t); }
       else if(el.id==='t-rufgruppe'){ t.rufgruppe=el.value; if(isNew && /sicherheit/i.test(el.value) && !t.stTouched){ t.st=true; const c=$('#t-st'); if(c) c.checked=true; } }
       else if(el.id==='t-st'){ t.st=el.checked; t.stTouched=true; }
       else if(el.id==='t-csa') t.csa=el.checked;
@@ -1954,6 +1999,7 @@ function openTrupp(tid, neuVorlage, nachSpeichern){
     f.addEventListener('submit', e=>{
       e.preventDefault();
       if(t.mitglieder[0].funktion!=='Truppführer'){ t.mitglieder.forEach((m,j)=>m.funktion=FUNKTIONEN[j]); }
+      t.mitglieder.forEach(m=>{ if(!m.pid){ const x=tauglichFuer(m); if(x) m.pid=x.i; } });
       if(S.config.funkName==='tf'){ const n=nameParts(tfOf(t)); if(!(n&&n.nach) && !t.rufgruppe.trim()){ $('#truppErr').textContent='Bitte den Namen des Truppführers oder eine Trupp-Bezeichnung eintragen.'; return; } }
       else if(!t.rufgruppe.trim()){ $('#truppErr').textContent='Bitte Rufgruppe bzw. Truppbezeichnung eintragen.'; return; }
       if(t.mitglieder.length < 3) Object.values(t.ev).forEach(x=>{ x.p = x.p.slice(0,t.mitglieder.length); });
@@ -2007,14 +2053,14 @@ function openPerson(pid){
       '<div class="dlg-body"><div class="panel" style="padding:12px;display:grid;gap:10px"><div class="row"><b style="font-family:var(--f-disp);font-size:18px">Geräteträger</b><span class="spacer"></span>'+
       '<button type="button" class="btn small" tabindex="-1" data-pact="scan">'+CAM_SVG.replace('<svg','<svg width="18" height="18"')+' Kamera</button></div>'+
       '<div class="mgrid">'+EFIELDS.map(f=>'<label class="f'+(f.nm?' halb':'')+'">'+f.l+'<input class="inp'+(f.nm?'':' mono num')+'" data-f="'+f.k+'"'+(f.nm?' autocapitalize="words" autocomplete="off"':' inputmode="numeric" pattern="[0-9]*" autocomplete="off"')+' value="'+esc(feldWert(m,f))+'"></label>').join('')+
-      '<label class="f druck">Flaschendruck (bar)'+pressureSelect('pp-druck', m.druck, m, 'data-f="druck" style="font-size:18px;min-height:44px"')+'</label></div></div>'+
+      '<label class="f druck">Flaschendruck (bar)'+pressureSelect('pp-druck', m.druck, m, 'data-f="druck" style="font-size:18px;min-height:44px"')+'</label></div><div id="tw-p">'+tauglichHTML(m)+'</div></div>'+
       '<p class="hint">Die Person steht danach unter „Einzelne Geräteträger“. Zwei oder drei Personen auswählen und „Trupp bilden“ – dort wird der Truppführer festgelegt.</p>'+
       '<div class="err" id="persErr" role="alert"></div></div>'+
       '<div class="dlg-foot">'+(alt?'<button type="button" class="btn danger" data-pact="del">Person entfernen</button><span class="spacer"></span>':'')+
       (alt?'':'<button type="submit" class="btn" data-weiter="1">Speichern &amp; nächste Person</button>')+'<button type="submit" class="btn primary">Speichern</button></div></form>');
     const f=$('#persForm');
     setTimeout(()=>{ const i=f.querySelector('[data-f="nachname"]'); if(i && !alt) i.focus(); }, 60);
-    f.addEventListener('input', e=>{ const el=e.target; if(!el.dataset.f) return; if(el.dataset.f==='nachname'||el.dataset.f==='vorname') setNameTeil(m, el.dataset.f, el.value); else m[el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; });
+    f.addEventListener('input', e=>{ const el=e.target; if(!el.dataset.f) return; if(el.dataset.f==='nachname'||el.dataset.f==='vorname'){ setNameTeil(m, el.dataset.f, el.value); delete m.pid; const tw=$('#tw-p'); if(tw) tw.innerHTML=tauglichHTML(m); } else m[el.dataset.f] = el.dataset.f==='druck' ? (el.value===''?null:+el.value) : el.value; });
     f.addEventListener('click', e=>{
       const b=e.target.closest('[data-pact]'); if(!b) return;
       if(b.dataset.pact==='scan') openScan(m, ()=>draw());
@@ -2136,6 +2182,9 @@ const CODE_KEYS = [
 function parseCode(text){
   const out = {};
   const t = String(text||'').trim();
+  // ab 4.0: QR-Codes der Atemschutz-Datenbank – Person mit versteckter Kennung, Gerät/Flasche/LA/Maske
+  if(/^ASUEP1:/.test(t)){ try{ const o=JSON.parse(t.slice(7)); if(o && o.n){ out.name=o.n+(o.v?', '+o.v:''); out.nachname=o.n; out.vorname=o.v||''; out.pid=String(o.i||''); out._pidName=out.name; } }catch(e){} return out; }
+  if(/^ASUEG1:/.test(t)){ try{ const o=JSON.parse(t.slice(7)); const f={geraet:'geraetNr', flasche:'flascheNr', la:'laNr', maske:'maskeNr'}[o.a]; if(f && o.n) out[f]=String(o.n); }catch(e){} return out; }
   try{ const o = JSON.parse(t); if(o && typeof o==='object'){ Object.keys(o).forEach(key=>{ const hit = FIELDS.find(f=>f.k.toLowerCase()===key.toLowerCase()) || CODE_KEYS.find(c=>c.re.test(key)); if(hit && o[key]!=null) out[hit.k]=String(o[key]).trim(); }); } }catch(e){}
   if(!Object.keys(out).length){
     t.split(/[\n;|]+/).forEach(part=>{ const m=/^\s*([^:=]+?)\s*[:=]\s*(.+)$/.exec(part); if(!m) return; const hit=CODE_KEYS.find(c=>c.re.test(m[1].trim())); if(hit) out[hit.k]=m[2].trim(); });
@@ -2214,7 +2263,9 @@ function openScan(m, onDone){
     if(a==='cancel'){ dlg.onclick=null; onDone ? onDone() : closeDlg(); }
     if(a==='field'){ active=b.dataset.f; draw(); }
     if(a==='pick'){ if(b.dataset.to){ draft[b.dataset.to]=b.dataset.v; active=b.dataset.to; nextField(); } else if(codes && codes.some(c=>c.text===b.dataset.v)) applyCode({text:b.dataset.v}); else { draft[active]=b.dataset.v; nextField(); } draw(); }
-    if(a==='ok'){ FIELDS.forEach(f=>m[f.k]=(draft[f.k]||'').trim()); nameAusVoll(m); dlg.onclick=null; if(onDone) onDone(); else { S.sample=false; save(); closeDlg(); renderAll(); toast('Übernommen'); } }
+    if(a==='ok'){ FIELDS.forEach(f=>m[f.k]=(draft[f.k]||'').trim()); nameAusVoll(m);
+      if(draft.pid!==undefined){ if(draft._pidName && draft.name!==draft._pidName) delete m.pid; else m.pid=draft.pid; }
+      { const x=tauglichFuer(m); if(x && !x.ok){ alert('⚠ '+personName(m)+' ist laut Atemschutz-Datenbank NICHT einsatzbereit:\n\n'+x.g.join('\n')); } } dlg.onclick=null; if(onDone) onDone(); else { S.sample=false; save(); closeDlg(); renderAll(); toast('Übernommen'); } }
     if(a==='shoot'){
       mode = b.dataset.mode;
       const fi = $('#fileCam'); fi.value='';
@@ -2362,6 +2413,22 @@ function syncOn(){ return !!(S.sync && S.sync.code && syncBase() && canSend()); 
 const GERAET=(()=>{ let id=''; try{ id=localStorage.getItem('asue.geraet')||''; }catch(e){}
   if(!/^[A-Za-z0-9_-]{6,40}$/.test(id)){ id='g'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); try{ localStorage.setItem('asue.geraet', id); }catch(e){} }
   return {id}; })();
+function eigenerGeraetName(){ try{ return (localStorage.getItem('asue.geraetName')||'').trim(); }catch(e){ return ''; } }
+/* ab 4.0: Jedes Gerät braucht einen Namen – er erscheint bei den anderen Geräten und als „führt die Überwachung“ */
+function geraetNameSicherstellen(weiter, pflicht){
+  if(eigenerGeraetName()){ if(weiter) weiter(); return true; }
+  const vorschlaege=['ELW Tablet','Tablet Atemschutz-Sammelplatz','Gruppenführer-Handy','Tablet '+((ident()&&ident().ort)||'LF')];
+  openDlg('<div class="dlg-head"><h2>Name dieses Geräts</h2>'+(pflicht?'':'<button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button>')+'</div>'+
+    '<div class="dlg-body"><p style="margin:0">Damit alle wissen, welches Gerät verbunden ist und <b>wer die Überwachung führt</b>, braucht jedes Gerät einen eindeutigen Namen.</p>'+
+    '<label class="f">Name<input class="inp" id="gnNeu" maxlength="60" placeholder="z. B. ELW Tablet" data-nosave="1"></label>'+
+    '<div class="chips">'+vorschlaege.map(v=>'<button type="button" class="chip" data-gnv="'+esc(v)+'">'+esc(v)+'</button>').join('')+'</div><div class="err" id="gnErr"></div></div>'+
+    '<div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn primary" id="gnOk">Speichern</button></div>');
+  setTimeout(()=>{ const i=$('#gnNeu'); if(i) i.focus(); }, 60);
+  dlg.onclick=e=>{ const c=e.target.closest('[data-gnv]'); if(c){ $('#gnNeu').value=c.dataset.gnv; $('#gnNeu').focus(); } };
+  const ok=()=>{ const v=$('#gnNeu').value.trim(); if(v.length<3){ $('#gnErr').textContent='Bitte mindestens 3 Zeichen.'; return; } try{ localStorage.setItem('asue.geraetName', v.slice(0,60)); }catch(e){} dlg.onclick=null; closeDlg(); toast('Gerätename: '+v); renderAll(); if(weiter) weiter(); };
+  $('#gnOk').onclick=ok; $('#gnNeu').onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); ok(); } };
+  return false;
+}
 function geraetName(){ let n=''; try{ n=localStorage.getItem('asue.geraetName')||''; }catch(e){} return n.trim() || (((ident()&&ident().name)||'ASÜ')+' · Gerät '+GERAET.id.slice(-4).toUpperCase()); }
 function fuehrung(){ return (S.sync && S.sync.fuehrung) || null; }
 function istFuehrend(){ if(!S.sync) return true; const f=fuehrung(); return f ? f.id===GERAET.id : !!S.sync.host; }
@@ -2493,6 +2560,7 @@ async function syncTick(){
     if(r && fuehrungAktualisieren(r.fuehrung)) r=await api('GET','/einsaetze/'+code+'?since=0');
     if(r){
       S.sync.geraete=Array.isArray(r.geraete)?r.geraete:[];
+      if(S.sync.begruessen && r.fuehrung){ S.sync.begruessen=false; saveRaw(); verbundenZeigen(); }
       if('wehr' in r){ const alt=JSON.stringify(S.sync.wehr||null); S.sync.wehr=r.wehr||null; if(alt!==JSON.stringify(S.sync.wehr)){ saveRaw(); if(view==='ueb'||view==='ein') renderAll(); } }
       // älterer Einsatz ohne Führung: das freigebende Gerät übernimmt sie beim nächsten Senden
       if(!r.fuehrung && S.sync.host && r.rev>0) syncState.einsatzDirty=true;
@@ -2517,6 +2585,15 @@ function autoShareTick(){
   if(!S.trupps.length && !(S.einsatz.einsatzstelle||'').trim()) return;
   shareEinsatz(true);
 }
+function verbundenZeigen(){
+  const f=fuehrung(), andere=(S.sync.geraete||[]).filter(g=>g.id!==GERAET.id);
+  const txt='Verbunden mit Einsatz '+S.sync.code+' – die Überwachung führt „'+(f?f.name:'?')+'“'+(f&&f.wehr&&f.wehr.name?' ('+f.wehr.name+')':'');
+  if(dlg.open){ toast(txt); return; }
+  openDlg('<div class="dlg-head"><h2>Verbunden</h2></div><div class="dlg-body"><div class="synccode"><span class="hint">Gemeinsamer Einsatz</span><b class="mono">'+esc(S.sync.code)+'</b></div>'+
+    '<p style="margin:0;font-size:18px">Die Überwachung führt <b>'+esc(f?f.name:'–')+'</b>'+(f&&f.wehr&&f.wehr.name?' <span class="hint">('+esc(f.wehr.name)+')</span>':'')+'.</p>'+
+    '<p class="hint" style="margin:0">Dieses Gerät („'+esc(geraetName())+'“) zeigt an und kann Trupps vorschlagen.'+(andere.length?' Verbunden: '+andere.map(g=>esc(g.name)).join(', ')+'.':'')+'</p></div>'+
+    '<div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn primary" data-close>OK</button></div>');
+}
 function joinEinsatz(code, url){
   code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if(code.length<4){ toast('Einsatz-Code prüfen'); return; }
   if(url){ const u=String(url).trim(); if(u && u.replace(/\/+$/,'')!==PI.base){ S.config.syncUrl=u; PI.ok=null; detectPi().then(loadEvList); } }
@@ -2526,7 +2603,7 @@ function joinEinsatz(code, url){
   S.vorschlaege=(S.vorschlaege||[]).concat(S.trupps.map(t=>Object.assign(t,{vorschlag:vorschlagMeta()})));
   S.trupps=[]; S.gone={}; syncState.dirty.clear(); syncState.einsatzDirty=false;
   S.vorschlaege.forEach(v=>syncState.vDirty.add(v.id));
-  S.sync={code, rev:0, host:false, fuehrung:null};
+  S.sync={code, rev:0, host:false, fuehrung:null, begruessen:true};
   joinCodeEntwurf=''; shadow=null; S.syncOff=false; saveRaw(); renderAll(); syncTick(); toast('Einsatz '+code+' beigetreten');
 }
 function leaveSync(force){
@@ -2565,34 +2642,45 @@ function renderSyncInfo(){
     syncState.ok===false ? 'Gestört: '+syncState.msg+' – neuer Versuch alle 2 Sekunden. Das Gerät arbeitet normal weiter.' :
     syncState.ok ? 'Abgeglichen um '+hms(syncState.at)+' über '+syncBase().replace(/^https?:\/\//,'').replace(/\/api$/,'')+((syncState.dirty.size+syncState.vDirty.size)?' · '+(syncState.dirty.size+syncState.vDirty.size)+' Änderung(en) ausstehend':'') : 'Verbinde …';
 }
-function fuehrungPanelHTML(){
-  if(!S.sync) return '';
-  const f=fuehrung(), ich=istFuehrend();
-  const andere=(S.sync.geraete||[]).filter(g=>g.id!==GERAET.id);
-  const wer = ich ? '<b>dieses Gerät</b>' : f ? '<b>'+esc(f.name)+'</b>' : '<b>das freigebende Gerät</b>';
-  return '<div class="fuehrbox'+(ich?' ich':'')+'"><div><span class="hint">Überwachung führt</span><div style="font-size:18px">'+wer+(f&&f.seit?' <span class="hint">seit '+hm(f.seit)+'</span>':'')+'</div></div>'+
-    (andere.length?'<div class="hint">Weitere Geräte: '+andere.map(g=>esc(g.name)).join(', ')+'</div>':'<div class="hint">Keine weiteren Geräte verbunden.</div>')+
-    (ich ? (andere.length?'<div class="row"><select class="inp" id="fzAn" style="max-width:280px">'+andere.map(g=>'<option value="'+esc(g.id)+'">'+esc(g.name)+'</option>').join('')+'</select><button type="button" class="btn" data-act="fuehrungan">Führung übergeben</button></div>':'')
-         : '<div class="row"><button type="button" class="btn" data-act="fuehrungnehmen">Führung übernehmen (Admin-Passwort)</button><span class="hint">nur wenn das führende Gerät ausgefallen ist</span></div>')+
-    '</div>';
-}
+function fuehrungPanelHTML(){ return ''; }   // ab 4.0 in syncPanelHTML enthalten
 function syncPanelHTML(){
-  const c=S.config;
-  const conn = S.sync ? (
-      '<div class="synccode"><span class="hint">Gemeinsamer Einsatz</span><b class="mono">'+esc(S.sync.code)+'</b></div>'+
-      fuehrungPanelHTML()+
-      '<div class="row"><button type="button" class="btn primary" data-act="joinqr">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' Beitritts-QR zeigen</button><button type="button" class="btn" data-act="syncnow">Jetzt abgleichen</button><button type="button" class="btn danger" data-act="syncleave">Trennen</button></div>'
-    ) : (
-      '<div class="row"><button type="button" class="btn primary" data-act="syncshare">Diesen Einsatz freigeben</button><span class="hint">erzeugt einen Einsatz-Code; dieses Gerät führt die Überwachung</span></div>'+
-      '<div class="row"><input class="inp mono" id="joinCode" placeholder="Einsatz-Code" maxlength="8" style="max-width:180px;text-transform:uppercase" data-nosave="1" autocomplete="off" autocapitalize="characters" value="'+esc(joinCodeEntwurf)+'"><button type="button" class="btn" data-act="syncjoin">Beitreten</button><button type="button" class="btn" data-act="qrrecv">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' Beitritts-QR scannen</button></div>'
-    );
-  return '<h2 class="section-title">Mehrere Geräte (Server-Abgleich)</h2><div class="panel" style="display:grid;gap:12px">'+
-    '<p class="hint" style="margin:0">Alle verbundenen Geräte sehen denselben Einsatz. <b>Nur ein Gerät führt die Überwachung</b>; die anderen zeigen an und können Trupps vorschlagen, die das führende Gerät bestätigt. Dafür wird der Server der Einsatzverwaltung gebraucht – im WLAN und über Mobilfunk. Ohne Server funktioniert die <b>QR-Übergabe</b> weiterhin.</p>'+
-    (PI.ok ? '<div class="calcbox">Server der Einsatzverwaltung erreicht über <span class="mono">'+esc(PI.base.replace(/^https?:\/\//,''))+'</span>. Jeder Einsatz wird dort automatisch mitgesichert, sobald der erste Trupp angelegt ist.'+(PI.key?' Der Server verlangt einen Wehr-Schlüssel.':'')+'</div>' : '')+
+  const c=S.config, name=eigenerGeraetName();
+  const zeit=t=>t?hm(t):'';
+  // 1. Dieses Gerät
+  const teil1='<div class="syncstep"><div class="syncnr">1</div><div class="syncbody"><b>Dieses Gerät</b>'+
+    (name ? '<div class="row"><span style="font-size:18px">„'+esc(name)+'“</span><button type="button" class="btn small" data-act="gnamechg">Ändern</button></div>'
+          : '<div class="row"><span class="err">Noch kein Name vergeben – ohne Namen kein gemeinsamer Einsatz.</span><button type="button" class="btn small primary" data-act="gname">Namen vergeben</button></div>')+'</div></div>';
+  // 2. Server
+  const teil2='<div class="syncstep"><div class="syncnr">2</div><div class="syncbody"><b>Server der Einsatzverwaltung</b>'+
+    (PI.ok ? '<div class="calcbox" style="margin:0">✓ Erreicht über <span class="mono">'+esc(PI.base.replace(/^https?:\/\//,''))+'</span>'+(PI.key?' · Wehr-Schlüssel nötig':'')+'</div>' : '<div class="hint">Noch nicht erreicht – Adresse prüfen.</div>')+
+    '<details'+(PI.ok&&!(PI.key&&!(c.syncKey||'').trim()&&!geraetSchluessel())?'':' open')+'><summary class="hint">Adresse und Wehr-Schlüssel</summary><div style="display:grid;gap:8px;margin-top:8px">'+
     '<div class="fgrid"><label class="f" style="grid-column:1/-1">Server-Adresse(n)<input class="inp mono" id="c-syncUrl" data-sync="syncUrl" inputmode="url" autocomplete="off" placeholder="'+(PI.ok?'leer = dieser Server':'https://…:8082/api  https://…ts.net:8443/api')+'" value="'+esc(c.syncUrl||'')+'"><span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">Mehrere Adressen mit Leerzeichen trennen (z. B. WLAN-Adresse und Internet-Adresse). Die App nimmt automatisch die erreichbare.</span></label>'+
-    '<label class="f">Wehr-Schlüssel<input class="inp mono" type="password" id="c-syncKey" data-sync="syncKey" autocomplete="off" value="'+esc(c.syncKey||'')+'"></label>'+
-    '<label class="f">Name dieses Geräts<input class="inp" id="c-gname" data-gname="1" maxlength="60" placeholder="'+esc(geraetName())+'" value="'+esc((()=>{ try{ return localStorage.getItem('asue.geraetName')||''; }catch(e){ return ''; } })())+'"></label></div>'+
-    conn + '<div id="syncInfo" class="hint"></div></div>';
+    
+    '<div class="row" style="align-items:flex-end"><label class="f" style="flex:1;min-width:180px">Wehr-Schlüssel<input class="inp mono" type="password" id="c-syncKey" data-sync="syncKey" autocomplete="off" value="'+esc(c.syncKey||'')+'"></label><button type="button" class="btn" data-act="keyqr">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' Schlüssel per QR</button></div></div></details></div></div>';
+  // 3. Gemeinsamer Einsatz
+  let teil3;
+  if(S.sync){
+    const f=fuehrung(), ich=istFuehrend();
+    const geraete=(S.sync.geraete||[]).slice(); if(!geraete.some(g=>g.id===GERAET.id)) geraete.unshift({id:GERAET.id, name:geraetName(), t:Date.now()});
+    const andere=geraete.filter(g=>g.id!==GERAET.id);
+    teil3='<div class="syncstep"><div class="syncnr">3</div><div class="syncbody"><b>Gemeinsamer Einsatz</b>'+
+      '<div class="syncrow"><div class="synccode"><span class="hint">Einsatz-Code</span><b class="mono">'+esc(S.sync.code)+'</b></div>'+
+      '<div class="fuehrbox'+(ich?' ich':'')+'"><span class="hint">Überwachung führt</span><div style="font-size:18px"><b>'+(ich?'dieses Gerät':esc(f?f.name:'das freigebende Gerät'))+'</b>'+(f&&f.seit?' <span class="hint">seit '+hm(f.seit)+'</span>':'')+'</div></div></div>'+
+      '<table class="geraetetab"><thead><tr><th>Gerät</th><th>Rolle</th><th>zuletzt</th></tr></thead><tbody>'+geraete.map(g=>{ const fu=f?f.id===g.id:(g.id===GERAET.id&&ich); return '<tr'+(g.id===GERAET.id?' class="ich"':'')+'><td><b>'+esc(g.name)+'</b>'+(g.id===GERAET.id?' <span class="hint">(dieses)</span>':'')+(g.wehr?'<div class="hint">'+esc(g.wehr)+'</div>':'')+'</td><td>'+(fu?'<span class="rolle fuehrt">führt</span>':'<span class="rolle">zeigt an · schlägt vor</span>')+'</td><td class="mono">'+zeit(g.t)+'</td></tr>'; }).join('')+'</tbody></table>'+
+      '<div class="row"><button type="button" class="btn primary" data-act="joinqr">'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' Beitritts-QR zeigen</button><button type="button" class="btn" data-act="syncnow">Jetzt abgleichen</button>'+
+      (ich ? (andere.length?'<select class="inp" id="fzAn" style="max-width:220px">'+andere.map(g=>'<option value="'+esc(g.id)+'">'+esc(g.name)+'</option>').join('')+'</select><button type="button" class="btn" data-act="fuehrungan">Führung übergeben</button>':'')
+           : '<button type="button" class="btn" data-act="fuehrungnehmen" title="nur wenn das führende Gerät ausgefallen ist">Führung übernehmen (Admin-Passwort)</button>')+
+      '<span class="spacer"></span><button type="button" class="btn danger" data-act="syncleave">Trennen</button></div></div></div>';
+  } else {
+    const gesperrt = !name;
+    teil3='<div class="syncstep"><div class="syncnr">3</div><div class="syncbody"><b>Gemeinsamer Einsatz</b>'+
+      '<div class="syncwahl"><div class="panel"><b>Neu freigeben</b><p class="hint">Dieses Gerät führt die Überwachung. Andere Geräte treten mit Code oder QR bei.</p><button type="button" class="btn primary" data-act="syncshare" '+(gesperrt?'disabled':'')+'>Diesen Einsatz freigeben</button></div>'+
+      '<div class="panel"><b>Beitreten</b><p class="hint">Code vom führenden Gerät eingeben oder dessen Beitritts-QR scannen.</p><div class="row"><input class="inp mono" id="joinCode" placeholder="Einsatz-Code" maxlength="8" style="max-width:150px;text-transform:uppercase" data-nosave="1" autocomplete="off" autocapitalize="characters" value="'+esc(joinCodeEntwurf)+'"><button type="button" class="btn" data-act="syncjoin" '+(gesperrt?'disabled':'')+'>Beitreten</button><button type="button" class="btn" data-act="qrrecv" '+(gesperrt?'disabled':'')+'>'+QR_SVG.replace(/width="20" height="20"/,'width="18" height="18"')+' QR</button></div></div></div>'+
+      (gesperrt?'<div class="hint err">Zuerst unter 1. einen Namen für dieses Gerät vergeben.</div>':'')+'</div></div>';
+  }
+  return '<h2 class="section-title">Mehrere Geräte</h2><div class="panel" style="display:grid;gap:14px">'+
+    '<p class="hint" style="margin:0">Alle verbundenen Geräte sehen denselben Einsatz. <b>Genau ein Gerät führt die Überwachung</b>, die anderen zeigen an und schlagen Trupps vor. Ohne Server arbeitet jedes Gerät für sich.</p>'+
+    teil1+teil2+teil3+'<div id="syncInfo" class="hint"></div></div>';
 }
 async function fuehrungUebergeben(){
   const sel=$('#fzAn'); if(!sel||!sel.value) return;
@@ -2700,7 +2788,7 @@ function openVorschlaege(){
 
 /* ---------- Trupp-Übergabe per QR-Code (Handy → Tablet) ---------- */
 function truppPayload(t){
-  const o={v:1, id:t.id, r:t.rufgruppe||'', a:t.auftrag||'', m:t.mitglieder.map(m=>{ const p=nameParts(m); return [m.name||'', m.geraetNr||'', m.laNr||'', m.flascheNr||'', m.maskeNr||'', m.druck??null, p?p.nach:'', p?p.vor:'']; })};
+  const o={v:1, id:t.id, r:t.rufgruppe||'', a:t.auftrag||'', m:t.mitglieder.map(m=>{ const p=nameParts(m); return [m.name||'', m.geraetNr||'', m.laNr||'', m.flascheNr||'', m.maskeNr||'', m.druck??null, p?p.nach:'', p?p.vor:'', m.pid||'']; })};
   if(t.st) o.s=1; if(t.bemerkung) o.b=t.bemerkung;
   if(t.ev.beginn) o.e=[t.ev.beginn.t, t.ev.beginn.p];
   // nur ASCII, damit Umlaute bei jedem Scanner richtig ankommen
@@ -2721,7 +2809,7 @@ function importTrupp(o){
   return r;
 }
 function importTruppIn(o, ex, liste){
-  const mem=o.m.slice(0,3).map((a,i)=>{ const x={id:(ex&&ex.mitglieder[i]&&ex.mitglieder[i].id)||uid(), name:a[0]||'', funktion:FUNKTIONEN[i]||'Truppmann', geraetNr:a[1]||'', laNr:a[2]||'', flascheNr:a[3]||'', maskeNr:a[4]||'', druck:a[5]??null}; if(a.length>6){ x.nachname=a[6]||''; x.vorname=a[7]||''; } else nameAusVoll(x); return x; });
+  const mem=o.m.slice(0,3).map((a,i)=>{ const x={id:(ex&&ex.mitglieder[i]&&ex.mitglieder[i].id)||uid(), name:a[0]||'', funktion:FUNKTIONEN[i]||'Truppmann', geraetNr:a[1]||'', laNr:a[2]||'', flascheNr:a[3]||'', maskeNr:a[4]||'', druck:a[5]??null}; if(a.length>6){ x.nachname=a[6]||''; x.vorname=a[7]||''; } else nameAusVoll(x); if(a[8] && /^P[A-Z0-9]{8}$/.test(a[8])) x.pid=a[8]; return x; });
   if(ex){
     Object.assign(ex,{rufgruppe:o.r||ex.rufgruppe, auftrag:o.a||ex.auftrag, st:!!o.s, bemerkung:o.b||ex.bemerkung, mitglieder:mem});
     if(o.e && !ex.ev.beginn) ex.ev.beginn={t:o.e[0], p:o.e[1]};
@@ -2767,7 +2855,7 @@ function openQRReceive(){
       '<div class="dlg-body">'+
         (found ? (
           '<div class="calcbox"><b>'+esc(found.r||'Trupp')+'</b>'+(found.a?' · '+esc(found.a):'')+(found.s?' · <span class="stb">ST</span>':'')+'</div>'+
-          '<div class="prompt-list">'+found.m.map((a,i)=>'<div><span>'+esc(FUNKTIONEN[i]||'Truppmann')+': '+esc(a[0]||'–')+'</span><span class="mono">'+esc(a[1]||'')+(a[5]!=null?' · '+a[5]+' bar':'')+'</span></div>').join('')+'</div>'+
+          '<div class="prompt-list">'+found.m.map((a,i)=>'<div><span>'+esc(FUNKTIONEN[i]||'Truppmann')+': '+esc(a[0]||'–')+tauglichHTML({name:a[0], nachname:a[6], vorname:a[7], pid:a[8]})+'</span><span class="mono">'+esc(a[1]||'')+(a[5]!=null?' · '+a[5]+' bar':'')+'</span></div>').join('')+'</div>'+
           (found.e?'<div class="hint">Beginn bereits erfasst: '+hm(found.e[0])+'</div>':'')+
           (ex?'<div class="samebox">Dieser Trupp ist schon vorhanden. Beim Übernehmen werden Namen und Geräte aktualisiert, erfasste Zeiten bleiben erhalten.</div>':'')
         ) : (
@@ -2778,7 +2866,7 @@ function openQRReceive(){
       '</div><div class="dlg-foot">'+(found?'<button type="button" class="btn" data-qr="again">Neu scannen</button><span class="spacer"></span><button type="button" class="btn primary" data-qr="take">'+(ex?'Aktualisieren':'Trupp übernehmen')+'</button>':'')+'</div>');
     if(!found && canLive) startLive();
   };
-  const hit = txt => { if(/^ASUEJ1:/.test(String(txt||''))){ try{ const j=JSON.parse(String(txt).slice(7)); stopQRCam(); dlg.onclick=null; closeDlg(); joinEinsatz(j.c, j.u); return true; }catch(e){} }
+  const hit = txt => { if(/^ASUEJ1:/.test(String(txt||''))){ try{ const j=JSON.parse(String(txt).slice(7)); stopQRCam(); dlg.onclick=null; closeDlg(); geraetNameSicherstellen(()=>joinEinsatz(j.c, j.u)); return true; }catch(e){} }
     const o=parsePayload(txt); if(o){ found=o; stopQRCam(); try{ if(navigator.vibrate) navigator.vibrate(120); }catch(e){} draw(); return true; } return false; };
   const startLive = async () => {
     const video=$('#qrVideo'); if(!video) return;
@@ -2823,6 +2911,44 @@ dlg.addEventListener('close', stopQRCam);
 window.ASUE_qrText = id => { const t=S.trupps.find(x=>x.id===id)||S.trupps[0]; return truppPayload(t); };
 window.ASUE_import = txt => { const o=parsePayload(txt); if(o){ const r=importTrupp(o); if(!r.gesperrt){ save(); if(r.vorschlag) syncSoon(); renderAll(); } } return !!o; };
 
+
+/* ---------- ab 4.0: allgemeiner QR-Scanner (Kamera live, sonst Foto) ---------- */
+function qrScanDialog(titel, hinweis, treffer){
+  const canLive = (()=>{ try{ return window.self===window.top && navigator.mediaDevices && navigator.mediaDevices.getUserMedia; }catch(e){ return false; } })();
+  let msg='';
+  const draw=()=>{ openDlg('<div class="dlg-head"><h2>'+esc(titel)+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div><div class="dlg-body">'+
+      (canLive?'<video id="qrVideo" class="qrvideo" playsinline muted></video>':'')+'<div class="hint" id="qrHint">'+esc(hinweis)+'</div>'+
+      '<div class="row"><button type="button" class="btn'+(canLive?'':' primary')+'" data-qs2="photo">'+CAM_SVG.replace('<svg','<svg width="18" height="18"')+' Foto vom QR-Code</button></div>'+(msg?'<div class="err">'+esc(msg)+'</div>':'')+'</div>');
+    if(canLive) live(); };
+  const fertig = txt => { if(treffer(String(txt||'').trim())){ stopQRCam(); dlg.onclick=null; closeDlg(); try{ if(navigator.vibrate) navigator.vibrate(120); }catch(e){} return true; } return false; };
+  const live = async ()=>{ const video=$('#qrVideo'); if(!video) return;
+    try{ qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment', width:{ideal:1280}}, audio:false}); video.srcObject=qrStream; await video.play(); }
+    catch(e){ video.hidden=true; return; }
+    const c=document.createElement('canvas');
+    const loop=async()=>{ if(!qrStream || !dlg.open) return; if(video.videoWidth){ const sc=Math.min(1, 900/Math.max(video.videoWidth, video.videoHeight)); c.width=Math.round(video.videoWidth*sc); c.height=Math.round(video.videoHeight*sc); c.getContext('2d').drawImage(video,0,0,c.width,c.height); const codes=await detectCodes(c); for(const cd of codes){ if(fertig(cd.text)) return; } if(codes.length){ const h=$('#qrHint'); if(h) h.textContent='Code erkannt, aber nicht der richtige.'; } } qrTimer=setTimeout(loop, 300); };
+    loop(); };
+  dlg.onclick=e=>{ const b=e.target.closest('[data-qs2]'); if(!b) return; stopQRCam(); const fi=$('#fileCam'); fi.value='';
+    fi.onchange=async()=>{ const file=fi.files&&fi.files[0]; if(!file) return; try{ const pr=await prepImage(file); const codes=await detectCodes(pr.orig); if(!codes.some(cd=>fertig(cd.text))){ msg=codes.length?'Falscher Code.':'Kein QR-Code erkannt.'; draw(); } }catch(err){ msg='Foto nicht lesbar.'; draw(); } };
+    fi.click(); };
+  draw();
+}
+// Wehr-Schlüssel per QR (erzeugt in der Einsatzverwaltung unter Verwaltung → ASÜ-Zugänge)
+function schluesselScannen(){
+  qrScanDialog('Wehr-Schlüssel per QR', 'Den QR-Code „Wehr-Schlüssel“ aus der Einsatzverwaltung scannen.', txt=>{
+    if(!/^ASUEK1:/.test(txt)) return false;
+    try{ const o=JSON.parse(txt.slice(7)); if(!o.k) return false; S.config.syncKey=String(o.k); if(o.u && !String(S.config.syncUrl||'').includes(o.u)) S.config.syncUrl=[o.u].concat(String(S.config.syncUrl||'').split(/[\s,;]+/).filter(Boolean)).join(' '); saveRaw(); PI.ok=null; detectPi().then(()=>{ loadEvList(); renderAll(); }); toast('Wehr-Schlüssel übernommen'); renderAll(); return true; }catch(e){ return false; }
+  });
+}
+// Link zur Sammel-App für Handys (nur Trupps und Personen sammeln, Übergabe per QR)
+function openSammelQR(){
+  const url=new URL('sammeln.html', location.href).href;
+  let c; try{ c=QRGEN.toCanvas(url, 420); }catch(e){ toast('QR-Code konnte nicht erzeugt werden'); return; }
+  openDlg('<div class="dlg-head"><h2>Sammel-App fürs Handy</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div>'+
+    '<div class="dlg-body"><div class="qrwrap" id="saW"></div><p class="hint" style="text-align:center;word-break:break-all">'+esc(url)+'</p>'+
+    '<p style="margin:0">Mit dem Handy scannen: Die <b>Sammel-App</b> erfasst nur Personen und Trupps – Namen per QR-Code der Atemschutz-Datenbank oder von Hand, dazu Geräte und Flaschendruck. Übergeben wird <b>nur per QR-Code</b>: hier unter „Trupps &amp; Geräte“ → „QR übernehmen“ scannen.</p></div>'+
+    '<div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn primary" data-close>OK</button></div>');
+  $('#saW').appendChild(c);
+}
 /* ---------- Audio / Vibration / Wachhalten ---------- */
 let actx=null, wake=null;
 let speechReady=false;
@@ -2912,8 +3038,12 @@ document.addEventListener('click', e=>{
   else if(a==='nbgen'){ $('#nbPass').value=genPw(); }
   else if(a==='nbmake') makeEntry();
   else if(a==='kwaendern') kwSelbstAendern();
-  else if(a==='syncshare') shareEinsatz();
-  else if(a==='syncjoin') joinEinsatz(($('#joinCode')||{}).value);
+  else if(a==='syncshare') geraetNameSicherstellen(()=>shareEinsatz());
+  else if(a==='syncjoin'){ const c=($('#joinCode')||{}).value; geraetNameSicherstellen(()=>joinEinsatz(c)); }
+  else if(a==='gname') geraetNameSicherstellen(null) || null;
+  else if(a==='gnamechg'){ try{ localStorage.removeItem('asue.geraetName'); }catch(x){} geraetNameSicherstellen(null); }
+  else if(a==='keyqr') schluesselScannen();
+  else if(a==='sammelqr') openSammelQR();
   else if(a==='syncleave') leaveSync();
   else if(a==='syncnow') syncTick();
   else if(a==='joinqr') openJoinQR();
@@ -3077,11 +3207,212 @@ setView(view);
 if(CUR && CUR.muss){ try{ localStorage.removeItem('asue.session'); }catch(e){} CUR=null; ALS=null; S=sampleState(); showLogin('Der Zugang wurde vom Administrator zurückgesetzt – bitte mit dem Startcode anmelden und ein eigenes Kennwort festlegen.'); }
 else if(CUR) loadWappen(); else showLogin();
 tick(); setInterval(tick, 250);
-detectPi().then(loadEvList); setInterval(()=>{ if(!PI.ok) detectPi().then(loadEvList); else loadEvList(); }, 30000);
+detectPi().then(loadEvList); setInterval(()=>{ if(!PI.ok) detectPi().then(loadEvList); else loadEvList(); if(CUR) tauglichLaden(); }, 30000);
+if(CUR) setTimeout(()=>{ tauglichLaden(true); if(!eigenerGeraetName() && !dlg.open && !document.body.dataset.dbnur) geraetNameSicherstellen(null, true); }, 1500);
 try{
   const top = window.self===window.top;
   if(top && 'serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
 }catch(e){}
+/* ==========================================================================
+   Atemschutz-Datenbank (ab 4.0): Personen, Nachweise nach FwDV 7, Geräte und QR-Codes.
+   Gepflegt von den Atemschutzgerätewarten der Ortswehren – Anmeldung mit eigenem Zugang
+   (mind. 8 Zeichen, alle 28 Tage neu). Daten liegen auf dem Pi der Einsatzverwaltung.
+   ========================================================================== */
+const asciiJson = o => JSON.stringify(o).replace(/[\u007f-￿]/g, c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
+const personQR = p => 'ASUEP1:'+asciiJson({i:p.id, n:p.nach, v:p.vor, w:p.wehr||''});
+const geraetQR = g => 'ASUEG1:'+asciiJson({i:g.id, a:g.art, n:g.nr, t:g.typ||''});
+const dDe = d => d ? String(d).split('-').reverse().join('.') : '–';
+const DB = { token:(()=>{ try{ return sessionStorage.getItem('asue.agwToken')||''; }catch(e){ return ''; } })(), daten:null, sub:'personen', q:'', fehler:'', kwNeu:null, laden:false, wahl:new Set() };
+function dbBase(){ return syncBase() || (PI.ok!==false && CFG.vomPi ? new URL('api', location.href).href.replace(/\/+$/,'') : '') || geraetAdressen()[0] || ''; }
+async function dbApi(method, path, body){
+  const base=dbBase(); if(!base) throw new Error('Keine Server-Adresse – unter Einsatzdaten → Mehrere Geräte eintragen');
+  const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(), 10000);
+  let r;
+  try{ r=await fetch(base+path, {method, headers:{'Content-Type':'application/json', 'X-AGW-Token':DB.token}, body:body?JSON.stringify(body):undefined, cache:'no-store', signal:ctl.signal}); }
+  catch(e){ clearTimeout(to); throw new Error(e.name==='AbortError'?'Server antwortet nicht':'Server nicht erreichbar'); }
+  clearTimeout(to);
+  let j=null; try{ j=await r.json(); }catch(e){}
+  if(!r.ok){ const err=new Error((j&&j.text)||('Fehler '+r.status)); err.status=r.status; err.code=j&&j.error; err.data=j; throw err; }
+  return j;
+}
+function dbTokenSetzen(t){ DB.token=t||''; try{ if(t) sessionStorage.setItem('asue.agwToken', t); else sessionStorage.removeItem('asue.agwToken'); }catch(e){} }
+async function dbLaden(still){
+  if(!DB.token){ DB.daten=null; return; }
+  DB.laden=true;
+  try{ DB.daten=await dbApi('GET','/agw/daten'); DB.fehler=''; }
+  catch(e){ if(e.status===401||e.status===403){ dbTokenSetzen(''); DB.daten=null; if(e.code==='kennwort_neu') DB.fehler='Das Kennwort muss erneuert werden – bitte neu anmelden.'; } else DB.fehler=e.message; }
+  DB.laden=false; if(view==='db' && !still) renderDb();
+}
+function dbStatusBadge(s){
+  if(!s) return '';
+  if(!s.tauglich) return '<span class="dbst nein" title="'+esc(s.gruende.join('\n'))+'">✕ nicht einsatzbereit</span>';
+  if(s.bald.length) return '<span class="dbst bald" title="'+esc(s.bald.join('\n'))+'">⚠ läuft bald ab</span>';
+  return '<span class="dbst ja">✓ einsatzbereit</span>';
+}
+function renderDb(){
+  const v=$('#view-db'); if(!v) return;
+  const base=dbBase();
+  if(!base){ v.innerHTML='<h2 class="section-title">Atemschutz-Datenbank</h2><div class="panel"><p class="hint" style="margin:0">Die Datenbank liegt auf dem Server der Einsatzverwaltung. Bitte zuerst unter <b>Einsatzdaten → Mehrere Geräte</b> die Server-Adresse eintragen (im Feuerwehrhaus oder von außen über die Internetadresse des Pi).</p></div>'; return; }
+  if(!DB.token){ v.innerHTML=dbLoginHTML(); return; }
+  if(!DB.daten){ v.innerHTML='<div class="panel hint">'+(DB.fehler?esc(DB.fehler):'Lade …')+'</div>'; if(!DB.laden && !DB.fehler) dbLaden(); return; }
+  const d=DB.daten, k=d.konto;
+  const tage=Math.ceil((k.pwBis-Date.now())/864e5);
+  const pers=d.personen.filter(p=>!DB.q || (p.nach+' '+p.vor+' '+p.wehr).toLowerCase().includes(DB.q.toLowerCase()));
+  const nein=d.personen.filter(p=>!p.status.tauglich).length, bald=d.personen.filter(p=>p.status.tauglich && p.status.bald.length).length;
+  const subBtn=(id,l)=>'<button type="button" class="btn'+(DB.sub===id?' primary':'')+'" data-db="sub" data-v="'+id+'">'+l+'</button>';
+  let inhalt='';
+  if(DB.sub==='personen'){
+    inhalt='<div class="dbsum"><span><b>'+d.personen.length+'</b> Personen</span><span class="ja"><b>'+(d.personen.length-nein)+'</b> einsatzbereit</span><span class="nein"><b>'+nein+'</b> nicht einsatzbereit</span><span class="bald"><b>'+bald+'</b> läuft in '+d.warnTage+' Tagen ab</span></div>'+
+      '<div class="row" style="margin:8px 0"><input class="inp" id="dbQ" placeholder="Suchen: Name, Ortswehr" value="'+esc(DB.q)+'" style="flex:1;min-width:180px"><button type="button" class="btn primary" data-db="neu">+ Person</button></div>'+
+      '<div class="panel" style="padding:0;overflow:auto"><table class="dbtab"><thead><tr><th>Name</th><th>Ortswehr</th><th>Status</th><th>Nächster Ablauf</th><th></th></tr></thead><tbody>'+
+      (pers.map(p=>{ const nx=Object.entries(p.status.nachweise).filter(([,x])=>x.bis && x.ok!==null).map(([key,x])=>({key,bis:x.bis})).sort((a,b)=>a.bis.localeCompare(b.bis))[0];
+        const rn=nx?(d.regeln.find(r=>r.k===nx.key)||{}).name:'';
+        return '<tr><td><b>'+esc(p.nach)+'</b>, '+esc(p.vor)+(p.ruhend?' <span class="hint">(ruhend)</span>':'')+'</td><td>'+esc(p.wehr)+'</td><td>'+dbStatusBadge(p.status)+(p.status.tauglich?'':'<div class="hint">'+esc(p.status.gruende.join(' · '))+'</div>')+'</td><td>'+(nx?dDe(nx.bis)+' <span class="hint">'+esc(rn)+'</span>':'–')+'</td><td style="white-space:nowrap"><button type="button" class="btn small" data-db="edit" data-id="'+p.id+'">Bearbeiten</button> <button type="button" class="btn small ghost" data-db="qrp" data-id="'+p.id+'" title="QR-Code">'+QR_SVG.replace(/width="20" height="20"/,'width="16" height="16"')+'</button></td></tr>'; }).join('') ||
+       '<tr><td colspan="5" class="hint">'+(d.personen.length?'Keine Treffer.':'Noch keine Personen – „+ Person“ oder im Reiter „QR-Codes“ anlegen.')+'</td></tr>')+'</tbody></table></div>';
+  } else if(DB.sub==='geraete'){
+    inhalt='<div class="row" style="margin:8px 0"><span class="hint" style="flex:1">Pressluftatmer, Flaschen, Lungenautomaten und Masken – mit QR-Code für die Geräteerfassung in der ASÜ.</span><button type="button" class="btn primary" data-db="gneu">+ Gerät</button></div>'+
+      '<div class="panel" style="padding:0;overflow:auto"><table class="dbtab"><thead><tr><th>Art</th><th>Nummer</th><th>Typ</th><th>Ortswehr</th><th>Prüfung fällig</th><th></th></tr></thead><tbody>'+
+      (d.geraete.map(g=>{ const f=g.pruefBis && g.pruefBis<new Date().toISOString().slice(0,10), b=g.pruefBis && !f && g.pruefBis<=new Date(Date.now()+d.warnTage*864e5).toISOString().slice(0,10);
+        return '<tr><td>'+esc(d.arten[g.art]||g.art)+'</td><td class="mono"><b>'+esc(g.nr)+'</b></td><td>'+esc(g.typ||'')+'</td><td>'+esc(g.wehr)+'</td><td>'+(g.pruefBis?(f?'<span class="dbst nein">überfällig '+dDe(g.pruefBis)+'</span>':b?'<span class="dbst bald">'+dDe(g.pruefBis)+'</span>':dDe(g.pruefBis)):'–')+'</td><td style="white-space:nowrap"><button type="button" class="btn small" data-db="gedit" data-id="'+g.id+'">Bearbeiten</button> <button type="button" class="btn small ghost" data-db="qrg" data-id="'+g.id+'">'+QR_SVG.replace(/width="20" height="20"/,'width="16" height="16"')+'</button></td></tr>'; }).join('') || '<tr><td colspan="6" class="hint">Noch keine Geräte erfasst.</td></tr>')+'</tbody></table></div>';
+  } else {
+    const alle=[...d.personen.map(p=>({id:p.id, l:p.nach+', '+p.vor, s:p.wehr, typ:'p'})), ...d.geraete.map(g=>({id:g.id, l:(d.arten[g.art]||g.art)+' '+g.nr, s:g.wehr+(g.typ?' · '+g.typ:''), typ:'g'}))];
+    inhalt='<div class="panel" style="display:grid;gap:10px"><h3 style="margin:0">Name und Vorname in einen QR-Code wandeln</h3>'+
+      '<p class="hint" style="margin:0">Die Person wird dabei in der Datenbank angelegt und bekommt eine Kennung, die im QR-Code mitgeführt wird (nicht sichtbar). Beim Einscannen in der ASÜ wird damit die Einsatzbereitschaft geprüft und der Einsatz dem Nachweis der Person gutgeschrieben.</p>'+
+      '<div class="fgrid"><label class="f">Nachname<input class="inp" id="qN" data-nosave="1"></label><label class="f">Vorname<input class="inp" id="qV" data-nosave="1"></label>'+
+      '<label class="f">Ortswehr<select class="inp" id="qW">'+k.wehren.map(w=>'<option>'+esc(w)+'</option>').join('')+'</select></label></div>'+
+      '<div class="row"><button type="button" class="btn primary" data-db="qrneu">Anlegen und QR-Code zeigen</button></div></div>'+
+      '<h2 class="section-title">Etiketten drucken</h2><div class="panel" style="display:grid;gap:8px">'+
+      '<div class="row"><button type="button" class="btn small" data-db="alle">Alle wählen</button><button type="button" class="btn small" data-db="keine">Keine</button><span class="spacer"></span><button type="button" class="btn primary" data-db="druck" '+(DB.wahl.size?'':'disabled')+'>🖨 '+DB.wahl.size+' Etikett'+(DB.wahl.size===1?'':'en')+' drucken</button></div>'+
+      '<div class="dbwahl">'+(alle.map(x=>'<label><input type="checkbox" data-dbw="'+x.id+'" '+(DB.wahl.has(x.id)?'checked':'')+'> <span><b>'+esc(x.l)+'</b><br><span class="hint">'+esc(x.s)+'</span></span></label>').join('') || '<span class="hint">Noch nichts angelegt.</span>')+'</div></div>';
+  }
+  v.innerHTML='<div class="toolbar"><h2>Atemschutz-Datenbank</h2><span class="spacer"></span><span class="hint">'+esc(k.name)+' · '+esc(k.wehren.join(', '))+'</span><button type="button" class="btn small" data-db="kw">Kennwort ändern</button><button type="button" class="btn small" data-db="ab">Abmelden</button></div>'+
+    (tage<=7?'<div class="calcbox">Ihr Kennwort läuft in '+Math.max(0,tage)+' Tag'+(tage===1?'':'en')+' ab – bitte rechtzeitig ändern (alle 28 Tage).</div>':'')+
+    (!d.mailAktiv?'<div class="hint" style="margin:6px 0">Hinweis: Der Mailversand der Einsatzverwaltung ist nicht eingerichtet – Erinnerungen vor Ablauf kommen erst, wenn er eingerichtet ist.</div>':!k.mail?'<div class="hint" style="margin:6px 0">Für Ihren Zugang ist keine E-Mail-Adresse hinterlegt – Erinnerungen vor Ablauf bitte beim Administrator eintragen lassen.</div>':'')+
+    '<div class="row" style="margin:8px 0">'+subBtn('personen','Personen')+subBtn('geraete','Geräte')+subBtn('qr','QR-Codes')+'</div>'+inhalt;
+  const q=$('#dbQ'); if(q) q.oninput=()=>{ DB.q=q.value; const pos=q.selectionStart; renderDb(); const n=$('#dbQ'); if(n){ n.focus(); n.setSelectionRange(pos,pos); } };
+}
+function dbLoginHTML(){
+  const kw=DB.kwNeu;
+  return '<h2 class="section-title">Atemschutz-Datenbank</h2><div class="panel" style="display:grid;gap:10px;max-width:480px">'+
+    (kw ? '<p style="margin:0"><b>'+(kw.grund==='erst'?'Erste Anmeldung: eigenes Kennwort festlegen':'Kennwort erneuern')+'</b></p><p class="hint" style="margin:0">'+esc(kw.text)+' Mindestens 8 Zeichen; es muss alle 28 Tage erneuert werden.</p>'+
+      '<label class="f">Neues Kennwort<input class="inp" type="password" id="dbN1" autocomplete="new-password" data-nosave="1"></label><label class="f">Wiederholen<input class="inp" type="password" id="dbN2" autocomplete="new-password" data-nosave="1"></label>'+
+      '<div class="row"><button type="button" class="btn primary" data-db="kwsetzen">Kennwort speichern</button><button type="button" class="btn" data-db="kwab">Abbrechen</button></div>'
+    : '<p class="hint" style="margin:0">Für Atemschutzgerätewarte: Personen, Prüf- und Leistungsnachweise und Geräte der eigenen Ortswehr pflegen. Zugang beim Administrator der Einsatzverwaltung.</p>'+
+      '<label class="f">Benutzer<input class="inp" id="dbU" autocomplete="username" autocapitalize="off" data-nosave="1"></label><label class="f">Kennwort<input class="inp" type="password" id="dbP" autocomplete="current-password" data-nosave="1"></label>'+
+      '<div class="row"><button type="button" class="btn primary" data-db="login">Anmelden</button></div>')+
+    (DB.fehler?'<div class="err">'+esc(DB.fehler)+'</div>':'')+(document.body.dataset.dbnur?'<div class="row"><button type="button" class="btn ghost" data-db="zurueck">‹ Zur Anmeldung der Atemschutzüberwachung</button></div>':'')+'</div>';
+}
+function dbPersonDlg(p0){
+  const d=DB.daten, neu=!p0;
+  const p=p0?JSON.parse(JSON.stringify(p0)):{nach:'', vor:'', wehr:d.konto.wehren[0]||'', nachweise:{}, ruhend:false, csa:false};
+  const st=p0?p0.status:null;
+  const zeile=r=>{ const x=(p.nachweise||{})[r.k]||{}; const s=st&&st.nachweise[r.k];
+    const info = s ? (s.ok===null?'<span class="hint">nicht zutreffend</span>':s.fehlt?'<span class="dbst nein">fehlt</span>':s.abgelaufen?'<span class="dbst nein">abgelaufen '+dDe(s.bis)+'</span>':s.bis?(s.bald?'<span class="dbst bald">bis '+dDe(s.bis)+'</span>':'<span class="dbst ja">bis '+dDe(s.bis)+'</span>'):'<span class="dbst ja">✓</span>') : '';
+    return '<div class="dbnw"><div><b>'+esc(r.name)+'</b>'+(r.pflicht?'':' <span class="hint">(Hinweis)</span>')+'<div class="hint">'+esc(r.hilfe)+(s&&s.quelle&&s.quelle!=='eingetragen'?' · zuletzt '+esc(s.quelle)+' am '+dDe(s.d):'')+'</div></div>'+
+      '<div class="row"><label class="f">Datum<input class="inp" type="date" data-nw="'+r.k+'" data-f="d" value="'+esc(x.d||'')+'"></label>'+(r.bisFeld?'<label class="f">gültig bis<input class="inp" type="date" data-nw="'+r.k+'" data-f="bis" value="'+esc(x.bis||'')+'"></label>':'')+'<div style="align-self:end;padding-bottom:6px">'+info+'</div></div></div>'; };
+  openDlg('<div class="dlg-head"><h2>'+(neu?'Person anlegen':esc(p.nach+', '+p.vor))+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div>'+
+    '<div class="dlg-body">'+
+      (st&&!st.tauglich?'<div class="calcbox"><span class="err"><b>Nicht einsatzbereit:</b> '+esc(st.gruende.join(' · '))+'</span></div>':'')+
+      '<div class="fgrid"><label class="f">Nachname<input class="inp" id="pN" value="'+esc(p.nach)+'" data-nosave="1"></label><label class="f">Vorname<input class="inp" id="pV" value="'+esc(p.vor)+'" data-nosave="1"></label>'+
+      '<label class="f">Ortswehr<select class="inp" id="pW">'+d.konto.wehren.map(w=>'<option '+(w===p.wehr?'selected':'')+'>'+esc(w)+'</option>').join('')+'</select></label></div>'+
+      '<div class="row"><label class="row" style="gap:6px"><input type="checkbox" id="pR" '+(p.ruhend?'checked':'')+'> ruhend (zurzeit nicht im Atemschutz einsetzen)</label><label class="row" style="gap:6px"><input type="checkbox" id="pC" '+(p.csa?'checked':'')+'> CSA-Träger</label></div>'+
+      '<h3 style="margin:10px 0 4px">Prüf- und Leistungsnachweise (FwDV 7)</h3>'+d.regeln.map(zeile).join('')+
+      (neu?'':'<h3 style="margin:12px 0 4px">Einsätze und Übungen aus der ASÜ</h3><div id="pVerl" class="hint">Lade …</div>')+
+    '</div><div class="dlg-foot">'+(neu?'':'<button type="button" class="btn danger" data-pd="del">Löschen</button><button type="button" class="btn" data-pd="qr">QR-Code</button>')+'<span class="spacer"></span><button type="button" class="btn primary" data-pd="save">Speichern</button></div>');
+  if(!neu) dbApi('GET','/agw/verlauf/'+p.id).then(l=>{ const el=$('#pVerl'); if(!el) return; el.innerHTML = l.length ? '<table class="dbtab"><thead><tr><th>Datum</th><th>Art</th><th>Einsatz</th><th>Trupp</th><th>Dauer</th></tr></thead><tbody>'+l.map(x=>'<tr><td>'+new Date(x.beginn).toLocaleDateString('de-DE')+'</td><td>'+esc(x.art||'')+'</td><td>'+esc([x.evNummer, x.einsatzstelle].filter(Boolean).join(' · '))+'</td><td>'+esc([x.trupp, x.funktion].filter(Boolean).join(' · '))+(x.csa?' · CSA':'')+'</td><td>'+(x.dauer!=null?Math.round(x.dauer/60000)+' min':'–')+'</td></tr>').join('')+'</tbody></table>' : 'Noch keine Einsätze oder Übungen mit QR-Kennung erfasst.'; }).catch(()=>{});
+  dlg.onclick=async e=>{
+    const b=e.target.closest('[data-pd]'); if(!b) return;
+    const a=b.dataset.pd;
+    if(a==='qr'){ dlg.onclick=null; dbQrDlg(personQR(p0), p0.nach+', '+p0.vor, p0.wehr); return; }
+    if(a==='del'){ if(!confirm(p.vor+' '+p.nach+' mit allen Nachweisen löschen? Der Atemschutz-Nachweis aus der ASÜ bleibt erhalten.')) return; try{ await dbApi('DELETE','/agw/person/'+p0.id); dlg.onclick=null; closeDlg(); toast('Gelöscht'); dbLaden(); }catch(err){ toast(err.message); } return; }
+    if(a==='save'){
+      const nw={}; dlg.querySelectorAll('[data-nw]').forEach(i=>{ (nw[i.dataset.nw]=nw[i.dataset.nw]||{})[i.dataset.f]=i.value; });
+      const body={id:p0&&p0.id, nach:$('#pN').value, vor:$('#pV').value, wehr:$('#pW').value, ruhend:$('#pR').checked, csa:$('#pC').checked, nachweise:nw};
+      try{ const r=await dbSpeichern('/agw/person', body); dlg.onclick=null; closeDlg(); toast(r.person.status.tauglich?'Gespeichert – einsatzbereit':'Gespeichert – nicht einsatzbereit'); dbLaden(); }catch(err){ toast(err.message); }
+    }
+  };
+}
+async function dbSpeichern(path, body){
+  try{ return await dbApi('POST', path, body); }
+  catch(e){ if(e.code==='doppelt' && confirm(e.message+' Trotzdem anlegen?')) return await dbApi('POST', path, {...body, doppeltOk:true}); if(e.status===401||e.status===403){ dbTokenSetzen(''); DB.daten=null; renderDb(); } throw e; }
+}
+function dbGeraetDlg(g0){
+  const d=DB.daten, g=g0||{art:'geraet', nr:'', typ:'', wehr:d.konto.wehren[0]||'', pruefBis:''};
+  openDlg('<div class="dlg-head"><h2>'+(g0?esc((d.arten[g.art]||'')+' '+g.nr):'Gerät anlegen')+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div>'+
+    '<div class="dlg-body"><div class="fgrid"><label class="f">Art<select class="inp" id="gA">'+Object.entries(d.arten).map(([k,l])=>'<option value="'+k+'" '+(k===g.art?'selected':'')+'>'+esc(l)+'</option>').join('')+'</select></label>'+
+    '<label class="f">Nummer<input class="inp mono" id="gN" value="'+esc(g.nr)+'" data-nosave="1"></label><label class="f">Typ / Hersteller<input class="inp" id="gT" value="'+esc(g.typ||'')+'" data-nosave="1"></label>'+
+    '<label class="f">Ortswehr<select class="inp" id="gW">'+d.konto.wehren.map(w=>'<option '+(w===g.wehr?'selected':'')+'>'+esc(w)+'</option>').join('')+'</select></label>'+
+    '<label class="f">Nächste Prüfung fällig<input class="inp" type="date" id="gP" value="'+esc(g.pruefBis||'')+'"></label></div><p class="hint">Mit Prüfdatum erinnert die Einsatzverwaltung 4 Wochen vorher per Mail.</p></div>'+
+    '<div class="dlg-foot">'+(g0?'<button type="button" class="btn danger" data-gd="del">Löschen</button><button type="button" class="btn" data-gd="qr">QR-Code</button>':'')+'<span class="spacer"></span><button type="button" class="btn primary" data-gd="save">Speichern</button></div>');
+  dlg.onclick=async e=>{
+    const b=e.target.closest('[data-gd]'); if(!b) return;
+    if(b.dataset.gd==='qr'){ dlg.onclick=null; dbQrDlg(geraetQR(g0), (d.arten[g0.art]||'')+' '+g0.nr, g0.wehr); return; }
+    if(b.dataset.gd==='del'){ if(!confirm('Gerät löschen?')) return; try{ await dbApi('DELETE','/agw/geraet/'+g0.id); dlg.onclick=null; closeDlg(); dbLaden(); }catch(err){ toast(err.message); } return; }
+    try{ await dbSpeichern('/agw/geraet', {id:g0&&g0.id, art:$('#gA').value, nr:$('#gN').value, typ:$('#gT').value, wehr:$('#gW').value, pruefBis:$('#gP').value}); dlg.onclick=null; closeDlg(); toast('Gespeichert'); dbLaden(); }catch(err){ toast(err.message); }
+  };
+}
+function dbQrDlg(text, titel, unter){
+  let c; try{ c=QRGEN.toCanvas(text, 420); }catch(e){ toast('QR-Code konnte nicht erzeugt werden'); return; }
+  openDlg('<div class="dlg-head"><h2>QR-Code · '+esc(titel)+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div>'+
+    '<div class="dlg-body"><div class="qrwrap" id="dbQrW"></div><div style="text-align:center"><b style="font-size:18px">'+esc(titel)+'</b><div class="hint">'+esc(unter||'')+'</div></div><p class="hint" style="text-align:center">In der ASÜ beim Trupp mit „Einlesen“ → „QR- / Strichcode“ scannen – oder in der Sammel-App.</p></div>'+
+    '<div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn primary" data-q1="print">🖨 Drucken</button></div>');
+  $('#dbQrW').appendChild(c);
+  dlg.onclick=e=>{ const b=e.target.closest('[data-q1]'); if(b){ dbDrucken([{text, l:titel, s:unter||''}]); } };
+}
+function dbDrucken(etiketten){
+  const html='<!doctype html><html lang="de"><head><meta charset="utf-8"><title>QR-Etiketten</title><style>@page{size:A4;margin:10mm}body{font-family:Arial,sans-serif;margin:0}.g{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm}.e{border:1px dashed #999;border-radius:2mm;padding:3mm;text-align:center;break-inside:avoid}.e img{width:38mm;height:38mm}.e b{display:block;font-size:11pt;margin-top:1mm}.e span{font-size:8pt;color:#555}</style></head><body><div class="g">'+
+    etiketten.map(x=>{ let url=''; try{ url=QRGEN.toCanvas(x.text, 300).toDataURL('image/png'); }catch(e){} return '<div class="e"><img src="'+url+'" alt=""><b>'+esc(x.l)+'</b><span>'+esc(x.s)+'</span></div>'; }).join('')+'</div></body></html>';
+  const f=document.createElement('iframe'); f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  document.body.appendChild(f);
+  f.onload=()=>{ setTimeout(()=>{ try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){ toast('Drucken nicht möglich'); } setTimeout(()=>f.remove(), 60000); }, 300); };
+  f.srcdoc=html;
+}
+document.addEventListener('click', async e=>{
+  const b=e.target.closest('[data-db]'); if(!b || !$('#view-db') || $('#view-db').hidden) return;
+  const a=b.dataset.db, d=DB.daten;
+  if(a==='login'){
+    const user=$('#dbU').value.trim(), pw=$('#dbP').value;
+    if(!user||!pw){ DB.fehler='Bitte Benutzer und Kennwort eingeben.'; renderDb(); return; }
+    try{ const r=await dbApi('POST','/agw/anmelden',{user, passwort:pw}); dbTokenSetzen(r.token); DB.fehler=''; DB.kwNeu=null; dbLaden(); }
+    catch(err){ if(err.code==='kennwort_neu'){ DB.kwNeu={user, alt:pw, grund:err.data.grund, text:err.message}; DB.fehler=''; } else DB.fehler=err.message; renderDb(); }
+  }
+  if(a==='kw'){ DB.kwNeu={user:d.konto.user, alt:null, grund:'selbst', text:'Neues Kennwort festlegen.'}; dbTokenSetzen(''); DB.daten=null; renderDb(); }
+  if(a==='kwab'){ DB.kwNeu=null; DB.fehler=''; renderDb(); }
+  if(a==='kwsetzen'){
+    const n1=$('#dbN1').value, n2=$('#dbN2').value;
+    if(n1.length<8){ DB.fehler='Mindestens 8 Zeichen.'; renderDb(); return; }
+    if(n1!==n2){ DB.fehler='Die beiden Eingaben stimmen nicht überein.'; renderDb(); return; }
+    let alt=DB.kwNeu.alt; if(alt==null){ alt=prompt('Bisheriges Kennwort zur Bestätigung:')||''; }
+    try{ await dbApi('POST','/agw/kennwort',{user:DB.kwNeu.user, alt, neu:n1}); const r=await dbApi('POST','/agw/anmelden',{user:DB.kwNeu.user, passwort:n1}); dbTokenSetzen(r.token); DB.kwNeu=null; DB.fehler=''; toast('Kennwort gespeichert'); dbLaden(); }
+    catch(err){ DB.fehler=err.message; renderDb(); }
+  }
+  if(a==='ab'){ try{ await dbApi('POST','/agw/abmelden'); }catch(err){} dbTokenSetzen(''); DB.daten=null; if(document.body.dataset.dbnur) dbNurBeenden(); else renderDb(); }
+  if(a==='zurueck') dbNurBeenden();
+  if(a==='sub'){ DB.sub=b.dataset.v; renderDb(); }
+  if(a==='neu') dbPersonDlg(null);
+  if(a==='edit') dbPersonDlg(d.personen.find(p=>p.id===b.dataset.id));
+  if(a==='qrp'){ const p=d.personen.find(x=>x.id===b.dataset.id); dbQrDlg(personQR(p), p.nach+', '+p.vor, p.wehr); }
+  if(a==='gneu') dbGeraetDlg(null);
+  if(a==='gedit') dbGeraetDlg(d.geraete.find(g=>g.id===b.dataset.id));
+  if(a==='qrg'){ const g=d.geraete.find(x=>x.id===b.dataset.id); dbQrDlg(geraetQR(g), (d.arten[g.art]||'')+' '+g.nr, g.wehr); }
+  if(a==='qrneu'){
+    const nach=$('#qN').value.trim(), vor=$('#qV').value.trim(), wehr=$('#qW').value;
+    if(!nach||!vor){ toast('Bitte Nachname und Vorname eintragen'); return; }
+    try{ const r=await dbSpeichern('/agw/person',{nach, vor, wehr, nachweise:{}}); await dbLaden(true); renderDb(); dbQrDlg(personQR(r.person), nach+', '+vor, wehr); }catch(err){ toast(err.message); }
+  }
+  if(a==='alle'){ d.personen.forEach(p=>DB.wahl.add(p.id)); d.geraete.forEach(g=>DB.wahl.add(g.id)); renderDb(); }
+  if(a==='keine'){ DB.wahl.clear(); renderDb(); }
+  if(a==='druck'){
+    const l=[]; d.personen.filter(p=>DB.wahl.has(p.id)).forEach(p=>l.push({text:personQR(p), l:p.nach+', '+p.vor, s:p.wehr}));
+    d.geraete.filter(g=>DB.wahl.has(g.id)).forEach(g=>l.push({text:geraetQR(g), l:(d.arten[g.art]||'')+' '+g.nr, s:g.wehr+(g.typ?' · '+g.typ:'')}));
+    dbDrucken(l);
+  }
+});
+document.addEventListener('change', e=>{ const c=e.target.closest('[data-dbw]'); if(!c) return; c.checked?DB.wahl.add(c.dataset.dbw):DB.wahl.delete(c.dataset.dbw); renderDb(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Enter' && e.target && (e.target.id==='dbP'||e.target.id==='dbU')){ const b=document.querySelector('[data-db="login"]'); if(b) b.click(); } });
+
+function dbNurOeffnen(){ document.body.dataset.dbnur='1'; const o=$('#login'); if(o) o.hidden=true; setView('db'); }
+function dbNurBeenden(){ delete document.body.dataset.dbnur; dbTokenSetzen(''); DB.daten=null; if(!CUR) showLogin(); else setView('ueb'); }
 })();
 </script>
 

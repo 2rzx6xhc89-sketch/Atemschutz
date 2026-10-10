@@ -1,5 +1,5 @@
 Atemschutzüberwachung (ASÜ) – Paket für https://2rzx6xhc89-sketch.github.io/Atemschutz/
-Version 3.87.0, erzeugt 9.10.2026, 14:29:12
+Version 4.0.0, erzeugt 10.10.2026, 21:52:35
 
 ERSTES MAL
 1. Auf GitHub ein Repository anlegen (z. B. "asue"), unter Settings > Pages "Deploy from a branch" (main, / root) einschalten.
