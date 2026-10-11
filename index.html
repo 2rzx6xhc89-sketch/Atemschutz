@@ -3338,12 +3338,15 @@ function agwAuswertungDrucken(){
 async function agwLinkDlg(p){
   openDlg('<div class="dlg-head"><h2>Persönlicher Link · '+esc(p.vor+' '+p.nach)+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body" style="display:grid;gap:10px">'+
     '<p class="hint" style="margin:0">Mit diesem Link sieht der Geräteträger auf seinem Handy selbst, wann G 26, Belastungsübung und Unterweisung ablaufen und wie oft er unter Atemschutz war – nur ansehen, ohne Anmeldung. Ein neuer Link macht den alten ungültig.</p>'+
-    (p.link?'<p style="margin:0">✅ Es gibt bereits einen Link. Er kann aus Sicherheitsgründen nicht erneut angezeigt werden – bei Bedarf einen neuen erzeugen.</p>':'')+
-    '<div id="alOut"></div><div class="row"><button type="button" class="btn primary" data-al="neu">'+(p.link?'Neuen Link erzeugen':'Link erzeugen')+'</button>'+(p.link?'<button type="button" class="btn danger" data-al="aus">Link sperren</button>':'')+'</div></div>');
+    (p.link?'<p style="margin:0">✅ Es gibt bereits einen Link. Er kann aus Sicherheitsgründen nicht erneut angezeigt werden – bei Bedarf einen neuen erzeugen.<br>Passwort: '+(p.linkPw?'<b>festgelegt</b> (der Geräteträger hat die Seite schon geöffnet)':'<b>noch nicht festgelegt</b> – wird beim ersten Öffnen gesetzt')+'</p>':'<p class="hint" style="margin:0">Beim ersten Öffnen legt der Geräteträger ein eigenes Passwort fest (mindestens 6 Zeichen) und kann auf seinem Handy angemeldet bleiben. Der Link funktioniert über die öffentliche Adresse der Fahrzeug-App – auch von unterwegs.</p>')+
+    '<div id="alOut"></div><div class="row"><button type="button" class="btn primary" data-al="neu">'+(p.link?'Neuen Link erzeugen':'Link erzeugen')+'</button>'+(p.link?'<button type="button" class="btn" data-al="pwreset">Passwort zurücksetzen</button>':'')+(p.link?'<button type="button" class="btn danger" data-al="aus">Link sperren</button>':'')+'</div></div>');
   dlg.onclick=async e=>{ const b=e.target.closest('[data-al]'); if(!b) return;
+    if(b.dataset.al==='pwreset' && !confirm('Passwort des persönlichen Links zurücksetzen? Der Geräteträger legt beim nächsten Öffnen ein neues fest; angemeldete Handys werden abgemeldet.')) return;
     try{ const r=await dbApi('POST','/agw/agtlink',{pid:p.id, aktion:b.dataset.al});
       if(b.dataset.al==='aus'){ toast('Link gesperrt'); dlg.onclick=null; closeDlg(); dbLaden(); return; }
-      const url=location.origin+r.pfad; let c=null; try{ c=QRGEN.toCanvas(url, 320); }catch(x){}
+      if(b.dataset.al==='pwreset'){ toast('Passwort zurückgesetzt – beim nächsten Öffnen wird ein neues festgelegt.'); p.linkPw=false; dbLaden(true); return; }
+      const url=r.url||(location.origin+r.pfad);
+      if(!r.extern) toast('Hinweis: Keine externe Adresse eingetragen – der Link gilt nur im Netz des Pi (Verwaltung → Einstellungen → Fahrzeug-App → externe Adresse).'); let c=null; try{ c=QRGEN.toCanvas(url, 320); }catch(x){}
       $('#alOut').innerHTML='<div class="panel" style="display:grid;gap:8px"><input class="inp mono" readonly value="'+esc(url)+'" id="alU"><div class="row"><button type="button" class="btn" data-al2="copy">📋 Kopieren</button>'+(navigator.share?'<button type="button" class="btn" data-al2="share">Teilen …</button>':'')+'</div><div id="alQ" style="text-align:center"></div><p class="hint" style="margin:0">QR-Code mit dem Handy des Geräteträgers scannen oder Link per Messenger schicken.</p></div>';
       if(c) $('#alQ').appendChild(c);
       $('#alOut').onclick=async ev=>{ const x=ev.target.closest('[data-al2]'); if(!x) return; if(x.dataset.al2==='copy'){ try{ await navigator.clipboard.writeText(url); toast('Kopiert'); }catch(er){ $('#alU').select(); } } else { try{ await navigator.share({title:'Mein Atemschutz', text:'Deine Atemschutz-Nachweise:', url}); }catch(er){} } };
@@ -3561,7 +3564,7 @@ function gdbHTML(){
       '<select class="inp" id="gdbFz" style="width:auto"><option value="">alle Fahrzeuge</option>'+G.fahrzeuge.map(f=>'<option value="'+esc(f.id)+'" '+(DB.gfz===f.id?'selected':'')+'>'+esc(f.funkrufname+' '+f.typ)+'</option>').join('')+'<option value="_lager" '+(DB.gfz==='_lager'?'selected':'')+'>Lager</option></select>'+
       '<select class="inp" id="gdbSt" style="width:auto"><option value="">jeder Zustand</option>'+Object.entries(G.status).map(([k,t])=>'<option value="'+k+'" '+(DB.gst===k?'selected':'')+'>'+esc(t)+'</option>').join('')+'</select>'+
       '<label class="chk"><input type="checkbox" id="gdbFa" '+(DB.gfaellig?'checked':'')+'> nur Prüfung fällig</label></div>'+
-    '<div class="row" style="margin:0 0 8px;gap:6px;flex-wrap:wrap"><button type="button" class="btn primary" data-gdb="neu">+ Gerät</button><button type="button" class="btn" data-gdb="live">📷 Etikett scannen</button><button type="button" class="btn ghost" data-gdb="scan">🖼 aus Foto</button><button type="button" class="btn ghost" data-gdb="woche">📋 Wochenüberblick</button><button type="button" class="btn" data-gdb="druck" '+(l.length?'':'disabled')+'>🖨 Etiketten ('+l.length+')</button><button type="button" class="btn ghost" data-gdb="listen">☰ Listen &amp; Prüfarten</button></div>'+
+    '<div class="row" style="margin:0 0 8px;gap:6px;flex-wrap:wrap"><button type="button" class="btn primary" data-gdb="neu">+ Gerät</button><button type="button" class="btn" data-gdb="live">📷 Etikett scannen</button><button type="button" class="btn ghost" data-gdb="scan">🖼 aus Foto</button><button type="button" class="btn ghost" data-gdb="woche">📋 Wochenüberblick</button><button type="button" class="btn" data-gdb="druck" '+(l.length?'':'disabled')+'>🖨 Etiketten ('+l.length+')</button><button type="button" class="btn ghost" data-gdb="listen">☰ Listen &amp; Prüfarten</button><button type="button" class="btn ghost" data-gdb="excel">📊 Excel</button></div>'+
     (reihen.map(id=>{ const f=G.fahrzeuge.find(x=>x.id===id);
       return '<div class="panel" style="padding:0;overflow:auto;margin-bottom:10px"><div style="padding:8px 12px;font-weight:700;background:var(--panel-2,rgba(0,0,0,.03))">'+(f?gdbFzAusHTML(f)+'🚒 '+esc(f.funkrufname)+' <span class="hint">'+esc(f.typ+' · '+f.wehr)+((G.beladung||{})[f.id]?' · Beladung geprüft '+dDe(new Date(G.beladung[f.id].t).toISOString().slice(0,10))+' ('+esc(G.beladung[f.id].von)+(G.beladung[f.id].maengel?', '+G.beladung[f.id].maengel+' Mängel':'')+')':' · Beladung noch nicht geprüft')+'</span>':'📦 Lager / ohne Fahrzeug')+'</div><table class="dbtab"><thead><tr><th>Gerät</th><th>Inv.-Nr.</th><th>Zustand</th><th>Nächste Prüfung</th><th></th></tr></thead><tbody>'+
         (gruppen.get(id)||[]).map(g=>'<tr><td><b>'+esc(g.bez)+'</b>'+((+g.menge||1)>1?' <span class="hint">('+g.menge+'×)</span>':'')+(g.kat?'<div class="hint">'+esc(g.kat)+'</div>':'')+'</td><td class="mono">'+esc(g.inv||'')+'</td><td><span class="dbst '+(GDB_ST_CLS[g.status]||'')+'">'+esc(G.status[g.status]||g.status)+'</span>'+(g.ausgeliehen?'<div><span class="dbst bald">⇢ ausgeliehen an '+esc(g.ausgeliehen.an)+(g.ausgeliehen.bis?' bis '+dDe(g.ausgeliehen.bis):'')+'</span></div>':'')+'</td><td>'+gdbPruefHTML(g)+(g.pruefArt?'<div class="hint">'+esc(g.pruefArt)+'</div>':'')+'</td><td style="white-space:nowrap"><button type="button" class="btn small" data-gdb="auf" data-id="'+esc(g.id)+'">Öffnen</button></td></tr>').join('')+(gruppen.has(id)?'':'<tr><td colspan="5" class="hint">Keine Geräte auf diesem Fahrzeug erfasst.</td></tr>')+'</tbody></table></div>'; }).join('') || '<div class="panel hint">Keine Geräte'+(DB.gq||DB.gfz||DB.gst||DB.gfaellig?' für diesen Filter':'')+'.</div>');
@@ -3678,6 +3681,7 @@ document.addEventListener('click', e=>{
   if(a==='merl'){ const m=DB.gdb.meldungen.find(x=>x.id===b.dataset.id); openDlg('<div class="dlg-head"><h2>Erledigt · '+esc(m?m.was:'')+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body"><label class="f">Rückmeldung an die Besatzung (erscheint in der Fahrzeug-App, optional)<input class="inp" id="merlT" data-nosave="1" placeholder="z. B. Ersatz liegt im Gerätehaus, Regal 3"></label></div><div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn primary" id="merlOk">✓ Erledigt</button></div>');
     $('#merlOk').onclick=()=>{ dbApi('POST','/gdb/meldung',{id:b.dataset.id, erledigt:true, text:$('#merlT').value}).then(()=>{ closeDlg(); toast('Meldung erledigt'); gdbNeuLaden(); }).catch(err=>toast(err.message)); }; }
   if(a==='listen') gdbListenDlg();
+  if(a==='excel') dbExcelDlg('gdb');
   if(a==='fzan'){ dbApi('POST','/gdb/fzstatus',{vid:b.dataset.id, aus:false}).then(()=>{ toast('Wieder im Dienst'); gdbNeuLaden(); }).catch(err=>toast(err.message)); }
   if(a==='fzaus'){ const f=DB.gdb.fahrzeuge.find(x=>x.id===b.dataset.id); openDlg('<div class="dlg-head"><h2>'+esc(f?f.funkrufname:'')+' außer Dienst</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body" style="display:grid;gap:8px"><label class="f">Grund<input class="inp" id="faG" data-nosave="1" placeholder="z. B. Werkstatt – Pumpe, TÜV"></label><label class="f">voraussichtlich bis (leer = offen)<input class="inp" type="date" id="faB"></label><p class="hint" style="margin:0">Erscheint auf den Alarmmonitoren unter „Außer Dienst“. Den FMS-Status 6 setzt weiterhin die Leitstelle bzw. PowerAlarm.</p></div><div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn primary" id="faOk">Außer Dienst setzen</button></div>');
     $('#faOk').onclick=()=>dbApi('POST','/gdb/fzstatus',{vid:b.dataset.id, aus:true, grund:$('#faG').value, bis:$('#faB').value}).then(()=>{ closeDlg(); toast('Außer Dienst gesetzt'); gdbNeuLaden(); }).catch(err=>toast(err.message)); }
@@ -3782,7 +3786,7 @@ function renderDb(){
           '</div>'; }).join('')+'</div>'+(proWehr.some(x=>!x.alle)?'<p class="hint" style="margin-top:10px">Noch keine Personen erfasst: '+esc(proWehr.filter(x=>!x.alle).map(x=>x.w).join(', '))+'</p>':'')+(!d.personen.length?'<div class="panel hint">Noch keine Personen in der Datenbank – im Reiter „Personen“ oder „QR-Codes“ anlegen.</div>':'');
   } else if(DB.sub==='personen'){
     inhalt='<div class="dbsum"><span><b>'+d.personen.length+'</b> Personen</span><span class="ja"><b>'+(d.personen.length-nein)+'</b> einsatzbereit</span><span class="nein"><b>'+nein+'</b> nicht einsatzbereit</span><span class="bald"><b>'+bald+'</b> läuft in '+d.warnTage+' Tagen ab</span></div>'+
-      '<div class="row" style="margin:8px 0"><input class="inp" id="dbQ" placeholder="Suchen: Name, Ortswehr" value="'+esc(DB.q)+'" style="flex:1;min-width:180px"><button type="button" class="btn primary" data-db="neu">+ Person</button></div>'+
+      '<div class="row" style="margin:8px 0"><input class="inp" id="dbQ" placeholder="Suchen: Name, Ortswehr" value="'+esc(DB.q)+'" style="flex:1;min-width:180px"><button type="button" class="btn ghost" data-db="excel" data-was="agwp">📊 Excel</button><button type="button" class="btn primary" data-db="neu">+ Person</button></div>'+
       '<div class="panel" style="padding:0;overflow:auto"><table class="dbtab"><thead><tr><th>Name</th><th>Ortswehr</th><th>Status</th><th>Nächster Ablauf</th><th></th></tr></thead><tbody>'+
       (pers.map(p=>{ const nx=Object.entries(p.status.nachweise).filter(([,x])=>x.bis && x.ok!==null).map(([key,x])=>({key,bis:x.bis})).sort((a,b)=>a.bis.localeCompare(b.bis))[0];
         const rn=nx?(d.regeln.find(r=>r.k===nx.key)||{}).name:'';
@@ -3793,7 +3797,7 @@ function renderDb(){
   } else if(DB.sub==='pflege'){
     inhalt=dbPflegeHTML(d);
   } else if(DB.sub==='geraete'){
-    inhalt='<div class="row" style="margin:8px 0"><span class="hint" style="flex:1">Pressluftatmer, Flaschen, Lungenautomaten und Masken – mit QR-Code für die Geräteerfassung in der ASÜ.</span><button type="button" class="btn" data-db="gtermine">📅 Prüftermine setzen</button><button type="button" class="btn primary" data-db="gneu">+ Gerät</button></div>'+
+    inhalt='<div class="row" style="margin:8px 0"><span class="hint" style="flex:1">Pressluftatmer, Flaschen, Lungenautomaten und Masken – mit QR-Code für die Geräteerfassung in der ASÜ.</span><button type="button" class="btn" data-db="gtermine">📅 Prüftermine setzen</button><button type="button" class="btn ghost" data-db="excel" data-was="agwg">📊 Excel</button><button type="button" class="btn primary" data-db="gneu">+ Gerät</button></div>'+
       '<div class="panel" style="padding:0;overflow:auto"><table class="dbtab"><thead><tr><th>Art</th><th>Nummer</th><th>Typ</th><th>Ortswehr</th><th>Prüftermine</th><th>Nutzung (365 Tage)</th><th></th></tr></thead><tbody>'+
       (d.geraete.map(g=>{ const nu=dbNutzungGeraet(g); const f=g.pruefBis && g.pruefBis<new Date().toISOString().slice(0,10), b=g.pruefBis && !f && g.pruefBis<=new Date(Date.now()+d.warnTage*864e5).toISOString().slice(0,10);
         return '<tr><td>'+esc(d.arten[g.art]||g.art)+'</td><td class="mono"><b>'+esc(g.nr)+'</b></td><td>'+esc(g.typ||'')+'</td><td>'+esc(g.wehr)+'</td><td>'+dbTermineHTML(g)+'</td><td>'+nu+'</td><td style="white-space:nowrap"><button type="button" class="btn small" data-db="gedit" data-id="'+g.id+'">Bearbeiten</button> <button type="button" class="btn small ghost" data-db="qrg" data-id="'+g.id+'">'+QR_SVG.replace(/width="20" height="20"/,'width="16" height="16"')+'</button></td></tr>'; }).join('') || '<tr><td colspan="7" class="hint">Noch keine Geräte erfasst.</td></tr>')+'</tbody></table></div>';
@@ -3905,6 +3909,44 @@ function dbQrDlg(text, titel, unter){
   $('#dbQrW').appendChild(c);
   dlg.onclick=e=>{ const b=e.target.closest('[data-q1]'); if(b){ dbDrucken([{text, l:titel, s:unter||''}]); } };
 }
+/* ---------- ab 5.11: Excel-Import / -Export je Ortswehr ---------- */
+async function dbDatei(path){
+  const base=dbBase(); const r=await fetch(base+path,{headers:{'X-AGW-Token':DB.token},cache:'no-store'});
+  if(!r.ok){ let j=null; try{ j=await r.json(); }catch(e){} throw new Error((j&&j.text)||('Fehler '+r.status)); }
+  const cd=r.headers.get('Content-Disposition')||''; const m=/filename="?([^";]+)/.exec(cd); const name=m?decodeURIComponent(m[1]):'export.xlsx';
+  const blob=await r.blob(); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+}
+function dbExcelDlg(was){
+  const titel={gdb:'Gerätedatenbank', agwp:'Personen (Atemschutz)', agwg:'Atemschutzgeräte'}[was]||'Datenbank';
+  const wehren=(was==='gdb' ? (DB.gdb&&DB.gdb.konto&&DB.gdb.konto.wehren) : (DB.daten&&DB.daten.konto&&DB.daten.konto.wehren))||[];
+  openDlg('<div class="dlg-head"><h2>📊 Excel · '+esc(titel)+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body" style="display:grid;gap:14px">'+
+    '<label class="f">Ortswehr<select class="inp" id="xlWehr">'+(wehren.length>1?'<option value="">Alle meine Ortswehren ('+wehren.length+')</option>':'')+wehren.map(w=>'<option>'+esc(w)+'</option>').join('')+'</select></label>'+
+    '<div class="panel" style="display:grid;gap:8px"><b>Exportieren</b><p class="hint" style="margin:0">Alle Einträge der gewählten Ortswehr als Excel-Datei (.xlsx) – zum Weitergeben, Drucken oder Bearbeiten und wieder Importieren.</p><div class="row"><button type="button" class="btn primary" data-xl="export">⬇ Excel-Datei herunterladen</button><button type="button" class="btn" data-xl="vorlage">⬇ Leere Vorlage</button></div></div>'+
+    '<div class="panel" style="display:grid;gap:8px"><b>Importieren</b><p class="hint" style="margin:0">Excel-Datei mit denselben Spalten wie der Export (Blatt „Hinweise“ in der Datei beachten). Zeilen mit ID ändern den vorhandenen Eintrag, Zeilen ohne ID legen neue an. Zuerst wird nur geprüft – eingespielt wird erst nach Bestätigung.</p>'+
+    '<input type="file" id="xlDatei" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="inp"><div class="row"><button type="button" class="btn" data-xl="pruefen">Datei prüfen</button><button type="button" class="btn primary" data-xl="einspielen" hidden>✓ Jetzt einspielen</button></div><div id="xlOut"></div></div></div>');
+  const out=()=>$('#xlOut'); const wehrQ=()=>'&wehr='+encodeURIComponent($('#xlWehr').value);
+  dlg.onclick=async e=>{ const b=e.target.closest('[data-xl]'); if(!b) return; const a=b.dataset.xl;
+    try{
+      if(a==='export'){ b.disabled=true; await dbDatei('/agw/excel?was='+was+wehrQ()); toast('Excel-Datei erstellt'); b.disabled=false; }
+      if(a==='vorlage'){ await dbDatei('/agw/excel?was='+was+'&vorlage=1'+wehrQ()); }
+      if(a==='pruefen'||a==='einspielen'){
+        const f=$('#xlDatei').files[0]; if(!f){ out().innerHTML='<div class="err">Bitte zuerst eine .xlsx-Datei wählen.</div>'; return; }
+        if(f.size>12*1024*1024){ out().innerHTML='<div class="err">Datei zu groß (höchstens 12 MB).</div>'; return; }
+        out().innerHTML='<div class="hint">Prüfe …</div>'; b.disabled=true;
+        const r=await fetch(dbBase()+'/agw/excel?was='+was+wehrQ()+(a==='einspielen'?'&einspielen=1':''),{method:'POST',headers:{'X-AGW-Token':DB.token,'Content-Type':'application/octet-stream'},body:f,cache:'no-store'});
+        let j=null; try{ j=await r.json(); }catch(x){} b.disabled=false;
+        if(!r.ok){ out().innerHTML='<div class="err">'+esc((j&&j.text)||('Fehler '+r.status))+'</div>'; $('[data-xl="einspielen"]').hidden=true; return; }
+        const fe=j.fehler||[];
+        out().innerHTML='<div class="calcbox" style="display:grid;gap:4px"><div><b>'+j.zeilen+'</b> Zeilen gelesen · <b>'+j.neu+'</b> neu · <b>'+j.geaendert+'</b> geändert · '+(j.zeilen-j.neu-j.geaendert-fe.length)+' unverändert'+(fe.length?' · <span class="err">'+fe.length+' Fehler</span>':'')+'</div>'+
+          (j.beispieleNeu.length?'<div class="hint">Neu: '+esc(j.beispieleNeu.join(', '))+(j.neu>8?' …':'')+'</div>':'')+(j.beispieleGeaendert.length?'<div class="hint">Geändert: '+esc(j.beispieleGeaendert.join(', '))+(j.geaendert>8?' …':'')+'</div>':'')+
+          (fe.length?'<div class="err" style="white-space:pre-wrap">'+fe.slice(0,20).map(x=>'Zeile '+x.zeile+': '+esc(x.text)).join('\n')+(fe.length>20?'\n…':'')+'\nBitte die Zeilen in Excel berichtigen und die Datei erneut wählen – es wurde nichts eingespielt.</div>':'')+
+          (j.eingespielt?'<div><b>✅ Eingespielt.</b></div>':'')+'</div>';
+        $('[data-xl="einspielen"]').hidden = !!fe.length || j.eingespielt || (j.neu+j.geaendert)===0;
+        if(j.eingespielt){ toast('Excel-Import eingespielt'); if(was==='gdb') gdbNeuLaden(); else dbLaden(true); }
+      }
+    }catch(err){ b.disabled=false; out().innerHTML='<div class="err">'+esc(err.message)+'</div>'; }
+  };
+}
 function dbDrucken(etiketten){
   const html='<!doctype html><html lang="de"><head><meta charset="utf-8"><title>QR-Etiketten</title><style>@page{size:A4;margin:10mm}body{font-family:Arial,sans-serif;margin:0}.g{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm}.e{border:1px dashed #999;border-radius:2mm;padding:3mm;text-align:center;break-inside:avoid}.e img{width:38mm;height:38mm}.e b{display:block;font-size:11pt;margin-top:1mm}.e span{font-size:8pt;color:#555}</style></head><body><div class="g">'+
     etiketten.map(x=>{ let url=''; try{ url=QRGEN.toCanvas(x.text, 300).toDataURL('image/png'); }catch(e){} return '<div class="e"><img src="'+url+'" alt=""><b>'+esc(x.l)+'</b><span>'+esc(x.s)+'</span></div>'; }).join('')+'</div></body></html>';
@@ -3929,6 +3971,7 @@ document.addEventListener('click', async e=>{
   if(a==='pushtest'){ try{ const r=await dbApi('POST','/agw/push/test',{}); toast(r.ok?'Test gesendet – kommt gleich an.':'Test fehlgeschlagen: '+(r.fehler||[]).join(', ')); }catch(err){ toast(err.message); } }
   if(a==='install'){ const pr=DB_INSTALL.prompt; DB_INSTALL.prompt=null; if(pr){ pr.prompt(); try{ await pr.userChoice; }catch(e){} } renderDb(); }
   if(a==='awdruck'){ agwAuswertungDrucken(); }
+  if(a==='excel'){ dbExcelDlg(b.dataset.was); return; }
   if(a==='kw'){ DB.kwNeu={user:d.konto.user, alt:null, grund:'selbst', text:'Neues Kennwort festlegen.'}; renderDb(); }   // ab 5.10.4: Anmeldung bleibt bestehen – „Abbrechen“ führt zurück in die Datenbank
   if(a==='kwab'){ DB.kwNeu=null; DB.fehler=''; renderDb(); }
   if(a==='kwsetzen'){

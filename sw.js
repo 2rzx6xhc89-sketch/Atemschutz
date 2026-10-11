@@ -1,5 +1,5 @@
 // Service Worker der Atemschutzüberwachung: App offline verfügbar machen, Texterkennung nach erstem Laden im Cache.
-const CACHE = 'asue-v59';
+const CACHE = 'asue-v61';
 const SHELL = ['./', './index.html', './sammeln.html', './benutzer.js', './asue-config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './geraete.webmanifest', './atemschutz.webmanifest', './icon-geraete-192.png', './icon-geraete-512.png', './icon-atemschutz-192.png', './icon-atemschutz-512.png', './wappen/flecken-aerzen.png', './wappen/reinerbeck.png', './wappen/dehmke.png', './wappen/gellersen.png', './wappen/griessem.png', './wappen/gross-berkel.png', './wappen/grupenhagen.png', './wappen/herkendorf.png', './wappen/reher.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => Promise.all(SHELL.map(u => c.add(u).catch(() => null)))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== CACHE && x.startsWith('asue-')).map(x => caches.delete(x)))).then(() => self.clients.claim())); });
