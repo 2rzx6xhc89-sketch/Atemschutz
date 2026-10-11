@@ -143,7 +143,8 @@ h1,h2,h3{font-family:var(--f-disp);font-weight:700;margin:0;letter-spacing:.01em
 .ovrow:hover{border-color:var(--ink-3)}
 .ovrow.g1{border-left-color:var(--green)} .ovrow.g2{border-left-color:var(--blue)} .ovrow.g4{opacity:.7}
 .ovrow.st-warn{background:var(--amber-soft);border-color:var(--amber)} .ovrow.st-alarm{background:var(--red-soft);border-color:var(--red);border-left-color:var(--red)}
-.ovrow .rg{font-family:var(--f-disp);font-weight:700;font-size:22px;line-height:1.1}
+.ovrow .rg{font-family:var(--f-disp);font-weight:700;font-size:22px;line-height:1.1;min-width:0;overflow-wrap:anywhere}
+@media (max-width:1180px){ .ovhead,.ovrow{grid-template-columns:150px minmax(0,1.3fr) minmax(0,1.6fr) 110px 120px 20px;gap:10px} .ovrow .rg{font-size:19px} .tab{padding:10px 10px;font-size:16px} }   /* 5.17.3: Tablet */
 .ovrow .au{color:var(--ink-2);font-size:15px}
 .ovrow .tm{display:flex;flex-direction:column;line-height:1.15}
 .ovrow .tm b{font-family:var(--f-mono);font-size:22px;font-weight:600}
@@ -402,12 +403,13 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
   .top[data-view="ein"] .meta{display:none}
   /* Reiter als Leiste unten */
   body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;background:var(--panel);border-top:1px solid var(--line-2);display:grid;grid-template-columns:repeat(5,1fr);gap:0;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -4px 16px rgba(0,0,0,.08)}
-  .tab{font-size:13px;padding:14px 2px 12px;border-bottom:0;border-top:3px solid transparent;text-align:center}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;background:var(--panel);border-top:1px solid var(--line-2);display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:0;padding-bottom:env(safe-area-inset-bottom,0px);transform:translateZ(0);box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+  .tab{font-size:12px;padding:14px 1px 12px;border-bottom:0;border-top:3px solid transparent;text-align:center;overflow:hidden;text-overflow:ellipsis}
   .tab[aria-selected="true"]{border-top-color:var(--red);color:var(--red)}
   .tab .lg{display:none} .tab .sm{display:inline}
   .top{border-bottom:1px solid var(--line);padding-bottom:8px}
   .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  body[data-dbnur] .tabs{display:none!important} body[data-dbnur]{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))} body[data-dbnur] .toast{bottom:calc(20px + env(safe-area-inset-bottom,0px))}   /* 5.17.3: Datenbank-App ohne leere Reiterleiste */
   /* Werkzeugleiste */
   .toolbar{gap:8px}
   .toolbar h2{font-size:18px;width:100%}
@@ -473,6 +475,8 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
 }
 dialog.evfrage .evf-z{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;margin-top:8px;text-align:left;padding:12px 14px}
 dialog.evfrage .evf-z span{font-weight:400;font-size:14px;opacity:.9}
+
+.gau-std{font-size:11px;font-weight:600;padding:1px 6px;border-radius:5px;background:var(--panel-2,#eee);color:var(--ink-3);border:1px solid var(--line);vertical-align:middle}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
 </head>
@@ -490,7 +494,7 @@ dialog.evfrage .evf-z span{font-weight:400;font-size:14px;opacity:.9}
     <div class="clock" id="clock" aria-label="Uhrzeit">--:--:--</div>
   </div>
   <nav class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tab-ueb" aria-selected="true" data-view="ueb"><span class="lg">Überwachung</span><span class="sm">Überwachung</span></button>
+    <button class="tab" role="tab" id="tab-ueb" aria-selected="true" data-view="ueb"><span class="lg">Überwachung</span><span class="sm">Überw.</span></button>
     <button class="tab" role="tab" id="tab-ger" aria-selected="false" data-view="ger"><span class="lg">Trupps &amp; Geräte</span><span class="sm">Trupps</span></button>
     <button class="tab" role="tab" id="tab-ein" aria-selected="false" data-view="ein"><span class="lg">Einsatzdaten</span><span class="sm">Einsatz</span></button>
     <button class="tab" role="tab" id="tab-pro" aria-selected="false" data-view="pro"><span class="lg">Protokoll</span><span class="sm">Protokoll</span></button>
@@ -3560,7 +3564,7 @@ function gdbFzName(id){ const f=(DB.gdb&&DB.gdb.fahrzeuge||[]).find(x=>x.id===id
 function gdbPruefHTML(g){ if(!g.pruefNaechste) return '<span class="hint">–</span>'; const h=gdbHeute(); return g.pruefNaechste<h?'<span class="dbst nein">überfällig '+dDe(g.pruefNaechste)+'</span>':g.pruefNaechste<=gdbBald()?'<span class="dbst bald">'+dDe(g.pruefNaechste)+'</span>':dDe(g.pruefNaechste); }
 function gdbGefiltert(){
   const G=DB.gdb; const q=DB.gq.toLowerCase(), h=gdbBald();
-  return G.geraete.filter(g=>(!q || [g.bez,g.inv,g.kat,g.hersteller,g.typ,g.serien,gdbFzName(g.vid)].join(' ').toLowerCase().includes(q)) && (!DB.gfz || (DB.gfz==='_lager'?!g.vid:g.vid===DB.gfz)) && (!DB.gst || g.status===DB.gst) && (!DB.gfaellig || (g.pruefNaechste && g.pruefNaechste<=h)));
+  return G.geraete.filter(g=>(!q || [g.bez,g.inv,g.kat,g.hersteller,g.typ,g.serien,gdbFzName(g.vid)].join(' ').toLowerCase().includes(q)) && (!DB.gfz || (DB.gfz==='_lager'?!g.vid:g.vid===DB.gfz)) && (!DB.gst || g.status===DB.gst) && (!DB.gau || (g.ausst||'zusatz')===DB.gau) && (!DB.gfaellig || (g.pruefNaechste && g.pruefNaechste<=h)));
 }
 function gdbHTML(){
   const G=DB.gdb; if(!G) return '<div class="panel hint">Gerätedatenbank nicht abrufbar.</div>';
@@ -3568,7 +3572,7 @@ function gdbHTML(){
   const l=gdbGefiltert(), h=gdbHeute(), bald=gdbBald();
   const nb=G.geraete.filter(g=>g.status!=='bereit').length, fa=G.geraete.filter(g=>g.pruefNaechste && g.pruefNaechste<=bald).length;
   const gruppen=new Map(); l.forEach(g=>{ const k=g.vid||''; if(!gruppen.has(k)) gruppen.set(k,[]); gruppen.get(k).push(g); });
-  const ohneFilter=!DB.gq && !DB.gst && !DB.gfaellig;
+  const ohneFilter=!DB.gq && !DB.gst && !DB.gfaellig && !DB.gau;
   const reihen=[...G.fahrzeuge.map(f=>f.id).filter(id=>gruppen.has(id) || (ohneFilter && (DB.gfz===id || (!DB.gfz && (G.fahrzeuge.find(f=>f.id===id)||{}).fz)))), ...(gruppen.has('')?['']:[])];
   const offen=(G.meldungen||[]).filter(m=>!m.erledigt);
   const typBadge = m => m.typ==='verbrauch' ? '<span class="dbst bald">📦 nachfüllen</span>' : m.typ==='check' ? '<span class="dbst nein">✅ Check offen</span>' : m.typ==='beladung' ? '<span class="dbst nein">🔍 Beladung</span>' : '<span class="dbst '+(m.ausserBetrieb?'nein':'bald')+'">'+(m.ausserBetrieb?'⛔ außer Betrieb':'⚠ funktioniert noch')+'</span>';
@@ -3581,11 +3585,12 @@ function gdbHTML(){
     '<div class="row" style="margin:8px 0;gap:6px;flex-wrap:wrap"><input class="inp" id="gdbQ" placeholder="Suchen: Bezeichnung, Inventar-Nr., Hersteller …" value="'+esc(DB.gq)+'" style="flex:1;min-width:200px">'+
       '<select class="inp" id="gdbFz" style="width:auto"><option value="">alle Fahrzeuge</option>'+G.fahrzeuge.map(f=>'<option value="'+esc(f.id)+'" '+(DB.gfz===f.id?'selected':'')+'>'+esc(f.funkrufname+' '+f.typ)+'</option>').join('')+'<option value="_lager" '+(DB.gfz==='_lager'?'selected':'')+'>Lager</option></select>'+
       '<select class="inp" id="gdbSt" style="width:auto"><option value="">jeder Zustand</option>'+Object.entries(G.status).map(([k,t])=>'<option value="'+k+'" '+(DB.gst===k?'selected':'')+'>'+esc(t)+'</option>').join('')+'</select>'+
+      '<select class="inp" id="gdbAu" style="width:auto"><option value="">Standard und Zusatz</option><option value="standard" '+(DB.gau==='standard'?'selected':'')+'>nur Standardausrüstung</option><option value="zusatz" '+(DB.gau==='zusatz'?'selected':'')+'>nur Zusatzausstattung</option></select>'+
       '<label class="chk"><input type="checkbox" id="gdbFa" '+(DB.gfaellig?'checked':'')+'> nur Prüfung fällig</label></div>'+
     '<div class="row" style="margin:0 0 8px;gap:6px;flex-wrap:wrap"><button type="button" class="btn primary" data-gdb="neu">+ Gerät</button><button type="button" class="btn" data-gdb="live">📷 Etikett scannen</button><button type="button" class="btn ghost" data-gdb="scan">🖼 aus Foto</button><button type="button" class="btn ghost" data-gdb="woche">📋 Wochenüberblick</button><button type="button" class="btn" data-gdb="druck" '+(l.length?'':'disabled')+'>🖨 Etiketten ('+l.length+')</button><button type="button" class="btn ghost" data-gdb="listen">☰ Listen &amp; Prüfarten</button><button type="button" class="btn ghost" data-gdb="excel">📊 Excel</button></div>'+
     (reihen.map(id=>{ const f=G.fahrzeuge.find(x=>x.id===id);
       return '<div class="panel" style="padding:0;overflow:auto;margin-bottom:10px"><div style="padding:8px 12px;font-weight:700;background:var(--panel-2,rgba(0,0,0,.03))">'+(f?gdbFzAusHTML(f)+'🚒 '+esc(f.funkrufname)+' <span class="hint">'+esc(f.typ+' · '+f.wehr)+((G.beladung||{})[f.id]?' · Beladung geprüft '+dDe(new Date(G.beladung[f.id].t).toISOString().slice(0,10))+' ('+esc(G.beladung[f.id].von)+(G.beladung[f.id].maengel?', '+G.beladung[f.id].maengel+' Mängel':'')+')':' · Beladung noch nicht geprüft')+'</span>':'📦 Lager / ohne Fahrzeug')+'</div><table class="dbtab"><thead><tr><th>Gerät</th><th>Inv.-Nr.</th><th>Zustand</th><th>Nächste Prüfung</th><th></th></tr></thead><tbody>'+
-        (gruppen.get(id)||[]).map(g=>'<tr><td><b>'+esc(g.bez)+'</b>'+((+g.menge||1)>1?' <span class="hint">('+g.menge+'×)</span>':'')+(g.kat?'<div class="hint">'+esc(g.kat)+'</div>':'')+'</td><td class="mono">'+esc(g.inv||'')+'</td><td><span class="dbst '+(GDB_ST_CLS[g.status]||'')+'">'+esc(G.status[g.status]||g.status)+'</span>'+(g.ausgeliehen?'<div><span class="dbst bald">⇢ ausgeliehen an '+esc(g.ausgeliehen.an)+(g.ausgeliehen.bis?' bis '+dDe(g.ausgeliehen.bis):'')+'</span></div>':'')+'</td><td>'+gdbPruefHTML(g)+(g.pruefArt?'<div class="hint">'+esc(g.pruefArt)+'</div>':'')+'</td><td style="white-space:nowrap"><button type="button" class="btn small" data-gdb="auf" data-id="'+esc(g.id)+'">Öffnen</button></td></tr>').join('')+(gruppen.has(id)?'':'<tr><td colspan="5" class="hint">Keine Geräte auf diesem Fahrzeug erfasst.</td></tr>')+'</tbody></table></div>'; }).join('') || '<div class="panel hint">Keine Geräte'+(DB.gq||DB.gfz||DB.gst||DB.gfaellig?' für diesen Filter':'')+'.</div>');
+        (gruppen.get(id)||[]).map(g=>'<tr><td><b>'+esc(g.bez)+'</b>'+((+g.menge||1)>1?' <span class="hint">('+g.menge+'×)</span>':'')+((g.ausst||'zusatz')==='standard'?' <span class="gau-std" title="Standardausrüstung – nur in der Gerätedatenbank">Standard</span>':'')+(g.kat?'<div class="hint">'+esc(g.kat)+'</div>':'')+'</td><td class="mono">'+esc(g.inv||'')+'</td><td><span class="dbst '+(GDB_ST_CLS[g.status]||'')+'">'+esc(G.status[g.status]||g.status)+'</span>'+(g.ausgeliehen?'<div><span class="dbst bald">⇢ ausgeliehen an '+esc(g.ausgeliehen.an)+(g.ausgeliehen.bis?' bis '+dDe(g.ausgeliehen.bis):'')+'</span></div>':'')+'</td><td>'+gdbPruefHTML(g)+(g.pruefArt?'<div class="hint">'+esc(g.pruefArt)+'</div>':'')+'</td><td style="white-space:nowrap"><button type="button" class="btn small" data-gdb="auf" data-id="'+esc(g.id)+'">Öffnen</button></td></tr>').join('')+(gruppen.has(id)?'':'<tr><td colspan="5" class="hint">Keine Geräte auf diesem Fahrzeug erfasst.</td></tr>')+'</tbody></table></div>'; }).join('') || '<div class="panel hint">Keine Geräte'+(DB.gq||DB.gfz||DB.gst||DB.gfaellig?' für diesen Filter':'')+'.</div>');
 }
 async function gdbNeuLaden(){ try{ DB.gdb=await dbApi('GET','/gdb/daten'); }catch(e){ toast(e.message); } renderDb(); }
 function gdbDlg(g0){
@@ -3606,6 +3611,7 @@ function gdbDlg(g0){
       '<label class="f">Hersteller<input class="inp" id="gH" value="'+esc(g.hersteller||'')+'" data-nosave="1"></label><label class="f">Typ<input class="inp" id="gT" value="'+esc(g.typ||'')+'" data-nosave="1"></label><label class="f">Serien-Nr.<input class="inp mono" id="gS" value="'+esc(g.serien||'')+'" data-nosave="1"></label>'+
       '<label class="f">Ortswehr<select class="inp" id="gW">'+G.konto.wehren.map(w=>'<option '+(w===g.wehr?'selected':'')+'>'+esc(w)+'</option>').join('')+'</select></label><label class="f">Fahrzeug<select class="inp" id="gF">'+fzOpt(g.wehr, g.vid)+'</select></label>'+
       '<label class="f">Prüfart<input class="inp" id="gPA" list="gPAL" value="'+esc(g.pruefArt||'')+'" placeholder="aus der Liste wählen oder frei eintragen" data-nosave="1"><datalist id="gPAL">'+(G.pruefarten||[]).map(x=>'<option value="'+esc(x.name)+'">'+(x.monate?x.monate+' Monate':'ohne festes Intervall')+'</option>').join('')+'</datalist></label><label class="f">Intervall<select class="inp" id="gPM">'+[[0,'keins'],[1,'monatlich'],[3,'vierteljährlich'],[6,'halbjährlich'],[12,'jährlich'],[24,'alle 2 Jahre'],[36,'alle 3 Jahre'],[60,'alle 5 Jahre']].map(([v,l])=>'<option value="'+v+'" '+(+g.pruefMonate===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label><label class="f">Nächste Prüfung<input class="inp" type="date" id="gPN" value="'+esc(g.pruefNaechste||'')+'"></label>'+
+      '<div class="f" style="grid-column:1/-1">Ausstattung<div class="row" style="gap:14px;flex-wrap:wrap;margin-top:4px"><label class="chk"><input type="radio" name="gAu" value="standard" '+((g.ausst||'zusatz')==='standard'?'checked':'')+'> <b>Standardausrüstung</b> <span class="hint">(z. B. Feuerwehrleinen, Handlampen – nur hier in der Gerätedatenbank)</span></label><label class="chk"><input type="radio" name="gAu" value="zusatz" '+((g.ausst||'zusatz')==='zusatz'?'checked':'')+'> <b>Zusatzausstattung</b> <span class="hint">(kann im Einsatz gebraucht werden – erscheint in der Einsatzverwaltung als Ausrüstung)</span></label></div></div>'+
       '<label class="f" style="grid-column:1/-1">Notiz<input class="inp" id="gN" value="'+esc(g.notiz||'')+'" data-nosave="1"></label></div><div class="row" style="margin-top:8px"><button type="button" class="btn primary" data-ga="speichern">Stammdaten speichern</button></div></details>'+
     (neu?'':'<details><summary><b>Verlauf</b> <span class="hint">('+(g.historie||[]).length+')</span></summary><div style="display:grid;gap:4px;margin-top:8px">'+(g.historie||[]).map(x=>'<div class="hint" style="color:var(--ink)"><span style="display:inline-block;width:1.4em">'+(histArt[x.art]||'·')+'</span>'+new Date(x.t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+' – '+esc(x.text)+' <span class="hint">('+esc(x.von||'')+')</span>'+(x.prot?' <button type="button" class="btn small" data-ga="prot" data-prot="'+esc(x.prot)+'">📄 Protokoll</button>':'')+'</div>').join('')+'</div></details>')+
     '</div><div class="dlg-foot">'+(neu?'':'<button type="button" class="btn danger" data-ga="del">Löschen</button><button type="button" class="btn" data-ga="qr">QR-Etikett</button>')+'<span class="spacer"></span></div>');
@@ -3618,7 +3624,7 @@ function gdbDlg(g0){
       if(a==='prot'){ gdbProtokollZeigen(b.dataset.prot); return; }
       if(a==='qr'){ dlg.onclick=null; dbQrDlg(gdbLinkQR(g0), g0.bez, [g0.inv?'Inv. '+g0.inv:'', gdbFzName(g0.vid), g0.wehr].filter(Boolean).join(' · ')); return; }
       if(a==='del'){ if(!confirm('Gerät „'+g0.bez+'“ löschen? Besser: Zustand „außer Dienst“, dann bleibt der Verlauf erhalten.')) return; await dbApi('DELETE','/gdb/geraet/'+g0.id); dlg.onclick=null; closeDlg(); toast('Gelöscht'); gdbNeuLaden(); return; }
-      if(a==='speichern'){ const r=await dbApi('POST','/gdb/geraet',{id:g0&&g0.id, bez:$('#gB').value, inv:$('#gI').value, kat:$('#gK').value, menge:$('#gM').value, hersteller:$('#gH').value, typ:$('#gT').value, serien:$('#gS').value, wehr:$('#gW').value, vid:$('#gF').value, pruefArt:$('#gPA').value, pruefMonate:$('#gPM').value, pruefNaechste:$('#gPN').value, notiz:$('#gN').value});
+      if(a==='speichern'){ const r=await dbApi('POST','/gdb/geraet',{id:g0&&g0.id, bez:$('#gB').value, inv:$('#gI').value, kat:$('#gK').value, menge:$('#gM').value, hersteller:$('#gH').value, typ:$('#gT').value, serien:$('#gS').value, wehr:$('#gW').value, vid:$('#gF').value, pruefArt:$('#gPA').value, pruefMonate:$('#gPM').value, pruefNaechste:$('#gPN').value, notiz:$('#gN').value, ausst:(document.querySelector('input[name=gAu]:checked')||{}).value||'zusatz'});
         toast('Gespeichert'); await gdbNeuLaden(); const n=DB.gdb.geraete.find(x=>x.id===r.geraet.id); if(n) gdbDlg(n); return; }
       const body={id:g0.id, aktion:a};
       if(a==='pruefung'){ body.datum=$('#gpD').value; body.ergebnis=$('#gpE').value; body.text=$('#gpT').value; }
@@ -3706,7 +3712,7 @@ document.addEventListener('click', e=>{
   if(a==='druck') dbDrucken(gdbGefiltert().map(g=>({text:gdbLinkQR(g), l:g.bez, s:[g.inv?'Inv. '+g.inv:'', gdbFzName(g.vid)].filter(Boolean).join(' · ')})));
 });
 document.addEventListener('input', e=>{ if(e.target.id==='gdbQ'){ DB.gq=e.target.value; const pos=e.target.selectionStart; renderDb(); const n=$('#gdbQ'); if(n){ n.focus(); n.setSelectionRange(pos,pos); } } });
-document.addEventListener('change', e=>{ const id=e.target.id; if(id==='gdbFz'){ DB.gfz=e.target.value; renderDb(); } if(id==='gdbSt'){ DB.gst=e.target.value; renderDb(); } if(id==='gdbFa'){ DB.gfaellig=e.target.checked; renderDb(); } });
+document.addEventListener('change', e=>{ const id=e.target.id; if(id==='gdbFz'){ DB.gfz=e.target.value; renderDb(); } if(id==='gdbSt'){ DB.gst=e.target.value; renderDb(); } if(id==='gdbFa'){ DB.gfaellig=e.target.checked; renderDb(); } if(id==='gdbAu'){ DB.gau=e.target.value; renderDb(); } });
 /* ---------- ab 5.3: Gerätetausch / zur Prüfung – jede Feuerwehr, ohne Gerätewart-Anmeldung ---------- */
 const TAU = { liste:null, fehler:'', filter:'offen', laden:false, markiert:'' };
 const TAU_ART = {geraet:'PA', flasche:'Flasche', la:'LA', maske:'Maske'};
@@ -4090,6 +4096,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Enter' && e.target && (e.t
 function dbNurOeffnen(){ document.body.dataset.dbnur='1'; const o=$('#login'); if(o) o.hidden=true; setView('db'); }
 function dbNurBeenden(){ if(window.DB_SEITE){ dbTokenSetzen(''); DB.daten=null; renderDb(); return; } delete document.body.dataset.dbnur; dbTokenSetzen(''); DB.daten=null; if(!CUR) showLogin(); else setView('ueb'); }
 })();
+
+/* 5.17.3: Handy – Reiterleiste direkt an <body> (iOS verschiebt feste Leisten im klebenden Kopf) */
+(function(){ const nav=document.querySelector('nav.tabs'); if(!nav) return; const heim=nav.parentElement, nach=nav.nextSibling; const mq=matchMedia('(max-width:640px)');
+  const ort=()=>{ if(mq.matches){ if(nav.parentElement!==document.body) document.body.appendChild(nav); } else if(nav.parentElement!==heim) heim.insertBefore(nav, nach); };
+  ort(); mq.addEventListener ? mq.addEventListener('change',ort) : mq.addListener(ort); })();
 </script>
 
 </body>
