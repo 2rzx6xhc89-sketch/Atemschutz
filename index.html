@@ -3384,6 +3384,23 @@ async function dbPushAus(){
   const reg=await dbSwReg(); const sub=reg&&await reg.pushManager.getSubscription();
   if(sub){ try{ await dbApi('POST','/agw/push/ab',{endpoint:sub.endpoint}); }catch(e){} try{ await sub.unsubscribe(); }catch(e){} }
 }
+/* ab 5.16: je Zugang wählbar, wofür App-Hinweise und E-Mails kommen */
+function dbBenachrAuswahl(){
+  const k=(DB.daten&&DB.daten.konto)||(DB.gdb&&DB.gdb.konto)||null; if(!k||!Array.isArray(k.benachrArten)||!k.benachrArten.length) return '';
+  const b=k.benachr||{}, bp=b.push||{}, bm=b.mail||{};
+  const mailOk=!!k.mail, mailAktiv=!!((DB.daten&&DB.daten.mailAktiv)||(DB.gdb&&DB.gdb.mailAktiv));
+  let h='<div style="margin-top:6px"><b>Wofür möchten Sie benachrichtigt werden?</b><div class="hint">Gilt für Ihren Zugang auf allen Geräten. Haken weg = kommt nicht mehr.</div>'+
+    '<table class="dbtab" style="margin-top:4px"><thead><tr><th>Anlass</th><th style="text-align:center">📱 App</th><th style="text-align:center">✉️ E-Mail</th></tr></thead><tbody>';
+  k.benachrArten.forEach(a=>{
+    h+='<tr><td>'+esc(a.t)+'</td><td style="text-align:center"><input type="checkbox" class="bn-push" data-k="'+esc(a.k)+'"'+(bp[a.k]===false?'':' checked')+'></td>'+
+      '<td style="text-align:center">'+(a.mail?'<input type="checkbox" class="bn-mail" data-k="'+esc(a.k)+'"'+(bm[a.k]===false?'':' checked')+(mailOk?'':' disabled title="Keine E-Mail-Adresse hinterlegt"')+'>':'–')+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  if(!mailOk) h+='<div class="hint">E-Mails: für Ihren Zugang ist keine Adresse hinterlegt (Administrator → Verwaltung → Gerätewarte).</div>';
+  else if(!mailAktiv) h+='<div class="hint">Hinweis: Der Mailversand der Einsatzverwaltung ist noch nicht eingerichtet.</div>';
+  h+='<div class="row" style="margin-top:6px"><button type="button" class="btn small primary" data-db="benachr">Auswahl speichern</button></div></div>';
+  return h;
+}
 function dbPushPanel(){
   const st=DB.push||{}, sv=st.server||{};
   const was=[dbHat('geraete')?'fällige Geräteprüfungen (eine Woche vorher) und Schadensmeldungen aus der Fahrzeug-App':'', dbHat('atemschutz')?'Prüftermine der Atemschutzgeräte, ablaufende Nachweise (G 26, Belastungsübung, Unterweisung) und Gerätetausch / Prüfung aus der ASÜ':'', 'ablaufendes Kennwort'].filter(Boolean);
@@ -3394,6 +3411,7 @@ function dbPushPanel(){
   else if(st.erlaubnis==='denied') h+='<div class="calcbox">Benachrichtigungen sind für diese Seite blockiert – bitte in den Einstellungen des Browsers bzw. des Handys erlauben.</div>';
   else h+='<div class="row">'+(st.hier?'<span>✅ Eingeschaltet</span><button type="button" class="btn small" data-db="pushtest">Test senden</button><button type="button" class="btn small" data-db="pushaus">Ausschalten</button>':'<button type="button" class="btn primary" data-db="pushan">Auf diesem Gerät einschalten</button>')+'</div>';
   if(sv.geraete&&sv.geraete.length) h+='<div class="hint">Eingeschaltet auf: '+sv.geraete.map(g=>esc(g.geraet||'Gerät')+(g.ok?'':' ⚠️')).join(', ')+' (höchstens 5)</div>';
+  h+=dbBenachrAuswahl();
   if(window.DB_SEITE && !dbIstApp()) h+='<div class="hint">Tipp: '+(DB_INSTALL.prompt?'Oben „📲 Als App installieren“ – dann liegt die Datenbank mit eigenem Symbol auf dem Startbildschirm.':dbIos()?'In Safari „Teilen“ → „Zum Home-Bildschirm“ legt die Datenbank als App ab.':'Über das Browser-Menü „App installieren“ / „Zum Startbildschirm hinzufügen“ wird die Datenbank zur App.')+'</div>';
   return h+'</div>';
 }
@@ -3439,7 +3457,7 @@ function pfStatus(n){
   if(n.status==='offen') return '<label class="pfhaken"><input type="checkbox" data-pf="ftz" data-id="'+esc(n.id)+'"> FTZ</label><button type="button" class="btn small ghost" data-db="pfmehr" data-id="'+esc(n.id)+'" title="Tauschgerät, selbst gepflegt, Bemerkung">…</button>';
   if(n.status==='ftz') return '<span class="dbst bald">✓ FTZ '+dt(p.ftz)+'</span>'+(p.ftz&&p.ftz.ersatz?'<div class="hint">Tausch: '+esc(p.ftz.ersatz)+'</div>':'')+'<div class="row" style="gap:4px;margin-top:4px"><button type="button" class="btn small" data-db="pfakt" data-a="zurueck" data-id="'+esc(n.id)+'">zurück</button><button type="button" class="btn small ghost" data-db="pfakt" data-a="offen" data-id="'+esc(n.id)+'">↶</button></div>';
   if(n.status==='zurueck') return '<span class="dbst ja">✓ zurück '+dt(p.zurueck)+'</span>'+(p.ftz&&p.ftz.ersatz?'<div class="hint">Tausch: '+esc(p.ftz.ersatz)+'</div>':'');
-  return '<span class="dbst ja">✓ selbst gepflegt '+dt(p.erledigt)+'</span>';
+  return '<span class="dbst ja">✓ selbst gepflegt '+dt(p.erledigt)+'</span>'+(p.erledigt&&p.erledigt.text?'<div class="hint">'+esc(p.erledigt.text)+(p.erledigt.von?' · '+esc(p.erledigt.von):'')+'</div>':'');
 }
 function dbPflegeHTML(d){
   const P=DB.pflege; if(!P) return '<div class="panel hint">Gerätepflege nicht abrufbar.</div>';
@@ -3693,7 +3711,7 @@ document.addEventListener('change', e=>{ const id=e.target.id; if(id==='gdbFz'){
 const TAU = { liste:null, fehler:'', filter:'offen', laden:false, markiert:'' };
 const TAU_ART = {geraet:'PA', flasche:'Flasche', la:'LA', maske:'Maske'};
 async function tauLaden(){ if(!syncBase()){ TAU.fehler='Keine Verbindung zum Pi – unter Einsatzdaten → Mehrere Geräte die Server-Adresse eintragen.'; renderTau(); return; }
-  TAU.laden=true; try{ TAU.liste=(await api('GET','/pflege/offen')).liste; TAU.fehler=''; }catch(e){ TAU.fehler=e.message; } TAU.laden=false; if(view==='tau') renderTau(); }
+  TAU.laden=true; try{ const r=await api('GET','/pflege/offen'); TAU.liste=r.liste; TAU.wehren=r.wehren||[]; TAU.geraete=r.geraete||[]; TAU.arten=r.arten||TAU.arten; TAU.fehler=''; }catch(e){ TAU.fehler=e.message; } TAU.laden=false; if(view==='tau') renderTau(); }
 async function tauAktion(ids, aktion, ersatz){ try{ await api('POST','/pflege/aktion',{ids, aktion, ersatz:ersatz||''}); toast({ftz:'Zur Prüfung (FTZ) vermerkt', zurueck:'Zurück vermerkt', offen:'Zurückgesetzt'}[aktion]); }catch(e){ toast(e.message); } tauLaden(); }
 function tauChips(n){ return n.geraete.map(g=>'<span class="pfchip'+(TAU.markiert && g.nr.toLowerCase()===TAU.markiert?' an':'')+'">'+(String(g.nr).toUpperCase().startsWith(TAU_ART[g.art].toUpperCase())?'':TAU_ART[g.art]+' ')+'<b class="mono">'+esc(g.nr)+'</b></span>').join(' '); }
 function renderTau(){
@@ -3705,20 +3723,65 @@ function renderTau(){
   v.innerHTML='<div class="toolbar"><h2>Gerätetausch / zur Prüfung</h2><span class="spacer"></span><button type="button" class="btn small" data-tau="neu">↻ Aktualisieren</button></div>'+
     '<p class="hint" style="margin:4px 0 8px">Benutzte Atemschutzgeräte aus allen Einsätzen und Übungen – egal welcher Feuerwehr. Wer die Geräte zur Prüfung bringt (FTZ) oder Tauschgeräte holt, hakt sie hier ab. Den Rest erledigt der Atemschutzgerätewart in der Datenbank.</p>'+
     (TAU.fehler?'<div class="calcbox"><span class="err">'+esc(TAU.fehler)+'</span></div>':'')+
-    '<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px"><button type="button" class="btn'+(TAU.filter==='offen'?' primary':'')+'" data-tau="f" data-v="offen">Benutzt – zur Prüfung ('+offen+')</button><button type="button" class="btn'+(TAU.filter==='ftz'?' primary':'')+'" data-tau="f" data-v="ftz">Bei der FTZ ('+ftz+')</button><span class="spacer"></span><button type="button" class="btn" data-tau="scan">'+QR_SVG+' Gerät scannen</button>'+(TAU.markiert?'<button type="button" class="btn ghost" data-tau="alle">Filter „'+esc(TAU.markiert)+'“ aufheben</button>':'')+'</div>'+
+    '<div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:8px"><button type="button" class="btn'+(TAU.filter==='offen'?' primary':'')+'" data-tau="f" data-v="offen">Benutzt – zur Prüfung ('+offen+')</button><button type="button" class="btn'+(TAU.filter==='ftz'?' primary':'')+'" data-tau="f" data-v="ftz">Bei der FTZ ('+ftz+')</button><span class="spacer"></span><button type="button" class="btn" data-tau="scan">'+QR_SVG+' Gerät scannen</button><button type="button" class="btn ghost" data-tau="foto" title="Foto des Etiketts auswerten">🖼</button><input class="inp mono" id="tauNr" placeholder="Gerätenummer" data-nosave="1" style="max-width:150px"><button type="button" class="btn" data-tau="nr">Gerät öffnen</button>'+(TAU.markiert?'<button type="button" class="btn ghost" data-tau="alle">Filter „'+esc(TAU.markiert)+'“ aufheben</button>':'')+'</div>'+
     ([...gr.values()].map(g=>{ const e=g[0];
       return '<div class="panel pfgruppe"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><b>'+esc(e.art||'Einsatz')+' '+new Date(e.beginn).toLocaleDateString('de-DE')+'</b><span class="hint">'+esc([e.evNummer?'Nr. '+e.evNummer:'', e.einsatzstelle, [...new Set(g.map(n=>n.wehr).filter(Boolean))].join(', ')].filter(Boolean).join(' · '))+'</span><span class="spacer" style="flex:1"></span>'+
         (TAU.filter==='offen'?'<button type="button" class="btn small" data-tau="alleftz" data-code="'+esc(e.code)+'">Alle '+g.length+' → zur Prüfung</button>':'')+'</div>'+
         g.map(n=>'<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);padding:8px 0"><span class="hint" style="min-width:110px">'+esc([n.funktion,n.trupp].filter(Boolean).join(' · ')||'Träger')+'</span><span style="flex:1;min-width:200px">'+tauChips(n)+'</span>'+
           (n.status==='offen'
-            ? '<label class="pfhaken"><input type="checkbox" data-tauftz="'+esc(n.id)+'"> zur Prüfung (FTZ)</label><button type="button" class="btn small" data-tau="tausch" data-id="'+esc(n.id)+'">⇄ Tausch …</button>'
+            ? '<label class="pfhaken"><input type="checkbox" data-tauftz="'+esc(n.id)+'"> zur Prüfung (FTZ)</label><button type="button" class="btn small" data-tau="tausch" data-id="'+esc(n.id)+'">🏭 FTZ + Tausch …</button><button type="button" class="btn small ghost" data-tau="elemente" data-id="'+esc(n.id)+'">⇄ Elemente …</button>'
             : '<span class="dbst bald">✓ FTZ '+new Date(n.ftz.t).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+'</span>'+(n.ftz.ersatz?'<span class="hint">Tausch: '+esc(n.ftz.ersatz)+'</span>':'')+'<span class="hint">'+esc(n.ftz.von||'')+'</span><button type="button" class="btn small" data-tau="zurueck" data-id="'+esc(n.id)+'">zurück</button><button type="button" class="btn small ghost" data-tau="offen" data-id="'+esc(n.id)+'">↶</button>')+'</div>').join('')+'</div>'; }).join('') || '<div class="panel hint">'+(TAU.filter==='offen'?'Keine benutzten Geräte offen – alles versorgt.':'Zurzeit ist nichts bei der FTZ.')+'</div>');
 }
-function tauTauschDlg(n){
-  openDlg('<div class="dlg-head"><h2>Gerätetausch</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body" style="display:grid;gap:10px"><div>'+tauChips(n)+'</div>'+
-    '<label class="f">Erhaltene Tauschgeräte (Nummern)<input class="inp" id="tauE" data-nosave="1" placeholder="z. B. PA 0815, Flasche 4711"></label><p class="hint" style="margin:0">Die benutzten Geräte gehen zur Prüfung (FTZ), die Tauschgeräte stehen beim Eintrag.</p></div>'+
-    '<div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn primary" id="tauOk">✓ Getauscht – zur Prüfung</button></div>');
-  $('#tauOk').onclick=()=>{ const e=$('#tauE').value.trim(); closeDlg(); tauAktion([n.id],'ftz',e); };
+function tauFmt(n){ const d=new Date(n.beginn); const z=x=>String(x).padStart(2,'0'); const min=n.dauer!=null?Math.round(n.dauer/60000):null;
+  return {datum:d.toLocaleDateString('de-DE'), von:z(d.getHours())+':'+z(d.getMinutes()), bis:n.ende?(()=>{ const e=new Date(n.ende); return z(e.getHours())+':'+z(e.getMinutes()); })():'', min}; }
+function tauNutzungHTML(n){ const f=tauFmt(n);
+  return '<div class="panel" style="display:grid;gap:4px"><div><b>'+esc(n.art||'Einsatz')+'</b>'+(n.evNummer?' · Nr. '+esc(n.evNummer):'')+(n.einsatzstelle?' · '+esc(n.einsatzstelle):'')+'</div>'+
+    '<div class="row" style="gap:14px;flex-wrap:wrap"><span>📅 '+f.datum+' '+f.von+(f.bis?' – '+f.bis:'')+' Uhr</span>'+(f.min!=null?'<span>⏱ <b>'+f.min+' min</b> unter Atemschutz</span>':'')+(n.druckA!=null?'<span>'+n.druckA+(n.druckE!=null?' → '+n.druckE:'')+' bar</span>':'')+'</div>'+
+    '<div>👤 <b>'+esc(n.name||'Träger unbekannt')+'</b>'+(n.funktion||n.trupp?' <span class="hint">'+esc([n.funktion,n.trupp].filter(Boolean).join(' · '))+'</span>':'')+(n.wehr?' <span class="hint">· '+esc(n.wehr)+'</span>':'')+(n.csa?' <span class="dbst bald">CSA</span>':'')+'</div>'+
+    '<div>'+tauChips(n)+'</div></div>'; }
+/* Gerät gescannt / eingegeben: alle offenen Nutzungen dieses Geräts zeigen, dann FTZ oder Elemente-Tausch */
+function tauGeraetDlg(nr){
+  const q=String(nr||'').trim().toLowerCase(); const treffer=(TAU.liste||[]).filter(n=>n.status==='offen' && n.geraete.some(g=>String(g.nr).toLowerCase()===q));
+  const bekannt=(TAU.geraete||[]).find(g=>String(g.nr).toLowerCase()===q);
+  if(!treffer.length){ openDlg('<div class="dlg-head"><h2>Gerät '+esc(nr)+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body"><p>'+(bekannt?esc((TAU.arten||{})[bekannt.art]||bekannt.art)+' '+esc(bekannt.nr)+(bekannt.typ?' ('+esc(bekannt.typ)+')':'')+' · Ortswehr '+esc(bekannt.wehr)+' · Zustand: '+esc(bekannt.zustand)+'.<br>':'Dieses Gerät ist in der Atemschutz-Datenbank nicht bekannt.<br>')+'<b>Keine offene Benutzung</b> – aus Einsatz oder Übung wurde nichts übernommen, was noch zur Pflege ansteht.</p></div>'); return; }
+  const n0=treffer[0];
+  openDlg('<div class="dlg-head"><h2>⇄ Gerät '+esc(n0.geraete.find(g=>String(g.nr).toLowerCase()===q)?.nr||nr)+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body" style="display:grid;gap:10px">'+
+    '<p class="hint" style="margin:0">Aus Einsatz bzw. Übung übernommen: wer mit dem Gerät unterwegs war, wann und wie lange. Das wird beim Tausch festgehalten.</p>'+
+    treffer.map(tauNutzungHTML).join('')+
+    '<div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" data-tauw="ftz" data-id="'+esc(n0.id)+'">🏭 Zur FTZ – Gerät tauschen</button><button type="button" class="btn" data-tauw="elemente" data-id="'+esc(n0.id)+'">⇄ Nur Elemente tauschen</button></div>'+(treffer.length>1?'<p class="hint" style="margin:0">'+treffer.length+' offene Benutzungen dieses Geräts – alle werden zusammen abgehakt.</p>':'')+
+    '<p class="hint" style="margin:0"><b>Zur FTZ:</b> Das benutzte Gerät geht zur Prüfung, ein Tauschgerät wird eingetragen (vorhanden oder neu angelegt, mit QR-Etikett).<br><b>Nur Elemente:</b> Flasche, Lungenautomat oder Maske werden gewechselt, der Pressluftatmer bleibt im Dienst.</p></div>');
+  dlg.onclick=e=>{ const b=e.target.closest('[data-tauw]'); if(!b) return; const n=TAU.liste.find(x=>x.id===b.dataset.id); dlg.onclick=null; closeDlg(); if(n) tauTauschDlg(n, b.dataset.tauw, treffer.map(x=>x.id)); };
+}
+function tauTauschDlg(n, modus, ids){
+  modus=modus||'ftz'; ids=ids&&ids.length?ids:[n.id]; const arten=TAU.arten||{geraet:'Pressluftatmer',flasche:'Atemluftflasche',la:'Lungenautomat',maske:'Atemschutzmaske'};
+  const wehren=(TAU.wehren&&TAU.wehren.length)?TAU.wehren:[n.wehr].filter(Boolean); const stdWehr=(CUR&&CUR.ort&&wehren.includes(CUR.ort))?CUR.ort:(n.wehr||wehren[0]||'');
+  const zeile=(g,i)=>{ const vorh=(TAU.geraete||[]).filter(x=>x.art===g.art && String(x.nr).toLowerCase()!==String(g.nr).toLowerCase()); const standard=modus==='ftz'?true:g.art!=='geraet';
+    return '<div class="panel" style="display:grid;gap:6px" data-tz="'+i+'"><label class="chk"><input type="checkbox" class="tz-an" '+(standard?'checked':'')+(modus==='elemente'&&g.art==='geraet'?' disabled':'')+'> <b>'+esc(arten[g.art]||g.art)+' '+esc(g.nr)+'</b>'+(g.typ?' <span class="hint">'+esc(g.typ)+'</span>':'')+(modus==='elemente'&&g.art==='geraet'?' <span class="hint">bleibt im Dienst</span>':' tauschen')+'</label>'+
+      '<div class="tz-body" style="display:grid;gap:6px;padding-left:28px'+(standard?'':';display:none')+'"><div class="row" style="gap:12px;flex-wrap:wrap"><label class="chk"><input type="radio" name="tzq'+i+'" value="vorh" checked> vorhandenes Tauschgerät</label><label class="chk"><input type="radio" name="tzq'+i+'" value="neu"> neu anlegen</label></div>'+
+      '<div class="tz-vorh"><input class="inp" list="tzl'+i+'" placeholder="Nummer eingeben oder wählen" data-nosave="1"><datalist id="tzl'+i+'">'+vorh.map(x=>'<option value="'+esc(x.nr)+'">'+esc(x.nr)+(x.typ?' · '+esc(x.typ):'')+' · '+esc(x.wehr)+(x.zustand!=='bereit'?' ('+esc(x.zustand)+')':'')+'</option>').join('')+'</datalist></div>'+
+      '<div class="tz-neu fgrid" style="display:none"><label class="f">Nummer<input class="inp mono" data-nosave="1" data-f="nr"></label><label class="f">Typ / Bezeichnung<input class="inp" data-nosave="1" data-f="typ" value="'+esc(g.typ||'')+'"></label><label class="f">Prüftermin 1<input class="inp" type="date" data-f="pruef1"></label><label class="f">Prüftermin 2<input class="inp" type="date" data-f="pruef2"></label></div>'+
+      '<label class="f">Zugewiesen an Ortswehr<select class="inp tz-wehr">'+wehren.map(w=>'<option '+(w===stdWehr?'selected':'')+'>'+esc(w)+'</option>').join('')+'</select></label></div></div>'; };
+  openDlg('<div class="dlg-head"><h2>'+(modus==='ftz'?'🏭 Zur FTZ – Gerätetausch':'⇄ Elemente tauschen')+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div><div class="dlg-body" style="display:grid;gap:10px">'+
+    tauNutzungHTML(n)+
+    '<p class="hint" style="margin:0">'+(modus==='ftz'?'Die angehakten Geräte gehen zur Prüfung an die FTZ. Für jedes ein Tauschgerät eintragen – vorhandenes aus der Datenbank oder neu anlegen (dann wird ein QR-Etikett gedruckt). Das Tauschgerät wird der gewählten Ortswehr zugewiesen (Vorgabe: die Wehr, die gerade tauscht).':'Nur die gewechselten Elemente eintragen; der Pressluftatmer bleibt im Dienst, die Benutzung gilt als selbst gepflegt.')+'</p>'+
+    n.geraete.map(zeile).join('')+
+    '<div class="err" id="tzErr" role="alert"></div></div><div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn primary" id="tzOk">'+(modus==='ftz'?'✓ Getauscht – zur Prüfung':'✓ Elemente getauscht')+'</button></div>');
+  dlg.querySelectorAll('[data-tz]').forEach(box=>{ const an=box.querySelector('.tz-an'), body=box.querySelector('.tz-body'); an.onchange=()=>{ body.style.display=an.checked?'grid':'none'; };
+    box.querySelectorAll('input[type=radio]').forEach(r=>r.onchange=()=>{ const neu=box.querySelector('input[type=radio][value=neu]').checked; box.querySelector('.tz-vorh').style.display=neu?'none':''; box.querySelector('.tz-neu').style.display=neu?'grid':'none'; }); });
+  $('#tzOk').onclick=async ()=>{ const err=$('#tzErr'); err.textContent=''; const tausch=[], anlegen=[];
+    for(const box of dlg.querySelectorAll('[data-tz]')){ const i=+box.dataset.tz, g=n.geraete[i]; if(!box.querySelector('.tz-an').checked) continue;
+      const neu=box.querySelector('input[type=radio][value=neu]').checked; const wehr=box.querySelector('.tz-wehr').value;
+      if(neu){ const f=k=>box.querySelector('.tz-neu [data-f="'+k+'"]').value.trim(); if(!f('nr')){ err.textContent='Bitte die Nummer des neuen '+(arten[g.art]||g.art)+'s eintragen.'; return; } anlegen.push({art:g.art, nr:f('nr'), typ:f('typ'), pruef1:f('pruef1'), pruef2:f('pruef2'), wehr, alt:g, neu:true}); }
+      else { const nr=box.querySelector('.tz-vorh input').value.trim(); if(!nr){ err.textContent='Bitte das Tauschgerät für '+(arten[g.art]||g.art)+' '+g.nr+' angeben (oder „neu anlegen“).'; return; } if(nr.toLowerCase()===String(g.nr).toLowerCase()){ err.textContent='Das Tauschgerät darf nicht das benutzte Gerät sein.'; return; } anlegen.push({art:g.art, nr, wehr, alt:g, neu:false}); } }
+    if(!anlegen.length){ err.textContent='Nichts angehakt.'; return; }
+    $('#tzOk').disabled=true; const gedruckt=[];
+    try{
+      for(const a of anlegen){ const r=await api('POST','/pflege/geraet', a.neu?{art:a.art, nr:a.nr, typ:a.typ, wehr:a.wehr, pruef1:a.pruef1, pruef2:a.pruef2}:{art:a.art, nr:a.nr, wehr:a.wehr}); tausch.push({alt:{art:a.alt.art, nr:a.alt.nr}, neu:{art:a.art, nr:r.geraet.nr, id:r.geraet.id}}); if(r.neu) gedruckt.push(r.geraet); }
+      await api('POST','/pflege/aktion',{ids, aktion:modus, tausch});
+      closeDlg(); toast(modus==='ftz'?'Zur Prüfung (FTZ) vermerkt – Tauschgerät eingetragen':'Elemente getauscht – als selbst gepflegt vermerkt'); tauLaden();
+      if(gedruckt.length && confirm(gedruckt.length+' neues Gerät/neue Geräte angelegt. QR-Etikett jetzt drucken?')) dbDrucken(gedruckt.map(g=>({text:geraetQR(g), l:(arten[g.art]||g.art)+' '+g.nr, s:[g.typ, g.wehr].filter(Boolean).join(' · ')})));
+    }catch(e){ err.textContent=e.message||'Fehler'; $('#tzOk').disabled=false; }
+  };
 }
 function tauScan(){
   const fi=$('#fileCam'); fi.value='';
@@ -3727,23 +3790,31 @@ function tauScan(){
       for(const x of c){ const o=parseCode(x.text); nr=o.geraetNr||o.flascheNr||o.laNr||o.maskeNr||''; if(nr) break; }
       if(!nr && c.length) nr=c[0].text.trim();
       if(!nr){ toast('Kein Code erkannt – näher heran, gerade halten.'); return; }
-      TAU.markiert=nr.toLowerCase(); const treffer=(TAU.liste||[]).filter(n=>n.geraete.some(g=>g.nr.toLowerCase()===TAU.markiert));
-      if(!treffer.length){ toast('Für „'+nr+'“ ist keine Benutzung offen.'); TAU.markiert=''; return; }
-      TAU.filter=treffer[0].status; renderTau(); toast(treffer.length+' Eintrag/Einträge mit „'+nr+'“');
+      tauGeraetDlg(nr);
     }catch(e){ toast(e.message||'Foto nicht lesbar'); } };
   fi.click();
+}
+function tauLiveScan(){
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){ tauScan(); return; }
+  qrScanDialog('Atemschutzgerät scannen', 'Kamera auf das QR-Etikett des Geräts halten (Pressluftatmer, Flasche, Lungenautomat oder Maske).', txt=>{
+    const o=parseCode(txt); const nr=o.geraetNr||o.flascheNr||o.laNr||o.maskeNr||String(txt||'').trim(); if(!nr) return false;
+    setTimeout(()=>tauGeraetDlg(nr), 50); return true; });
 }
 document.addEventListener('click', e=>{
   const b=e.target.closest('[data-tau]'); if(!b || !$('#view-tau') || $('#view-tau').hidden) return; const a=b.dataset.tau;
   if(a==='neu') tauLaden();
   if(a==='f'){ TAU.filter=b.dataset.v; renderTau(); }
   if(a==='alle'){ TAU.markiert=''; renderTau(); }
-  if(a==='scan') tauScan();
-  if(a==='tausch'){ const n=TAU.liste.find(x=>x.id===b.dataset.id); if(n) tauTauschDlg(n); }
+  if(a==='scan') tauLiveScan();
+  if(a==='foto') tauScan();
+  if(a==='nr'){ const i=$('#tauNr'); const nr=i?i.value.trim():''; if(!nr){ toast('Bitte die Gerätenummer eingeben.'); return; } tauGeraetDlg(nr); }
+  if(a==='tausch'){ const n=TAU.liste.find(x=>x.id===b.dataset.id); if(n) tauTauschDlg(n,'ftz'); }
+  if(a==='elemente'){ const n=TAU.liste.find(x=>x.id===b.dataset.id); if(n) tauTauschDlg(n,'elemente'); }
   if(a==='zurueck'||a==='offen') tauAktion([b.dataset.id], a);
   if(a==='alleftz') tauAktion(TAU.liste.filter(n=>n.code===b.dataset.code && n.status==='offen').map(n=>n.id), 'ftz');
 });
 document.addEventListener('change', e=>{ const c=e.target.closest('[data-tauftz]'); if(c && c.checked) tauAktion([c.dataset.tauftz],'ftz'); });
+document.addEventListener('keydown', e=>{ if(e.key==='Enter' && e.target && e.target.id==='tauNr'){ e.preventDefault(); const nr=e.target.value.trim(); if(nr) tauGeraetDlg(nr); } });
 function renderDb(){
   const v=$('#view-db'); if(!v) return;
   const base=dbBase();
@@ -3968,6 +4039,8 @@ document.addEventListener('click', async e=>{
   if(a==='push'){ DB.pushOffen=!DB.pushOffen; if(DB.pushOffen) await dbPushStand(); renderDb(); }
   if(a==='pushan'){ try{ await dbPushAn(); toast('Benachrichtigungen eingeschaltet.'); }catch(err){ DB.push={...(DB.push||{}), fehler:err.message}; } await dbPushStand(); renderDb(); }
   if(a==='pushaus'){ try{ await dbPushAus(); toast('Auf diesem Gerät ausgeschaltet.'); }catch(err){} await dbPushStand(); renderDb(); }
+  if(a==='benachr'){ const push={}, mail={}; document.querySelectorAll('.bn-push').forEach(c=>{ push[c.dataset.k]=c.checked; }); document.querySelectorAll('.bn-mail').forEach(c=>{ mail[c.dataset.k]=c.checked; });
+    try{ const r=await dbApi('POST','/agw/benachr',{push, mail}); [DB.daten&&DB.daten.konto, DB.gdb&&DB.gdb.konto].forEach(kk=>{ if(kk) kk.benachr=r.benachr; }); toast('Benachrichtigungs-Auswahl gespeichert.'); renderDb(); }catch(err){ toast(err.message); } }
   if(a==='pushtest'){ try{ const r=await dbApi('POST','/agw/push/test',{}); toast(r.ok?'Test gesendet – kommt gleich an.':'Test fehlgeschlagen: '+(r.fehler||[]).join(', ')); }catch(err){ toast(err.message); } }
   if(a==='install'){ const pr=DB_INSTALL.prompt; DB_INSTALL.prompt=null; if(pr){ pr.prompt(); try{ await pr.userChoice; }catch(e){} } renderDb(); }
   if(a==='awdruck'){ agwAuswertungDrucken(); }
