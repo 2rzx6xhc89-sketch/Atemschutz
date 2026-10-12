@@ -256,6 +256,38 @@ dialog.qrdlg .dlg-body{justify-items:stretch}
 .synccode{display:flex;align-items:baseline;gap:12px}
 .synccode b{font-size:32px;letter-spacing:.12em}
 .sticky-tb{position:sticky;top:var(--toph,0px);z-index:15;background:var(--ground);margin-inline:-16px;padding:10px 16px;margin-block:6px 10px;border-bottom:1px solid var(--line)}
+/* ab 5.23 */
+.gd-raeume{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.gd-tz.akt{background:var(--ink);color:var(--panel);border-color:var(--ink)}.gd-tz.akt b{color:inherit}
+.gd-rp-liste{display:grid;gap:6px}
+.gd-rp{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:8px 10px;flex-wrap:wrap}
+.gd-rp.ok{border-color:var(--green);background:rgba(29,107,69,.07)}.gd-rp.mg{border-color:var(--red);background:rgba(179,18,31,.07)}
+.gd-rp .btn.gruen{background:var(--green);border-color:var(--green);color:#fff}
+.gd-rp-t{flex:1 1 220px;min-width:0}.gd-rp-t .inp{margin-top:6px}.gd-rp-k{display:flex;gap:6px}
+.gd-rep{border-top:1px solid var(--line);padding-top:8px}
+/* ab 5.21: vereinfachte Gerätedatenbank */
+.gd-heute{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;padding:10px 12px}
+.gd-heute>b{margin-right:6px}
+.gd-tz{appearance:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font:inherit;cursor:pointer;color:var(--ink)}
+.gd-tz.nein{border-color:var(--red)}.gd-tz.nein b{color:var(--red)}.gd-tz.bald{border-color:var(--amber)}.gd-tz.bald b{color:var(--amber)}
+.gd-meld>summary{cursor:pointer;list-style:none}.gd-meld>summary::before{content:'▸ '}.gd-meld[open]>summary::before{content:'▾ '}
+.gd-mgr-z{border-left:3px solid var(--line);padding:4px 0 4px 10px;margin:6px 0 0 4px}
+.gd-mehr>summary{list-style:none;cursor:pointer}.gd-mehr>summary::-webkit-details-marker,.gd-fzmenue>summary::-webkit-details-marker,.gd-meld>summary::-webkit-details-marker{display:none}
+.gd-mehr[open]{flex-basis:100%;order:9}
+.gd-menue{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2,var(--panel))}
+.gd-fzkopf{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:var(--panel-2,rgba(0,0,0,.03));cursor:pointer;border-radius:12px}
+.gd-fz.auf .gd-fzkopf{border-radius:12px 12px 0 0}
+.gd-pfeil{width:1em;font-size:14px;color:var(--ink-2)}
+.gd-anz{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.gd-fzinhalt{display:none}.gd-fz.auf .gd-fzinhalt{display:block}
+.gd-fzr{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.gd-fzmenue{position:relative}.gd-fzmenue>summary{list-style:none;font-size:18px;line-height:1;padding:4px 12px}
+.gd-pop{position:absolute;right:0;top:calc(100% + 4px);z-index:30;display:grid;gap:4px;min-width:240px;padding:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.gd-pop .btn{justify-content:flex-start;text-align:left;width:100%}
+.gd-tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:6px}
+.gd-tabs button{appearance:none;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:7px 11px;font:inherit;font-weight:600;cursor:pointer;color:var(--ink-2)}
+.gd-tabs button.active{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.gd-pane[hidden]{display:none!important}
+@media (max-width:640px){ .gd-tabs button{flex:1 1 45%;padding:7px 6px;font-size:14px} .gd-pop{right:-8px;min-width:220px} }
 .dbsum{display:flex;gap:8px;flex-wrap:wrap}.dbsum span{border:1px solid var(--line);border-radius:10px;padding:6px 12px;background:var(--panel)}.dbsum b{font-size:18px}
 .pfchip.an{background:#FFF1C2;border-color:#D9A400}
 .pfgruppe{display:grid;gap:8px;margin-bottom:10px}.pfchip{display:inline-block;border:1px solid var(--line);border-radius:8px;padding:2px 7px;margin:1px 0;font-size:13px;white-space:nowrap}.pfchip.fremd{border-style:dashed}.pfhaken{display:inline-flex;gap:6px;align-items:center;font-weight:700;border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;margin-right:4px}.pfhaken input{width:20px;height:20px}
@@ -409,6 +441,7 @@ pre.json{background:var(--panel-2);border:1px solid var(--line);border-radius:8p
   .tab .lg{display:none} .tab .sm{display:inline}
   .top{border-bottom:1px solid var(--line);padding-bottom:8px}
   .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+  #view-db table.dbtab{display:block;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch} #view-db .panel{min-width:0;max-width:100%} #view-db{overflow-x:clip}   /* 5.20: breite Tabellen scrollen in sich */
   body[data-dbnur] .tabs{display:none!important} body[data-dbnur]{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))} body[data-dbnur] .toast{bottom:calc(20px + env(safe-area-inset-bottom,0px))}   /* 5.17.3: Datenbank-App ohne leere Reiterleiste */
   /* Werkzeugleiste */
   .toolbar{gap:8px}
@@ -477,6 +510,18 @@ dialog.evfrage .evf-z{display:flex;flex-direction:column;align-items:flex-start;
 dialog.evfrage .evf-z span{font-weight:400;font-size:14px;opacity:.9}
 
 .gau-std{font-size:11px;font-weight:600;padding:1px 6px;border-radius:5px;background:var(--panel-2,#eee);color:var(--ink-3);border:1px solid var(--line);vertical-align:middle}
+
+.gk-gr h3{font-size:15px;margin:10px 0 6px;text-transform:capitalize}.gk-gr.ueber h3{color:var(--red)}
+.gk-z{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);margin-bottom:6px}
+.gk-z[role=button]{cursor:pointer}.gk-z[role=button]:hover{border-color:var(--ink-3)}
+.gk-z.ueber{border-color:var(--red);background:var(--red-soft)}.gk-z.heute{border-color:var(--amber);background:var(--amber-soft)}
+.gk-tag{display:flex;flex-direction:column;align-items:center;line-height:1}.gk-tag b{font-family:var(--f-mono);font-size:22px}.gk-tag small{font-size:11px;color:var(--ink-3);text-transform:uppercase}
+.gk-t{min-width:0}.gk-t b{display:block;overflow-wrap:anywhere}.gk-bis{font-size:12px;color:var(--ink-3);white-space:nowrap}.gk-z.ueber .gk-bis{color:var(--red);font-weight:600}
+.gk-abo a.btn{text-decoration:none}
+.gk-abo{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--panel)}
+
+.gd-ampel{font-size:14px}.gd-raum{font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;background:var(--blue-soft,#e6eef7);color:var(--blue,#1F5F99);border:1px solid var(--line);vertical-align:middle}
+.gu-w{margin-bottom:12px}.gu-mat{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;margin:6px 0}.gu-mat .nein{color:var(--red)}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}body{margin:0}</style>
 </head>
@@ -3251,7 +3296,12 @@ const dbGeraetName = ()=>(/iPhone/.test(navigator.userAgent)?'iPhone':/iPad/.tes
 // QR-Etiketten der Gerätedatenbank enthalten ab 5.6 einen Link – Handy-Kamera öffnet direkt die Gerätekarte
 const gdbLinkQR = g => location.origin+'/geraete#GDB1:'+g.id;
 const gdbIdAus = t => { const m=/GDB1:([A-Za-z0-9]+)/.exec(String(t||'')); return m?m[1]:''; };
+/* ab 5.23: QR-Code am Fahrzeug – öffnet direkt dessen Geräteliste mit Ampel */
+const gdbFzLinkQR = vid => location.origin+'/geraete#GDBFZ:'+vid;
+const gdbFzAus = t => { const m=/GDBFZ:([A-Za-z0-9_-]+)/.exec(String(t||'')); return m?m[1]:''; };
 function dbHashOeffnen(){
+  const vid=gdbFzAus(location.hash);
+  if(vid && DB.daten){ const geh=()=>{ if(!(DB.gdb&&DB.gdb.fahrzeuge.some(f=>f.id===vid))){ toast('Fahrzeug nicht gefunden (andere Ortswehr?).'); return; } try{ history.replaceState(null,'',location.pathname); }catch(e){} DB.sub='gdb'; DB.gfz=vid; DB.gq=''; DB.gst=''; DB.gau=''; DB.gfaellig=false; DB.gnb=false; DB.gleih=false; DB.ghb=false; DB.grep=false; const l=gdbAufGet(); if(!l.includes(vid)){ l.push(vid); try{ localStorage.setItem('asue.gdbAuf', JSON.stringify(l)); }catch(e){} } renderDb(); }; if(DB.gdb) geh(); else if(dbHat('geraete')) dbApi('GET','/gdb/daten').then(x=>{ DB.gdb=x; geh(); }).catch(()=>{}); return; }
   const id=gdbIdAus(location.hash); if(!id || !DB.daten) return;
   const geh=()=>{ const g=DB.gdb&&DB.gdb.geraete.find(x=>x.id===id); if(!g){ toast('Gerät nicht gefunden (andere Ortswehr oder gelöscht).'); return; } try{ history.replaceState(null,'',location.pathname); }catch(e){} DB.sub='gdb'; renderDb(); gdbDlg(g); };
   if(DB.gdb) geh(); else if(dbHat('geraete')) dbApi('GET','/gdb/daten').then(x=>{ DB.gdb=x; geh(); }).catch(()=>{});
@@ -3275,7 +3325,9 @@ async function gdbWocheDlg(){
 let GDB_LISTEN=null;
 async function gdbProtokollDlg(g){
   if(!GDB_LISTEN){ try{ GDB_LISTEN=await dbApi('GET','/gdb/prueflisten'); }catch(e){ toast(e.message); return; } }
-  const vorschlag=Object.keys(GDB_LISTEN).find(k=>new RegExp(k.replace(/n$/,''),'i').test((g.kat||'')+' '+g.bez))||(/elektr|strom|kabel|leitung|säge|pumpe/i.test(g.kat+' '+g.bez)?'Elektrisch':'Allgemein');
+  const ALIAS={Feuerwehrleinen:/leine/i, Druckschläuche:/schl[aä]uch/i, 'Hydraulische Rettungsgeräte':/spreizer|schere|rettungszylinder|hydraul|kombiger/i, Tragkraftspritze:/tragkraftspritze|\bTS ?8|\bPFPN/i, Sprungpolster:/sprungpolster|sprungretter/i, Absturzsicherung:/absturz|auffang|haltegurt|gurt/i, Motorkettensäge:/kettens[aä]ge|motors[aä]ge/i, 'Wärmebildkamera':/w[aä]rmebild/i, Hebekissen:/hebekissen/i, Leitern:/leiter/i, Stromerzeuger:/stromerzeuger|aggregat/i};
+  const txt=(g.kat||'')+' '+g.bez+' '+(g.pruefArt||'');
+  const vorschlag=Object.keys(GDB_LISTEN).find(k=>ALIAS[k]&&ALIAS[k].test(txt))||Object.keys(GDB_LISTEN).find(k=>new RegExp(k.replace(/n$/,''),'i').test(txt))||(/elektr|strom|kabel|leitung|pumpe/i.test(txt)?'Elektrisch':'Allgemein');
   let liste=vorschlag;
   const zeichne=()=>{
     openDlg('<div class="dlg-head"><h2>Prüfprotokoll · '+esc(g.bez)+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div><div class="dlg-body" style="display:grid;gap:10px">'+
@@ -3434,7 +3486,7 @@ function dbTokenSetzen(t, merken){ DB.token=t||''; if(!t) DB.push=null; try{ if(
 async function dbLaden(still){
   if(!DB.token){ DB.daten=null; return; }
   DB.laden=true;
-  try{ DB.daten=await dbApi('GET','/agw/daten'); DB.fehler=''; if(gdbIdAus(location.hash)) setTimeout(dbHashOeffnen, 300); if(!DB.push) dbPushStand().then(()=>{ try{ renderDb(); }catch(e){} }).catch(()=>{});
+  try{ DB.daten=await dbApi('GET','/agw/daten'); DB.fehler=''; if(gdbIdAus(location.hash)||gdbFzAus(location.hash)) setTimeout(dbHashOeffnen, 300); if(!DB.push) dbPushStand().then(()=>{ try{ renderDb(); }catch(e){} }).catch(()=>{});
     if(dbHat('atemschutz')){ try{ DB.pflege=await dbApi('GET','/agw/pflege'); }catch(e){ DB.pflege=null; } }
     if(dbHat('geraete')){ try{ DB.gdb=await dbApi('GET','/gdb/daten'); }catch(e){ DB.gdb=null; } }
     if(!dbHat('atemschutz') && DB.sub!=='gdb') DB.sub='gdb'; }
@@ -3556,7 +3608,7 @@ document.addEventListener('change', e=>{ if(e.target.id==='nwJ'){ DB.nwJahr=e.ta
 document.addEventListener('input', e=>{ if(e.target.id==='nwQ'){ DB.nwQ=e.target.value; const pos=e.target.selectionStart; renderDb(); const n=$('#nwQ'); if(n){ n.focus(); n.setSelectionRange(pos,pos); } } });
 
 /* ---------- Gerätedatenbank (ab 4.7) ---------- */
-const GDB_ST_CLS = {bereit:'ja', defekt:'nein', pruefung:'bald', ausser:'nein'};
+const GDB_ST_CLS = {bereit:'ja', defekt:'nein', pruefung:'bald', ausser:'nein', fehlt:'nein'};
 const gdbHeute = ()=>new Date().toISOString().slice(0,10);
 const gdbBald = ()=>new Date(Date.now()+7*864e5).toISOString().slice(0,10);
 const gdbQR = g => 'GDB1:'+g.id;
@@ -3564,77 +3616,386 @@ function gdbFzName(id){ const f=(DB.gdb&&DB.gdb.fahrzeuge||[]).find(x=>x.id===id
 function gdbPruefHTML(g){ if(!g.pruefNaechste) return '<span class="hint">–</span>'; const h=gdbHeute(); return g.pruefNaechste<h?'<span class="dbst nein">überfällig '+dDe(g.pruefNaechste)+'</span>':g.pruefNaechste<=gdbBald()?'<span class="dbst bald">'+dDe(g.pruefNaechste)+'</span>':dDe(g.pruefNaechste); }
 function gdbGefiltert(){
   const G=DB.gdb; const q=DB.gq.toLowerCase(), h=gdbBald();
-  return G.geraete.filter(g=>(!q || [g.bez,g.inv,g.kat,g.hersteller,g.typ,g.serien,gdbFzName(g.vid)].join(' ').toLowerCase().includes(q)) && (!DB.gfz || (DB.gfz==='_lager'?!g.vid:g.vid===DB.gfz)) && (!DB.gst || g.status===DB.gst) && (!DB.gau || (g.ausst||'zusatz')===DB.gau) && (!DB.gfaellig || (g.pruefNaechste && g.pruefNaechste<=h)));
+  const archiv=DB.gst==='_aus';
+  return G.geraete.filter(g=>(archiv?!!g.ausgesondert:!g.ausgesondert) && (!q || [g.bez,g.inv,g.kat,g.hersteller,g.typ,g.serien,gdbFzName(g.vid)].join(' ').toLowerCase().includes(q)) && (!DB.gfz || (DB.gfz==='_lager'?!g.vid:g.vid===DB.gfz)) && (!DB.gst || archiv || g.status===DB.gst) && (!DB.gau || (g.ausst||'zusatz')===DB.gau) && (!DB.gfaellig || (g.pruefNaechste && g.pruefNaechste<=h)) && (!DB.gnb || g.status!=='bereit') && (!DB.ghb || (g.haltbar && g.haltbar<=gdbIn30())) && (!DB.grep || gdbRepLang(g)) && (!DB.gleih || (g.ausgeliehen && g.ausgeliehen.bis && g.ausgeliehen.bis<gdbHeute())));
 }
 function gdbHTML(){
   const G=DB.gdb; if(!G) return '<div class="panel hint">Gerätedatenbank nicht abrufbar.</div>';
   if(!G.stand.aktiv && !G.geraete.length) return '<div class="panel"><p style="margin:0"><b>Die Gerätedatenbank ist noch leer.</b></p><p class="hint">Der Administrator kann in der Einsatzverwaltung (Verwaltung → Gerätewarte) die bisherige Ausrüstungsliste der Fahrzeuge übernehmen – dann sind alle Geräte gleich da. Oder hier mit „+ Gerät“ anfangen.</p><button type="button" class="btn primary" data-gdb="neu">+ Gerät</button></div>';
   const l=gdbGefiltert(), h=gdbHeute(), bald=gdbBald();
-  const nb=G.geraete.filter(g=>g.status!=='bereit').length, fa=G.geraete.filter(g=>g.pruefNaechste && g.pruefNaechste<=bald).length;
+  const akt=G.geraete.filter(g=>!g.ausgesondert), nAus=G.geraete.length-akt.length;
+  const nb=akt.filter(g=>g.status!=='bereit').length, fa=akt.filter(g=>g.pruefNaechste && g.pruefNaechste<=bald).length;
   const gruppen=new Map(); l.forEach(g=>{ const k=g.vid||''; if(!gruppen.has(k)) gruppen.set(k,[]); gruppen.get(k).push(g); });
-  const ohneFilter=!DB.gq && !DB.gst && !DB.gfaellig && !DB.gau;
+  const ohneFilter=!DB.gq && !DB.gst && !DB.gfaellig && !DB.gau && !DB.gnb && !DB.gleih && !DB.ghb && !DB.grep;
+  const nF=[DB.gfz,DB.gst,DB.gau,DB.gfaellig,DB.gnb,DB.gleih,DB.ghb,DB.grep].filter(Boolean).length;
   const reihen=[...G.fahrzeuge.map(f=>f.id).filter(id=>gruppen.has(id) || (ohneFilter && (DB.gfz===id || (!DB.gfz && (G.fahrzeuge.find(f=>f.id===id)||{}).fz)))), ...(gruppen.has('')?['']:[])];
   const offen=(G.meldungen||[]).filter(m=>!m.erledigt);
-  const typBadge = m => m.typ==='verbrauch' ? '<span class="dbst bald">📦 nachfüllen</span>' : m.typ==='check' ? '<span class="dbst nein">✅ Check offen</span>' : m.typ==='beladung' ? '<span class="dbst nein">🔍 Beladung</span>' : '<span class="dbst '+(m.ausserBetrieb?'nein':'bald')+'">'+(m.ausserBetrieb?'⛔ außer Betrieb':'⚠ funktioniert noch')+'</span>';
-  const typText = m => m.typ==='verbrauch' ? (m.posten||[]).map(p=>(p.menge?p.menge+'× ':'')+p.name).join(', ')+(m.text?' – '+m.text:'') : m.typ==='check' ? 'Offen: '+(m.offen||[]).join(', ')+(m.text?' – '+m.text:'') : m.typ==='beladung' ? (m.maengel||[]).map(x=>x.bez+': '+(x.st==='fehlt'?'fehlt':'defekt')).join(' · ')+(m.text?' – '+m.text:'') : m.text;
-  const meldHTML = offen.length ? '<div class="panel" style="border-color:var(--red);margin-bottom:10px"><b>🔧 Meldungen aus der Fahrzeug-App ('+offen.length+')</b>'+offen.map(m=>'<div style="border-top:1px solid var(--line);padding:8px 0;margin-top:6px"><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">'+typBadge(m)+'<b>'+esc(m.was)+'</b><span class="hint">'+esc(m.fz)+' · '+new Date(m.t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(m.einsatzNr?' · im Einsatz '+esc(m.einsatzNr):'')+'</span></div><div style="margin:4px 0">'+esc(typText(m))+'</div>'+
+  const typBadge = m => m.fehlt ? '<span class="dbst nein">📦 fehlt</span>' : m.typ==='verbrauch' ? '<span class="dbst bald">📦 nachfüllen</span>' : m.typ==='check' ? '<span class="dbst nein">✅ Check offen</span>' : m.typ==='beladung' ? '<span class="dbst nein">🔍 Beladung</span>' : '<span class="dbst '+(m.ausserBetrieb?'nein':'bald')+'">'+(m.ausserBetrieb?'⛔ außer Betrieb':'⚠ funktioniert noch')+'</span>';
+  const typText = m => m.fehlt ? ('Fehlt – nachbestücken'+(m.text?': '+m.text:'')) : m.typ==='verbrauch' ? (m.posten||[]).map(p=>(p.menge?p.menge+'× ':'')+p.name).join(', ')+(m.text?' – '+m.text:'') : m.typ==='check' ? 'Offen: '+(m.offen||[]).join(', ')+(m.text?' – '+m.text:'') : m.typ==='beladung' ? (m.maengel||[]).map(x=>x.bez+': '+(x.st==='fehlt'?'fehlt':'defekt')).join(' · ')+(m.text?' – '+m.text:'') : m.text;
+  const meldEin = m => '<div style="border-top:1px solid var(--line);padding:8px 0;margin-top:6px"><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">'+typBadge(m)+'<b>'+esc(m.was)+'</b><span class="hint">'+esc(m.fz)+' · '+new Date(m.t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(m.einsatzNr?' · im Einsatz '+esc(m.einsatzNr):'')+'</span></div><div style="margin:4px 0">'+esc(typText(m))+'</div>'+
     ((m.bilder||[]).length?'<div class="row" style="gap:6px">'+m.bilder.map(b=>'<img data-smbild="'+esc(b)+'" alt="Foto" style="height:80px;border-radius:8px;border:1px solid var(--line);cursor:zoom-in">').join('')+'</div>':'')+
-    '<div class="row" style="gap:6px;margin-top:6px">'+(m.geraetId&&G.geraete.some(g=>g.id===m.geraetId)?'<button type="button" class="btn small" data-gdb="auf" data-id="'+esc(m.geraetId)+'">Gerät öffnen</button>':'')+'<button type="button" class="btn small primary" data-gdb="merl" data-id="'+esc(m.id)+'">✓ Erledigt …</button></div></div>').join('')+'</div>' : '';
-  return meldHTML+'<div class="dbsum"><span><b>'+G.geraete.length+'</b> Geräte</span><span class="nein"><b>'+nb+'</b> nicht einsatzbereit</span><span class="bald"><b>'+fa+'</b> Prüfung fällig (7 Tage)</span></div>'+
+    '<div class="row" style="gap:6px;margin-top:6px">'+(m.geraetId&&G.geraete.some(g=>g.id===m.geraetId)?'<button type="button" class="btn small" data-gdb="auf" data-id="'+esc(m.geraetId)+'">Gerät öffnen</button>':'')+'<button type="button" class="btn small primary" data-gdb="merl" data-id="'+esc(m.id)+'">✓ Erledigt …</button></div></div>';
+  /* ab 5.21: gleiche Geräte (gleiche Meldung) zusammenfassen, Block einklappbar */
+  const mGr=new Map(); offen.forEach(m=>{ const k=(!m.typ||m.typ==='mangel')?['m',m.fehlt?1:0,m.ausserBetrieb?1:0,String(m.was||'').trim().toLowerCase()].join('|'):m.id; if(!mGr.has(k)) mGr.set(k,[]); mGr.get(k).push(m); });
+  const mGrHTML = xs => xs.length===1 ? meldEin(xs[0]) : '<div class="gd-mgr" style="border-top:1px solid var(--line);padding:8px 0;margin-top:6px"><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">'+typBadge(xs[0])+'<b>'+esc(xs[0].was)+'</b><span class="dbst bald">×'+xs.length+'</span><span class="hint">'+esc([...new Set(xs.map(m=>m.fz))].join(', '))+'</span></div>'+
+    xs.map(m=>'<div class="gd-mgr-z"><span class="hint">'+esc(m.fz)+' · '+new Date(m.t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</span> '+esc(typText(m))+((m.bilder||[]).length?'<div class="row" style="gap:6px">'+m.bilder.map(b=>'<img data-smbild="'+esc(b)+'" alt="Foto" style="height:60px;border-radius:8px;border:1px solid var(--line);cursor:zoom-in">').join('')+'</div>':'')+'<div class="row" style="gap:6px;margin-top:4px">'+(m.geraetId&&G.geraete.some(g=>g.id===m.geraetId)?'<button type="button" class="btn small" data-gdb="auf" data-id="'+esc(m.geraetId)+'">Gerät öffnen</button>':'')+'<button type="button" class="btn small primary" data-gdb="merl" data-id="'+esc(m.id)+'">✓ Erledigt …</button></div></div>').join('')+'</div>';
+  const mOffen = DB.gmOffen!=null ? DB.gmOffen : offen.length<=3;
+  const meldHTML = offen.length ? '<details class="panel gd-meld" id="gdbMeldD" '+(mOffen?'open':'')+' style="border-color:var(--red);margin-bottom:10px"><summary><b>🔧 Meldungen aus der Fahrzeug-App ('+offen.length+')</b>'+(mGr.size<offen.length?' <span class="hint">· '+mGr.size+' verschiedene</span>':'')+'</summary>'+[...mGr.values()].map(mGrHTML).join('')+'</details>' : '';
+  /* ab 5.21: Startbereich „Heute zu tun“ */
+  const tz=[[akt.filter(g=>g.pruefNaechste && g.pruefNaechste<h).length,'nein','⏰','Prüfungen überfällig','faellig'],[akt.filter(g=>g.pruefNaechste && g.pruefNaechste>=h && g.pruefNaechste<=bald).length,'bald','📅','Prüfungen in 7 Tagen','faellig'],[akt.filter(g=>g.mangelFrist && g.status!=='bereit' && g.mangelFrist.bis<=bald).length,'nein','⚠','Mängel mit Frist','nb'],[nb,'nein','⛔','nicht einsatzbereit','nb'],[akt.filter(g=>g.ausgeliehen && g.ausgeliehen.bis && g.ausgeliehen.bis<h).length,'bald','⇢','Verleih überfällig','leih'],[akt.filter(g=>g.haltbar && g.haltbar<=gdbIn30()).length,akt.some(g=>g.haltbar && g.haltbar<h)?'nein':'bald','🧴','Haltbarkeit (30 Tage)','hb'],[akt.filter(gdbRepLang).length,'bald','🔧','zu lange in Reparatur','rep'],[offen.length,'nein','🔧','Meldungen offen','meld']].filter(x=>x[0]);
+  const heuteHTML = DB.gst==='_aus' ? '' : '<div class="panel gd-heute"><b>📌 Heute zu tun</b>'+(tz.length?tz.map(([n,c,ic,t,f])=>'<button type="button" class="gd-tz '+c+'" data-gdb="tz" data-f="'+f+'"><b>'+n+'</b> '+ic+' '+t+'</button>').join(''):'<span class="dbst ja">✓ Nichts offen – alles erledigt</span>')+'</div>';
+  return gdbOffBanner()+heuteHTML+meldHTML+'<div class="dbsum"><span><b>'+akt.length+'</b> Geräte</span>'+'</div>'+
     (!G.stand.aktiv?'<div class="calcbox">Die Ausrüstungsliste der Fahrzeuge ist noch nicht übernommen – Änderungen hier wirken erst auf die Fahrzeuge, wenn der Administrator die Datenbank aktiviert.</div>':'')+
-    '<div class="row" style="margin:8px 0;gap:6px;flex-wrap:wrap"><input class="inp" id="gdbQ" placeholder="Suchen: Bezeichnung, Inventar-Nr., Hersteller …" value="'+esc(DB.gq)+'" style="flex:1;min-width:200px">'+
+    '<div class="row" style="margin:8px 0;gap:6px;flex-wrap:wrap;align-items:flex-start"><input class="inp" id="gdbQ" placeholder="Suchen: Bezeichnung, Inventar-Nr., Hersteller …" value="'+esc(DB.gq)+'" style="flex:1;min-width:200px"><details class="gd-mehr" id="gdbFiltD" '+(DB.gfOffen?'open':'')+'><summary class="btn'+(nF?' primary':'')+'">⚙ Filter'+(nF?' ('+nF+')':'')+'</summary><div class="gd-menue">'+
       '<select class="inp" id="gdbFz" style="width:auto"><option value="">alle Fahrzeuge</option>'+G.fahrzeuge.map(f=>'<option value="'+esc(f.id)+'" '+(DB.gfz===f.id?'selected':'')+'>'+esc(f.funkrufname+' '+f.typ)+'</option>').join('')+'<option value="_lager" '+(DB.gfz==='_lager'?'selected':'')+'>Lager</option></select>'+
-      '<select class="inp" id="gdbSt" style="width:auto"><option value="">jeder Zustand</option>'+Object.entries(G.status).map(([k,t])=>'<option value="'+k+'" '+(DB.gst===k?'selected':'')+'>'+esc(t)+'</option>').join('')+'</select>'+
+      '<select class="inp" id="gdbSt" style="width:auto"><option value="">jeder Zustand</option>'+Object.entries(G.status).map(([k,t])=>'<option value="'+k+'" '+(DB.gst===k?'selected':'')+'>'+esc(t)+'</option>').join('')+(nAus?'<option value="_aus" '+(DB.gst==='_aus'?'selected':'')+'>🗄 ausgesondert ('+nAus+')</option>':'')+'</select>'+
       '<select class="inp" id="gdbAu" style="width:auto"><option value="">Standard und Zusatz</option><option value="standard" '+(DB.gau==='standard'?'selected':'')+'>nur Standardausrüstung</option><option value="zusatz" '+(DB.gau==='zusatz'?'selected':'')+'>nur Zusatzausstattung</option></select>'+
-      '<label class="chk"><input type="checkbox" id="gdbFa" '+(DB.gfaellig?'checked':'')+'> nur Prüfung fällig</label></div>'+
-    '<div class="row" style="margin:0 0 8px;gap:6px;flex-wrap:wrap"><button type="button" class="btn primary" data-gdb="neu">+ Gerät</button><button type="button" class="btn" data-gdb="live">📷 Etikett scannen</button><button type="button" class="btn ghost" data-gdb="scan">🖼 aus Foto</button><button type="button" class="btn ghost" data-gdb="woche">📋 Wochenüberblick</button><button type="button" class="btn" data-gdb="druck" '+(l.length?'':'disabled')+'>🖨 Etiketten ('+l.length+')</button><button type="button" class="btn ghost" data-gdb="listen">☰ Listen &amp; Prüfarten</button><button type="button" class="btn ghost" data-gdb="excel">📊 Excel</button></div>'+
+      '<label class="chk"><input type="checkbox" id="gdbFa" '+(DB.gfaellig?'checked':'')+'> nur Prüfung fällig</label>'+(DB.gnb?'<span class="dbst nein">nur nicht einsatzbereit</span>':'')+(DB.gleih?'<span class="dbst bald">nur Verleih überfällig</span>':'')+(DB.ghb?'<span class="dbst bald">nur Haltbarkeit</span>':'')+(DB.grep?'<span class="dbst bald">nur zu lange in Reparatur</span>':'')+(nF?'<button type="button" class="btn small ghost" data-gdb="fweg">✕ Filter zurücksetzen</button>':'')+'</div></details></div>'+
+    '<div class="row" style="margin:0 0 8px;gap:6px;flex-wrap:wrap"><button type="button" class="btn primary" data-gdb="neu">+ Gerät</button><button type="button" class="btn" data-gdb="stapel">✅ Prüfung im Stapel</button><button type="button" class="btn" data-gdb="raumpruef">🚒 Prüfen am Fahrzeug</button><button type="button" class="btn" data-gdb="live">📷 Etikett scannen</button><button type="button" class="btn" data-gdb="woist">📍 Wo ist …?</button><details class="gd-mehr" id="gdbMehrD"><summary class="btn ghost">⋯ Mehr</summary><div class="gd-menue"><button type="button" class="btn ghost" data-gdb="monat">🗓 Diesen Monat fällig</button><button type="button" class="btn ghost" data-gdb="monatmail">📧 Monatsliste an mich</button><button type="button" class="btn ghost" data-gdb="jahr">📊 Jahresbericht</button><button type="button" class="btn ghost" data-gdb="vorlagen">★ Gerätevorlagen</button><button type="button" class="btn ghost" data-gdb="begriffe">🔤 Einheitliche Begriffe'+(gdbAbweichend().length?' <span class="dbst bald">'+gdbAbweichend().length+'</span>':'')+'</button><button type="button" class="btn ghost" data-gdb="scan">🖼 aus Foto</button><button type="button" class="btn ghost" data-gdb="woche">📋 Wochenüberblick</button><button type="button" class="btn" data-gdb="druck" '+(l.length?'':'disabled')+'>🖨 Etiketten ('+l.length+')</button><button type="button" class="btn ghost" data-gdb="listen">☰ Listen &amp; Prüfarten</button><button type="button" class="btn ghost" data-gdb="excel">📊 Excel</button></div></details></div>'+
     (reihen.map(id=>{ const f=G.fahrzeuge.find(x=>x.id===id);
-      return '<div class="panel" style="padding:0;overflow:auto;margin-bottom:10px"><div style="padding:8px 12px;font-weight:700;background:var(--panel-2,rgba(0,0,0,.03))">'+(f?gdbFzAusHTML(f)+'🚒 '+esc(f.funkrufname)+' <span class="hint">'+esc(f.typ+' · '+f.wehr)+((G.beladung||{})[f.id]?' · Beladung geprüft '+dDe(new Date(G.beladung[f.id].t).toISOString().slice(0,10))+' ('+esc(G.beladung[f.id].von)+(G.beladung[f.id].maengel?', '+G.beladung[f.id].maengel+' Mängel':'')+')':' · Beladung noch nicht geprüft')+'</span>':'📦 Lager / ohne Fahrzeug')+'</div><table class="dbtab"><thead><tr><th>Gerät</th><th>Inv.-Nr.</th><th>Zustand</th><th>Nächste Prüfung</th><th></th></tr></thead><tbody>'+
-        (gruppen.get(id)||[]).map(g=>'<tr><td><b>'+esc(g.bez)+'</b>'+((+g.menge||1)>1?' <span class="hint">('+g.menge+'×)</span>':'')+((g.ausst||'zusatz')==='standard'?' <span class="gau-std" title="Standardausrüstung – nur in der Gerätedatenbank">Standard</span>':'')+(g.kat?'<div class="hint">'+esc(g.kat)+'</div>':'')+'</td><td class="mono">'+esc(g.inv||'')+'</td><td><span class="dbst '+(GDB_ST_CLS[g.status]||'')+'">'+esc(G.status[g.status]||g.status)+'</span>'+(g.ausgeliehen?'<div><span class="dbst bald">⇢ ausgeliehen an '+esc(g.ausgeliehen.an)+(g.ausgeliehen.bis?' bis '+dDe(g.ausgeliehen.bis):'')+'</span></div>':'')+'</td><td>'+gdbPruefHTML(g)+(g.pruefArt?'<div class="hint">'+esc(g.pruefArt)+'</div>':'')+'</td><td style="white-space:nowrap"><button type="button" class="btn small" data-gdb="auf" data-id="'+esc(g.id)+'">Öffnen</button></td></tr>').join('')+(gruppen.has(id)?'':'<tr><td colspan="5" class="hint">Keine Geräte auf diesem Fahrzeug erfasst.</td></tr>')+'</tbody></table></div>'; }).join('') || '<div class="panel hint">Keine Geräte'+(DB.gq||DB.gfz||DB.gst||DB.gfaellig?' für diesen Filter':'')+'.</div>');
+      const gl=gruppen.get(id)||[], nNb=gl.filter(g=>g.status!=='bereit').length, nFa=gl.filter(g=>g.pruefNaechste && g.pruefNaechste<=bald).length;
+      const auf = !ohneFilter || !!DB.gq || reihen.length===1 || gdbAufGet().includes(id||'_lager');
+      return '<div class="panel gd-fz'+(auf?' auf':'')+'" style="padding:0;margin-bottom:10px"><div class="gd-fzkopf" data-gdb="fzzu" data-id="'+esc(id||'_lager')+'" role="button" tabindex="0" aria-expanded="'+auf+'"><span class="gd-pfeil">'+(auf?'▾':'▸')+'</span>'+(f?gdbAmpelHTML(f)+'<b>🚒 '+esc(f.funkrufname)+'</b> <span class="hint">'+esc(f.typ+' · '+f.wehr+(f.baujahr?' · Bj. '+f.baujahr:''))+'</span>':'<b>📦 Lager / ohne Fahrzeug</b>')+' <span class="gd-anz">'+gl.length+(gl.length===1?' Gerät':' Geräte')+'</span>'+(nNb?'<span class="dbst nein">'+nNb+' nicht bereit</span>':'')+(nFa?'<span class="dbst bald">'+nFa+' Prüfung fällig</span>':'')+(f?gdbFzAusHTML(f):'')+'</div>'+
+        '<div class="gd-fzinhalt">'+(f?'<div class="hint" style="padding:4px 12px">'+((G.beladung||{})[f.id]?'Beladung geprüft '+dDe(new Date(G.beladung[f.id].t).toISOString().slice(0,10))+' ('+esc(G.beladung[f.id].von)+(G.beladung[f.id].maengel?', '+G.beladung[f.id].maengel+' Mängel':'')+')':'Beladung noch nicht geprüft')+'</div>':'')+'<div style="overflow:auto"><table class="dbtab"><thead><tr><th>Gerät</th><th>Inv.-Nr.</th><th>Zustand</th><th>Nächste Prüfung</th><th></th></tr></thead><tbody>'+
+        (gruppen.get(id)||[]).slice().sort((a,b)=>String(a.raum||'~').localeCompare(String(b.raum||'~'),'de',{numeric:true})||String(a.bez).localeCompare(b.bez,'de',{numeric:true})).map(g=>'<tr><td>'+(g.raum?'<span class="gd-raum">'+esc(g.raum)+'</span> ':'')+'<b>'+esc(g.bez)+'</b>'+((+g.menge||1)>1?' <span class="hint">('+g.menge+'×)</span>':'')+((g.ausst||'zusatz')==='standard'?' <span class="gau-std" title="Standardausrüstung – nur in der Gerätedatenbank">Standard</span>':'')+(g.kat?'<div class="hint">'+esc(g.kat)+'</div>':'')+'</td><td class="mono">'+esc(g.inv||'')+'</td><td><span class="dbst '+(GDB_ST_CLS[g.status]||'')+'">'+esc(G.status[g.status]||g.status)+'</span>'+(g.mangelFrist&&g.status!=='bereit'?'<div class="hint" style="color:'+(g.mangelFrist.bis<gdbHeute()?'var(--red)':'inherit')+'">⏰ beheben bis '+dDe(g.mangelFrist.bis)+'</div>':'')+(g.reparatur&&g.status!=='bereit'?'<div><span class="dbst '+(gdbRepLang(g)?'nein':'bald')+'">🔧 '+esc(GDB_REP[g.reparatur.stufe]||'')+(g.reparatur.werkstatt?' · '+esc(g.reparatur.werkstatt):'')+'</span></div>':'')+(g.haltbar&&g.haltbar<=gdbIn30()?'<div><span class="dbst '+(g.haltbar<gdbHeute()?'nein':'bald')+'">🧴 haltbar bis '+dDe(g.haltbar)+'</span></div>':'')+(g.ausgeliehen?'<div><span class="dbst bald">⇢ ausgeliehen an '+esc(g.ausgeliehen.an)+(g.ausgeliehen.bis?' bis '+dDe(g.ausgeliehen.bis):'')+'</span></div>':'')+'</td><td>'+gdbPruefHTML(g)+(g.pruefArt?'<div class="hint">'+esc(g.pruefArt)+'</div>':'')+'</td><td style="white-space:nowrap"><button type="button" class="btn small" data-gdb="auf" data-id="'+esc(g.id)+'">Öffnen</button></td></tr>').join('')+(gruppen.has(id)?'':'<tr><td colspan="5" class="hint">Keine Geräte auf diesem Fahrzeug erfasst.</td></tr>')+'</tbody></table></div></div></div>'; }).join('') || '<div class="panel hint">Keine Geräte'+(DB.gq||DB.gfz||DB.gst||DB.gfaellig?' für diesen Filter':'')+'.</div>');
 }
-async function gdbNeuLaden(){ try{ DB.gdb=await dbApi('GET','/gdb/daten'); }catch(e){ toast(e.message); } renderDb(); }
+async function gdbNeuLaden(){
+  try{ DB.gdb=await dbApi('GET','/gdb/daten'); try{ localStorage.setItem('asue.gdbCache', JSON.stringify({t:Date.now(), d:DB.gdb})); }catch(e){} gdbOffSenden(); }
+  catch(e){ if(!e.status){ try{ const c=JSON.parse(localStorage.getItem('asue.gdbCache')||'null'); if(c && c.d){ DB.gdb={...c.d, offlineSeit:c.t}; toast('📴 Offline – Stand vom '+new Date(c.t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'. Prüfungen werden gespeichert und später gesendet.'); } }catch(x){} } else toast(e.message); }
+  renderDb(); }
 const GDB_BESTAND=[['b','B-Schläuche','Stück'],['c','C-Schläuche','Stück'],['d','D-Schläuche','Stück'],['wasser','Wasser im Tank','Liter'],['schaum','Schaummittel','Liter'],['agt','AGT-Geräte','Stück']];
+/* ab 5.19: Kalender der Gerätedatenbank je Ortswehr – Prüftermine, Fahrzeugfristen, eigene Fristen; Abo für Apple/Google */
+const GKAL_ART={haltbar:['🧴','Haltbarkeit'],rep:['🔧','Zurück aus Werkstatt'],mangel:['⚠','Mangel beheben'],geraete:['🧰','Geräteprüfung'],fz:['🚒','Fahrzeugfrist'],frist:['📌','Frist'],ausser:['🔧','Außer Dienst']};
+async function gkalLaden(wehr){
+  try{ DB.gkal={...(DB.gkal||{}), laden:true}; const d=await dbApi('GET','/gdb/kalender'+(wehr||(DB.gkal&&DB.gkal.wehr)?'?wehr='+encodeURIComponent(wehr||DB.gkal.wehr):'')); DB.gkal={...d, filter:(DB.gkal||{}).filter||''}; }
+  catch(e){ DB.gkal={fehler:e.message}; }
+  if(DB.sub==='gkal') renderDb();
+}
+function gkalHTML(){
+  const K=DB.gkal; if(!K||K.laden&&!K.termine) return '<div class="panel">Kalender wird geladen …</div>'; if(K.fehler) return '<div class="err">'+esc(K.fehler)+'</div>';
+  const heute=new Date().toLocaleDateString('sv-SE'); const f=K.filter||'';
+  const l=(K.termine||[]).filter(x=>!f||x.art===f);
+  const ueber=l.filter(x=>x.ueber), kommend=l.filter(x=>!x.ueber);
+  const tagTxt=d=>{ const x=new Date(d+'T12:00:00'); return '<div class="gk-tag"><b>'+x.getDate()+'</b><small>'+x.toLocaleDateString('de-DE',{weekday:'short'})+'</small></div>'; };
+  const bis=d=>{ const n=Math.round((new Date(d+'T12:00:00')-new Date(heute+'T12:00:00'))/864e5); return n===0?'heute':n===1?'morgen':n<0?'seit '+(-n)+' Tagen':'in '+n+' Tagen'; };
+  const zeile=x=>{ const a=GKAL_ART[x.art]||['📅',x.art]; return '<div class="gk-z'+(x.ueber?' ueber':'')+(x.datum===heute?' heute':'')+'"'+(x.gid?' data-gdb="auf" data-id="'+esc(x.gid)+'" role="button" tabindex="0"':'')+'>'+tagTxt(x.datum)+'<div class="gk-t"><b>'+esc(String(x.titel).replace(/^⚠ überfällig: /,''))+'</b><div class="hint">'+a[0]+' '+esc(a[1])+(x.text?' · '+esc(x.text):'')+'</div></div><span class="gk-bis">'+bis(x.datum)+'</span></div>'; };
+  const monate=new Map(); kommend.forEach(x=>{ const m=x.datum.slice(0,7); if(!monate.has(m)) monate.set(m,[]); monate.get(m).push(x); });
+  const L=K.links||{};
+  return '<div class="panel" style="display:grid;gap:10px">'+
+    '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><b style="font-size:18px">📅 Fristen und Termine</b>'+((K.wehren||[]).length>1?'<select class="inp" id="gkW" style="width:auto">'+K.wehren.map(w=>'<option '+(w===K.wehr?'selected':'')+'>'+esc(w)+'</option>').join('')+'</select>':'<span class="hint">Ortswehr '+esc(K.wehr||'')+'</span>')+'<span class="spacer"></span>'+
+      '<select class="inp" id="gkF" style="width:auto"><option value="">alle Arten</option>'+Object.entries(GKAL_ART).map(([k,v])=>'<option value="'+k+'" '+(f===k?'selected':'')+'>'+v[0]+' '+v[1]+'</option>').join('')+'</select></div>'+
+    '<details class="gk-abo"><summary><b>📲 In Apple- oder Google-Kalender übernehmen</b> <span class="hint">– aktualisiert sich von selbst</span></summary><div style="display:grid;gap:8px;margin-top:8px">'+
+      (L.oeffentlich?'':'<div class="calcbox">Hinweis: Für Google und für Handys außerhalb des Feuerwehr-WLANs braucht der Pi eine öffentliche https-Adresse (Verwaltung → Einstellungen → Fahrzeug-App → Externe Adresse, z. B. Tailscale Funnel). Ohne sie funktioniert das Abo nur im eigenen Netz; „.ics herunterladen“ geht immer.</div>')+
+      '<div class="row" style="gap:6px;flex-wrap:wrap"><a class="btn primary" href="'+esc(L.webcal||'#')+'">🍎 Apple-Kalender abonnieren</a><a class="btn" href="'+esc(L.google||'#')+'" target="_blank" rel="noopener">📅 Google Kalender</a><button type="button" class="btn" data-gk="kopie">🔗 Link kopieren</button><a class="btn" href="'+esc(L.download||'#')+'">⬇ .ics herunterladen</a><button type="button" class="btn ghost" data-gk="neu">Neuer Link</button></div>'+
+      '<input class="inp mono" readonly value="'+esc(L.https||'')+'" id="gkLink" style="font-size:12px">'+
+      '<div class="hint"><b>iPhone/iPad/Mac:</b> „Apple-Kalender abonnieren“ antippen → „Abonnieren“. <b>Google:</b> „Google Kalender“ öffnet calendar.google.com → „Hinzufügen“ (oder dort Einstellungen → Kalender hinzufügen → Per URL, Link einfügen). <b>Outlook:</b> Kalender hinzufügen → Aus dem Internet → Link einfügen. Erinnerung jeweils 7 Tage vorher. „Neuer Link“ macht den alten ungültig (z. B. wenn er weitergegeben wurde).</div></div></details>'+
+    (ueber.length?'<div class="gk-gr ueber"><h3>⚠ Überfällig ('+ueber.length+')</h3>'+ueber.map(zeile).join('')+'</div>':'')+
+    ([...monate.entries()].map(([m,xs])=>'<div class="gk-gr"><h3>'+new Date(m+'-15T12:00:00').toLocaleDateString('de-DE',{month:'long',year:'numeric'})+' <span class="hint">('+xs.length+')</span></h3>'+xs.map(zeile).join('')+'</div>').join('')||(ueber.length?'':'<div class="hint">Keine Fristen und Termine erfasst – Prüftermine kommen aus den Geräten (Prüfart, Intervall), Fahrzeugfristen aus „Fahrtenbuch &amp; Fristen“.</div>'))+
+  '</div>';
+}
+/* ===== ab 5.23: Prüfen am Fahrzeug, Haltbarkeit, Reparaturstufen, Prüfnachweis, Vorlagen, Wo ist …?, Monatsliste, Jahresbericht ===== */
+const GDB_REP={gemeldet:'Reparatur gemeldet', werkstatt:'in der Werkstatt', ersatzteil:'Ersatzteil bestellt'};
+const gdbIn30=()=>new Date(Date.now()+30*864e5).toISOString().slice(0,10);
+function gdbRepLang(g){ const r=g&&g.reparatur; if(!r || g.status==='bereit' || g.ausgesondert) return false; if(r.bis) return r.bis<gdbHeute(); return Date.now()-(r.ab||r.seit||Date.now())>28*864e5; }
+function gdbOrt(g){ const G=DB.gdb; if(g.ausgesondert) return '🗄 ausgesondert am '+dDe(g.ausgesondert.d); const t=[]; t.push(g.vid?'🚒 '+gdbFzName(g.vid)+(g.raum?' · '+g.raum:''):'📦 Lager'+(g.raum?' · '+g.raum:'')); if(g.ausgeliehen) t.push('⇢ ausgeliehen an '+g.ausgeliehen.an+(g.ausgeliehen.bis?' bis '+dDe(g.ausgeliehen.bis):'')); if(g.reparatur&&g.status!=='bereit') t.push('🔧 '+(GDB_REP[g.reparatur.stufe]||'')+(g.reparatur.werkstatt?' – '+g.reparatur.werkstatt:'')); if(g.status!=='bereit') t.push((G.status||{})[g.status]||g.status); return t.join(' · '); }
+/* 2 · Prüfen am Fahrzeug, Geräteraum für Geräteraum */
+function gdbRaumPruefDlg(vid0){
+  const G=DB.gdb; const fzs=G.fahrzeuge.filter(f=>gdbNichtAus().some(g=>g.vid===f.id));
+  const S={vid:vid0||((fzs[0]||{}).id||''), raum:'', datum:gdbHeute(), pruefer:(G.konto&&G.konto.name)||'', e:{}};
+  const zeichne=()=>{
+    const ger=gdbNichtAus().filter(g=>g.vid===S.vid); const raeume=[...new Set(ger.map(g=>g.raum||''))].sort((a,b)=>String(a||'~').localeCompare(String(b||'~'),'de',{numeric:true}));
+    if(S.raum && !raeume.includes(S.raum)) S.raum='';
+    const l=ger.filter(g=>!S.raum || (g.raum||'')===S.raum).sort((a,b)=>String(a.raum||'~').localeCompare(String(b.raum||'~'),'de',{numeric:true})||String(a.bez).localeCompare(b.bez,'de',{numeric:true}));
+    const n=Object.values(S.e).filter(x=>x.ergebnis).length;
+    openDlg('<div class="dlg-head"><h2>🚒 Prüfen am Fahrzeug</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div><div class="dlg-body" style="display:grid;gap:10px">'+
+      '<div class="fgrid"><label class="f">Fahrzeug<select class="inp" id="rpF">'+fzs.map(f=>'<option value="'+esc(f.id)+'" '+(f.id===S.vid?'selected':'')+'>'+esc(f.funkrufname+' '+f.typ)+'</option>').join('')+'</select></label><label class="f">Datum<input class="inp" type="date" id="rpD" value="'+S.datum+'"></label><label class="f">Prüfer<input class="inp" id="rpP" value="'+esc(S.pruefer)+'" data-nosave="1"></label></div>'+
+      '<div class="gd-raeume">'+['',...raeume.filter(r=>r)].map(r=>'<button type="button" class="gd-tz'+(S.raum===r?' akt':'')+'" data-rr="'+esc(r)+'">'+(r?esc(r):'alle Räume')+' <b>'+ger.filter(g=>!r||(g.raum||'')===r).length+'</b></button>').join('')+(raeume.includes('')&&raeume.length>1?'<span class="hint">(ohne Raum: unter „alle“)</span>':'')+'</div>'+
+      '<div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn small" id="rpAlle">✓ alle sichtbaren i. O.</button><span class="hint">Nur angetippte Geräte werden gespeichert. Nicht zutreffendes einfach offen lassen.</span></div>'+
+      '<div class="gd-rp-liste">'+(l.map(g=>{ const x=S.e[g.id]||{}; return '<div class="gd-rp'+(x.ergebnis==='ok'?' ok':x.ergebnis==='mangel'?' mg':'')+'"><div class="gd-rp-t">'+(g.raum?'<span class="gd-raum">'+esc(g.raum)+'</span> ':'')+'<b>'+esc(g.bez)+'</b>'+((+g.menge||1)>1?' <span class="hint">('+g.menge+'×)</span>':'')+'<div class="hint">'+esc([g.inv?'Inv. '+g.inv:'', g.pruefArt, g.pruefNaechste?'fällig '+dDe(g.pruefNaechste):''].filter(Boolean).join(' · '))+'</div>'+(x.ergebnis==='mangel'?'<input class="inp" data-rpt="'+esc(g.id)+'" data-nosave="1" placeholder="Was ist defekt?" value="'+esc(x.text||'')+'">':'')+'</div><div class="gd-rp-k"><button type="button" class="btn small'+(x.ergebnis==='ok'?' gruen':'')+'" data-rpe="ok" data-id="'+esc(g.id)+'">✓ i. O.</button><button type="button" class="btn small'+(x.ergebnis==='mangel'?' danger':'')+'" data-rpe="mangel" data-id="'+esc(g.id)+'">⚠ Mangel</button></div></div>'; }).join('')||'<div class="hint">Keine Geräte auf diesem Fahrzeug.</div>')+'</div>'+
+      '</div><div class="dlg-foot"><span class="hint">'+n+' geprüft · '+Object.values(S.e).filter(x=>x.ergebnis==='mangel').length+' mit Mangel</span><span class="spacer"></span><button type="button" class="btn primary" id="rpOk" '+(n?'':'disabled')+'>'+n+' Prüfungen speichern</button></div>');
+    const merke=()=>{ S.datum=$('#rpD').value; S.pruefer=$('#rpP').value; };
+    $('#rpF').onchange=()=>{ merke(); S.vid=$('#rpF').value; S.raum=''; zeichne(); };
+    dlg.querySelectorAll('[data-rr]').forEach(x=>x.onclick=()=>{ merke(); S.raum=x.dataset.rr; zeichne(); });
+    dlg.querySelectorAll('[data-rpe]').forEach(x=>x.onclick=()=>{ merke(); const id=x.dataset.id, alt=S.e[id]||{}; S.e[id]= alt.ergebnis===x.dataset.rpe ? {} : {...alt, ergebnis:x.dataset.rpe}; zeichne(); });
+    dlg.querySelectorAll('[data-rpt]').forEach(x=>x.oninput=()=>{ S.e[x.dataset.rpt]={...(S.e[x.dataset.rpt]||{}), text:x.value}; });
+    $('#rpAlle').onclick=()=>{ merke(); l.forEach(g=>{ if(!(S.e[g.id]||{}).ergebnis) S.e[g.id]={ergebnis:'ok'}; }); zeichne(); };
+    $('#rpOk').onclick=async()=>{ merke(); const f=G.fahrzeuge.find(x=>x.id===S.vid)||{}; const eintraege=Object.entries(S.e).filter(([,x])=>x.ergebnis).map(([id,x])=>({id, ergebnis:x.ergebnis, text:x.text||''}));
+      const r=await gdbSendenOderMerken('/gdb/stapel', {datum:S.datum, pruefart:'Prüfung am Fahrzeug '+(f.funkrufname||'')+(S.raum?' · '+S.raum:''), pruefer:S.pruefer, eintraege}, 'Prüfung am Fahrzeug ('+eintraege.length+')'); if(!r) return;
+      closeDlg(); toast('Gespeichert: '+eintraege.length+' Prüfungen'); if(r.protokoll) gdbStapelDruck(r.protokoll); gdbNeuLaden(); };
+  };
+  if(!fzs.length){ toast('Noch keine Geräte auf Fahrzeugen erfasst.'); return; }
+  zeichne();
+}
+/* 4 · Prüfnachweis je Gerät */
+async function gdbPruefnachweis(id){
+  let x; try{ x=await dbApi('GET','/gdb/lebenslauf/'+encodeURIComponent(id)); }catch(e){ toast(e.message); return; }
+  const g=x.geraet, dd=d=>d?String(d).split('-').reverse().join('.'):'–';
+  const pr=(g.historie||[]).filter(h=>h.art==='pruefung').sort((a,b)=>String(a.datum||'').localeCompare(String(b.datum||''))||a.t-b.t);
+  const prot=Object.fromEntries((x.protokolle||[]).map(p=>[p.id,p]));
+  gdbDruck('Prüfnachweis '+g.bez, '<h1>Prüfnachweis</h1><div style="font-size:13pt;font-weight:bold;margin-bottom:3mm">'+esc(g.bez)+'</div>'+
+    '<table><tr><td class="k">Inventar-Nr.</td><td>'+esc(g.inv||'–')+'</td><td class="k">Serien-Nr.</td><td>'+esc(g.serien||'–')+'</td></tr><tr><td class="k">Hersteller / Typ</td><td>'+esc([g.hersteller,g.typ].filter(Boolean).join(' / ')||'–')+'</td><td class="k">Standort</td><td>'+esc((g.fz||'Lager')+(g.raum?' · '+g.raum:''))+' · Ortswehr '+esc(g.wehr)+'</td></tr>'+
+    '<tr><td class="k">Prüfart</td><td>'+esc(g.pruefArt||'–')+'</td><td class="k">Prüfintervall</td><td>'+(g.pruefMonate?'alle '+g.pruefMonate+' Monate':'ohne festes Intervall')+'</td></tr><tr><td class="k">Letzte Prüfung</td><td>'+dd(g.pruefLetzte)+'</td><td class="k">Nächste Prüfung</td><td><b>'+dd(g.pruefNaechste)+'</b></td></tr>'+(g.haltbar?'<tr><td class="k">Haltbar bis</td><td colspan="3">'+dd(g.haltbar)+'</td></tr>':'')+'</table>'+
+    '<h2>Durchgeführte Prüfungen ('+pr.length+')</h2><table><tr><th style="width:22mm">Datum</th><th>Prüfung / Bemerkung</th><th style="width:22mm">Ergebnis</th><th style="width:36mm">Prüfer</th><th style="width:24mm">Protokoll</th></tr>'+(pr.map(h=>{ const p=h.prot&&prot[h.prot]; return '<tr><td>'+dd(h.datum||new Date(h.t).toISOString().slice(0,10))+'</td><td>'+esc(h.text||'')+'</td><td'+(h.ergebnis==='mangel'?' class="rot">Mangel':'>ohne Mängel')+'</td><td>'+esc((p&&p.pruefer)||h.von||'')+'</td><td class="klein">'+(p?esc(p.id)+(p.liste?' · '+esc(p.liste):''):h.stapel?'Sammelprotokoll':'–')+'</td></tr>'; }).join('')||'<tr><td colspan="5">Noch keine Prüfung eingetragen.</td></tr>')+'</table>'+
+    '<p class="klein">Die Prüfungen wurden von befähigten Personen der Feuerwehr durchgeführt und in der Gerätedatenbank dokumentiert. Einzelprotokolle mit Unterschrift sind in der Gerätedatenbank abrufbar.</p><table><tr><td class="k">Ort, Datum</td><td style="height:12mm"></td><td class="k">Unterschrift Gerätewart</td><td></td></tr></table>');
+}
+/* 13 · Wo ist …? */
+function gdbWoIstDlg(){
+  const G=DB.gdb; let q='';
+  const zeig=()=>{ const t=q.trim().toLowerCase(); const l=t?G.geraete.filter(g=>[g.bez,g.inv,g.serien,g.kat,g.hersteller,g.typ].join(' ').toLowerCase().includes(t)).slice(0,60):[];
+    const host=$('#woL'); if(!host) return;
+    host.innerHTML=t?(l.map(g=>'<div class="gk-z" data-gdb="auf" data-id="'+esc(g.id)+'" role="button" tabindex="0"><div class="gk-t"><b>'+esc(g.bez)+'</b>'+(g.inv?' <span class="hint mono">'+esc(g.inv)+'</span>':'')+'<div>'+esc(gdbOrt(g))+'</div><div class="hint">Ortswehr '+esc(g.wehr)+'</div></div></div>').join('')||'<div class="hint">Nichts gefunden.</div>'):'<div class="hint">Bezeichnung, Inventar- oder Serien-Nr. eingeben.</div>'; };
+  openDlg('<div class="dlg-head"><h2>📍 Wo ist …?</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body" style="display:grid;gap:10px"><input class="inp" id="woQ" placeholder="z. B. Wärmebildkamera, L-012 …" data-nosave="1" autocomplete="off"><div id="woL" style="display:grid;gap:6px"></div><p class="hint" style="margin:0">Zeigt Fahrzeug und Geräteraum, Lager, Ausleihe, Werkstatt und Zustand – über alle eigenen Ortswehren.</p></div>');
+  $('#woQ').oninput=()=>{ q=$('#woQ').value; zeig(); }; zeig(); setTimeout(()=>{ const i=$('#woQ'); if(i) i.focus(); }, 50);
+}
+/* ab 5.24: einheitliche Begriffe */
+const gdbBegNorm=t=>String(t||'').toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss').replace(/schl(ae|a)uche?/g,'schlauch').replace(/[\s\-_.,/()]+/g,'');
+function gdbAbweichend(){ const G=DB.gdb; if(!G||!G.begriffe) return []; const ok=new Set(G.begriffe.map(x=>x.name)); const m=new Map(); G.geraete.filter(g=>!g.ausgesondert && !ok.has(g.bez)).forEach(g=>{ const e=m.get(g.bez)||{bez:g.bez, n:0, wehren:new Set()}; e.n++; e.wehren.add(g.wehr); m.set(g.bez,e); }); return [...m.values()].sort((a,b)=>b.n-a.n||a.bez.localeCompare(b.bez,'de')); }
+function gdbBegriffVorschlag(t){ const n=gdbBegNorm(t); const l=DB.gdb.begriffe||[]; const hit=l.find(x=>[x.name,...(x.alias||[])].some(a=>gdbBegNorm(a)===n)); if(hit) return hit.name; const teil=l.filter(x=>[x.name,...(x.alias||[])].some(a=>{ const k=gdbBegNorm(a); return k.length>3 && (n.includes(k)||k.includes(n)); })); return teil.length?teil[0].name:''; }
+function gdbBegriffeDlg(){
+  const G=DB.gdb; const ab=gdbAbweichend(); const anz=new Map(); G.geraete.filter(g=>!g.ausgesondert).forEach(g=>anz.set(g.bez,(anz.get(g.bez)||0)+1));
+  const opt=sel=>'<option value="">– Begriff wählen –</option>'+G.begriffe.map(x=>'<option '+(x.name===sel?'selected':'')+'>'+esc(x.name)+'</option>').join('');
+  openDlg('<div class="dlg-head"><h2>🔤 Einheitliche Begriffe</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body" style="display:grid;gap:12px">'+
+    '<p class="hint" style="margin:0">Alle Ortswehren verwenden dieselben Bezeichnungen – so steht in der Einsatzverwaltung überall das Gleiche (z. B. immer „Wärmebildkamera“, nie „WBK“). Andere Schreibweisen werden beim Anlegen automatisch angeglichen; unbekannte Begriffe gibt es nur nach Rückfrage.</p>'+
+    (ab.length?'<div class="panel" style="border-color:var(--amber)"><b>⚠ Abweichende Bezeichnungen ('+ab.length+')</b><div class="hint">Diese Geräte heißen noch anders. Begriff wählen und „Umstellen“ – die alte Schreibweise wird gemerkt und künftig automatisch angeglichen.</div><table class="dbtab" style="margin-top:6px"><tbody>'+ab.map((x,i)=>'<tr><td><b>'+esc(x.bez)+'</b><div class="hint">'+x.n+' Gerät'+(x.n>1?'e':'')+' · '+esc([...x.wehren].join(', '))+'</div></td><td><select class="inp" data-abs="'+i+'">'+opt(gdbBegriffVorschlag(x.bez))+'</select></td><td style="white-space:nowrap"><button type="button" class="btn small primary" data-abu="'+i+'">Umstellen</button> <button type="button" class="btn small ghost" data-abn="'+i+'" title="So wie geschrieben als neuen Begriff aufnehmen">+ als Begriff</button></td></tr>').join('')+'</tbody></table></div>':'<div class="calcbox">✓ Alle Geräte verwenden einheitliche Begriffe.</div>')+
+    '<div class="row" style="gap:6px;flex-wrap:wrap"><input class="inp" id="beN" placeholder="Neuer Begriff, z. B. Rettungsplattform" data-nosave="1" style="flex:1;min-width:200px"><button type="button" class="btn" id="beAdd">+ Begriff aufnehmen</button><input class="inp" id="beQ" placeholder="🔍 in der Liste suchen" data-nosave="1" style="flex:1;min-width:160px"></div>'+
+    '<table class="dbtab"><thead><tr><th>Begriff</th><th>andere Schreibweisen (werden angeglichen)</th><th>Geräte</th><th></th></tr></thead><tbody id="beT">'+G.begriffe.map((x,i)=>'<tr data-beq="'+esc((x.name+' '+(x.alias||[]).join(' ')).toLowerCase())+'"><td><b>'+esc(x.name)+'</b></td><td><input class="inp" data-bal="'+i+'" value="'+esc((x.alias||[]).join(', '))+'" data-nosave="1" placeholder="–" style="min-width:160px"></td><td>'+(anz.get(x.name)||'')+'</td><td><button type="button" class="btn small ghost" data-bweg="'+i+'" title="Begriff löschen">✕</button></td></tr>').join('')+'</tbody></table></div>'+
+    '<div class="dlg-foot">'+(G.begriffeStd?'':'')+'<span class="hint">'+G.begriffe.length+' Begriffe</span><span class="spacer"></span></div>');
+  const neu=async r=>{ if(r && r.begriffe){ DB.gdb.begriffe=r.begriffe; } await gdbNeuLaden(); gdbBegriffeDlg(); };
+  dlg.querySelectorAll('[data-abu]').forEach(b=>b.onclick=async()=>{ const x=ab[+b.dataset.abu], ziel=dlg.querySelector('[data-abs="'+b.dataset.abu+'"]').value; if(!ziel){ toast('Bitte einen Begriff wählen.'); return; } try{ const r=await dbApi('POST','/gdb/begriffe',{aktion:'vereinheitlichen', name:ziel, von:[x.bez]}); toast(r.n+' Gerät(e) → „'+ziel+'“'); neu(r); }catch(e){ toast(e.message); } });
+  dlg.querySelectorAll('[data-abn]').forEach(b=>b.onclick=async()=>{ const x=ab[+b.dataset.abn]; try{ const r=await dbApi('POST','/gdb/begriffe',{aktion:'neu', name:x.bez}); toast('Aufgenommen: '+x.bez); neu(r); }catch(e){ toast(e.message); } });
+  $('#beAdd').onclick=async()=>{ const n=$('#beN').value.trim(); if(!n) return; try{ const r=await dbApi('POST','/gdb/begriffe',{aktion:'neu', name:n}); toast('Aufgenommen: '+n); neu(r); }catch(e){ toast(e.message); } };
+  $('#beQ').oninput=()=>{ const q=$('#beQ').value.trim().toLowerCase(); dlg.querySelectorAll('[data-beq]').forEach(z=>{ z.hidden=!!q && !z.dataset.beq.includes(q); }); };
+  dlg.querySelectorAll('[data-bal]').forEach(i=>i.onchange=async()=>{ const x=G.begriffe[+i.dataset.bal]; try{ const r=await dbApi('POST','/gdb/begriffe',{aktion:'alias', name:x.name, alias:i.value}); DB.gdb.begriffe=r.begriffe; toast('Schreibweisen gespeichert'); }catch(e){ toast(e.message); } });
+  dlg.querySelectorAll('[data-bweg]').forEach(b=>b.onclick=async()=>{ const x=G.begriffe[+b.dataset.bweg]; if(!confirm('Begriff „'+x.name+'“ löschen? Vorhandene Geräte behalten ihre Bezeichnung.')) return; try{ neu(await dbApi('POST','/gdb/begriffe',{aktion:'loeschen', name:x.name})); }catch(e){ toast(e.message); } });
+}
+/* 11 · Vorlagen verwalten */
+function gdbVorlagenDlg(){
+  const G=DB.gdb; const l=G.vorlagen||[];
+  openDlg('<div class="dlg-head"><h2>★ Gerätevorlagen</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body" style="display:grid;gap:8px"><p class="hint" style="margin:0">Bei „+ Gerät“ oben „Aus Vorlage“ wählen – Bezeichnung, Kategorie, Prüfart, Intervall, Ausstattung und Haltbarkeit sind dann ausgefüllt. Neue Vorlage: ein Gerät öffnen → Stammdaten → „★ Als Vorlage speichern“.'+(G.vorlagenStd?' Derzeit die Vorgabe.':'')+'</p>'+
+    '<table class="dbtab"><thead><tr><th>Vorlage</th><th>Prüfart</th><th>Intervall</th><th>Haltbar</th><th></th></tr></thead><tbody>'+l.map(v=>'<tr><td><b>'+esc(v.name)+'</b><div class="hint">'+esc([v.kat,(v.ausst==='zusatz'?'Zusatz':'Standard')].filter(Boolean).join(' · '))+'</div></td><td>'+esc(v.pruefArt||'–')+'</td><td>'+(v.pruefMonate?v.pruefMonate+' Mon.':'–')+'</td><td>'+(v.haltbarMonate?v.haltbarMonate+' Mon.':'–')+'</td><td><button type="button" class="btn small ghost" data-vweg="'+esc(v.name)+'">✕</button></td></tr>').join('')+'</tbody></table></div>'+
+    '<div class="dlg-foot">'+(G.vorlagenStd?'':'<button type="button" class="btn ghost" id="voStd">Auf Vorgabe zurücksetzen</button>')+'<span class="spacer"></span><button type="button" class="btn primary" data-gdb="neu">+ Gerät aus Vorlage</button></div>');
+  dlg.querySelectorAll('[data-vweg]').forEach(b=>b.onclick=async()=>{ if(!confirm('Vorlage „'+b.dataset.vweg+'“ löschen?')) return; try{ const r=await dbApi('POST','/gdb/vorlagen',{aktion:'loeschen', name:b.dataset.vweg}); DB.gdb.vorlagen=r.vorlagen; DB.gdb.vorlagenStd=false; gdbVorlagenDlg(); }catch(e){ toast(e.message); } });
+  const st=$('#voStd'); if(st) st.onclick=async()=>{ try{ const r=await dbApi('POST','/gdb/vorlagen',{aktion:'standard', name:'x'}); DB.gdb.vorlagen=r.vorlagen; DB.gdb.vorlagenStd=true; gdbVorlagenDlg(); }catch(e){ toast(e.message); } };
+}
+/* 1 · Monatsliste */
+async function gdbMonatsliste(senden){
+  try{
+    if(senden){ const r=await dbApi('POST','/gdb/monatsliste',{senden:true}); toast('Monatsliste ('+r.n+' Einträge) an '+r.an+' gesendet'); return; }
+    const r=await dbApi('POST','/gdb/monatsliste',{}); const dd=d=>d.split('-').reverse().join('.');
+    const monat=new Date(r.ende+'T12:00:00').toLocaleDateString('de-DE',{month:'long',year:'numeric'}); const wehren=[...new Set(r.zeilen.map(z=>z.wehr))];
+    gdbDruck('Diesen Monat fällig – '+monat, '<h1>Diesen Monat fällig – '+esc(monat)+'</h1><p class="klein">Prüfungen und Haltbarkeiten bis '+dd(r.ende)+', rot = bereits überfällig. Sortiert nach Fahrzeug und Geräteraum.</p>'+(r.zeilen.length?wehren.map(w=>'<h2>Ortswehr '+esc(w)+'</h2><table><tr><th style="width:7mm">✓</th><th>Fahrzeug</th><th>Raum</th><th>Gerät</th><th>Inv.-Nr.</th><th>Was</th><th>fällig</th></tr>'+r.zeilen.filter(z=>z.wehr===w).map(z=>'<tr'+(z.ueber?' class="rot"':'')+'><td>☐</td><td>'+esc(z.fz)+'</td><td>'+esc(z.raum)+'</td><td>'+esc(z.bez)+'</td><td>'+esc(z.inv)+'</td><td>'+esc(z.was)+'</td><td>'+dd(z.datum)+'</td></tr>').join('')+'</table>').join(''):'<p><b>Diesen Monat ist nichts fällig.</b></p>'));
+  }catch(e){ toast(e.message); }
+}
+/* 14 · Jahresbericht */
+async function gdbJahresbericht(){
+  const j=prompt('Jahresbericht für welches Jahr?', String(new Date().getFullYear())); if(!j) return;
+  let r; try{ r=await dbApi('GET','/gdb/jahresbericht?jahr='+encodeURIComponent(j.trim())); }catch(e){ toast(e.message); return; }
+  const W=r.wehren; const sum=k=>W.reduce((n,w)=>n+(+w[k]||0),0);
+  const zeile=(t,k,f)=>'<tr><td>'+t+'</td>'+W.map(w=>'<td style="text-align:right">'+(f?f(w):w[k])+'</td>').join('')+(W.length>1?'<td style="text-align:right"><b>'+(f?'':sum(k))+'</b></td>':'')+'</tr>';
+  gdbDruck('Jahresbericht Geräte '+r.jahr, '<h1>Jahresbericht Gerätewesen '+esc(r.jahr)+'</h1><p>'+esc(W.map(w=>'Ortswehr '+w.wehr).join(' · '))+'</p>'+
+    '<h2>Kennzahlen</h2><table><tr><th style="width:60%"></th>'+W.map(w=>'<th style="text-align:right">'+esc(w.wehr)+'</th>').join('')+(W.length>1?'<th style="text-align:right">Gesamt</th>':'')+'</tr>'+
+    zeile('Geräte im Bestand','geraete')+zeile('Fahrzeuge mit Geräten','fahrzeuge')+zeile('Neu angelegt','neu')+zeile('Prüfungen durchgeführt','pruefungen')+zeile('davon mit Mangel','pruefungenMangel')+
+    zeile('Prüfquote (Geräte mit Intervall geprüft)','quote',w=>w.quote==null?'–':w.quote+' % ('+w.geprueft+'/'+w.mitIntervall+')')+zeile('Mängel gemeldet','maengel')+zeile('Reparaturen abgeschlossen','reparaturen')+zeile('Meldungen aus der Fahrzeug-App','meldungen')+zeile('Ausleihen','ausleihen')+zeile('Aussonderungen','aussonderungen',w=>w.aussonderungen.length)+zeile('Prüfungen derzeit überfällig','ueberfaellig')+'</table>'+
+    W.map(w=>(w.maengelNachKat.length||w.aussonderungen.length)?'<h2>Ortswehr '+esc(w.wehr)+'</h2>'+(w.maengelNachKat.length?'<p><b>Mängel nach Kategorie:</b> '+w.maengelNachKat.map(([k,n])=>esc(k)+' '+n+'×').join(' · ')+'</p>':'')+(w.aussonderungen.length?'<table><tr><th>Ausgesondert</th><th>Inv.-Nr.</th><th>Datum</th><th>Grund</th></tr>'+w.aussonderungen.map(a=>'<tr><td>'+esc(a.bez)+'</td><td>'+esc(a.inv)+'</td><td>'+dDe(a.d)+'</td><td>'+esc(a.grund)+'</td></tr>').join('')+'</table>':''):'').join('')+
+    '<p class="klein">Erstellt von '+esc(r.von)+'. Grundlage: Verlauf der Geräte in der Gerätedatenbank.</p>');
+}
+/* ===== ab 5.20: Erweiterungen der Gerätedatenbank ===== */
+const GDB_RAEUME=['G1','G2','G3','G4','G5','G6','GR','Kabine','Mannschaftsraum','Pumpenraum','Dach','Heck','Anhänger'];
+const gdbNichtAus=()=>(DB.gdb&&DB.gdb.geraete||[]).filter(g=>!g.ausgesondert);
+const AMPEL={gruen:['🟢','einsatzbereit'],gelb:['🟡','Hinweise'],rot:['🔴','nicht vollständig einsatzbereit']};
+function gdbAmpelHTML(f){ const a=f&&f.ampel; if(!a) return ''; const x=AMPEL[a.farbe]||AMPEL.gruen; return '<span class="gd-ampel '+a.farbe+'" title="'+esc(x[1]+(a.gruende.length?': '+a.gruende.join(' · '):''))+'">'+x[0]+'</span> '; }
+function gdbDruck(titel, body){
+  const w=window.open('', '_blank'); if(!w){ toast('Bitte Pop-ups für diese Seite erlauben.'); return; }
+  w.document.open(); w.document.write('<!doctype html><html lang="de"><head><meta charset="utf-8"><title>'+esc(titel)+'</title><style>body{font-family:Arial,sans-serif;font-size:10.5pt;margin:14mm;color:#000}h1{font-size:17pt;margin:0 0 2mm}h2{font-size:13pt;margin:6mm 0 2mm;border-bottom:1.5pt solid #B3121F;padding-bottom:1mm}table{width:100%;border-collapse:collapse;margin:2mm 0 4mm}th,td{border:0.6pt solid #999;padding:1.4mm 2mm;text-align:left;vertical-align:top}th{background:#eee;font-size:9pt}.k{width:38mm;color:#444}.rot{color:#B3121F;font-weight:bold}.gelb{color:#8a5a00;font-weight:bold}.klein{font-size:8.5pt;color:#555}img.f{height:32mm;margin:1mm 2mm 0 0;border:0.5pt solid #999}@media print{.nd{display:none}body{margin:0}}.dr-kopf{display:flex;align-items:center;gap:3mm;border-bottom:1.5pt solid #B3121F;padding-bottom:2mm;margin-bottom:4mm}.dr-kopf img{width:9mm;height:12mm;object-fit:contain}.dr-kopf b{display:block;font-size:11pt}.dr-kopf span{font-size:8.5pt;color:#555}.dr-kopf .dr-titel{margin-left:auto;text-align:right;color:#000}@page{margin:14mm 12mm 16mm;@bottom-left{content:"Gerätedatenbank · gedruckt '+new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+'";font:8pt Arial,sans-serif;color:#555}@bottom-right{content:"Seite " counter(page) " von " counter(pages);font:8pt Arial,sans-serif;color:#555}}</style></head><body><button class="nd" onclick="print()" style="float:right;padding:8px 14px;font-size:14px">🖨 Drucken / als PDF speichern</button>'+(()=>{ const im=document.querySelector('img.wappen'); const wl=(DB.gdb&&DB.gdb.konto&&DB.gdb.konto.wehren||[]).join(', '); return '<div class="dr-kopf">'+(im&&im.src?'<img src="'+im.src+'" alt="">':'')+'<div><b>Feuerwehr '+esc(wl||'')+'</b><span>Gerätedatenbank</span></div><span class="dr-titel">'+esc(titel)+'</span></div>'; })()+body+'<p class="klein">Erstellt mit der Gerätedatenbank der Einsatzverwaltung am '+new Date().toLocaleString('de-DE')+'</p></body></html>'); w.document.close();
+}
+async function gdbBildDataUrl(name){ try{ const r=await fetch(dbBase()+'/gdb/bild/'+encodeURIComponent(name),{headers:{'X-AGW-Token':DB.token}}); if(!r.ok) return ''; const b=await r.blob(); return await new Promise(ok=>{ const fr=new FileReader(); fr.onload=()=>ok(fr.result); fr.onerror=()=>ok(''); fr.readAsDataURL(b); }); }catch(e){ return ''; } }
+function gdbVerkleinern(file, max, q){ return new Promise((ok, nein)=>{ const img=new Image(); const u=URL.createObjectURL(file); img.onload=()=>{ const sc=Math.min(1, max/Math.max(img.width, img.height)); const c=document.createElement('canvas'); c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc); c.getContext('2d').drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(u); c.toBlob(b=>b?ok(b):nein(new Error('Foto')), 'image/jpeg', q); }; img.onerror=()=>{ URL.revokeObjectURL(u); nein(new Error('Foto')); }; img.src=u; }); }
+/* 11 · Gerätelebenslauf */
+async function gdbLebenslauf(id){
+  let x; try{ x=await dbApi('GET','/gdb/lebenslauf/'+encodeURIComponent(id)); }catch(e){ toast(e.message); return; }
+  const g=x.geraet, dd=d=>d?String(d).split('-').reverse().join('.'):'–', dt=t=>new Date(t).toLocaleDateString('de-DE');
+  const histArt={angelegt:'angelegt', pruefung:'Prüfung', mangel:'Mangel', reparatur:'Reparatur', status:'Zustand', umsetzen:'Standort', notiz:'Notiz'};
+  const bilder={}; for(const h of (g.historie||[])) for(const b of (h.bilder||[])) bilder[b]=await gdbBildDataUrl(b);
+  const hist=(g.historie||[]).slice().sort((a,b)=>a.t-b.t);
+  gdbDruck('Gerätelebenslauf '+g.bez, '<h1>Gerätelebenslauf</h1><div style="font-size:13pt;font-weight:bold;margin-bottom:3mm">'+esc(g.bez)+'</div>'+
+    '<table><tr><td class="k">Inventar-Nr.</td><td>'+esc(g.inv||'–')+'</td><td class="k">Serien-Nr.</td><td>'+esc(g.serien||'–')+'</td></tr><tr><td class="k">Hersteller / Typ</td><td>'+esc([g.hersteller,g.typ].filter(Boolean).join(' / ')||'–')+'</td><td class="k">Kategorie</td><td>'+esc(g.kat||'–')+'</td></tr>'+
+    '<tr><td class="k">Ortswehr</td><td>'+esc(g.wehr)+'</td><td class="k">Standort</td><td>'+esc(g.fz||'Lager')+(g.raum?' · '+esc(g.raum):'')+'</td></tr><tr><td class="k">Zustand</td><td>'+esc((x.status||{})[g.status]||g.status)+(g.ausgesondert?' <span class="rot">– ausgesondert am '+dd(g.ausgesondert.d)+': '+esc(g.ausgesondert.grund)+'</span>':'')+'</td><td class="k">Ausstattung</td><td>'+((g.ausst||'zusatz')==='standard'?'Standardausrüstung':'Zusatzausstattung')+'</td></tr>'+
+    '<tr><td class="k">Prüfart / Intervall</td><td>'+esc(g.pruefArt||'–')+(g.pruefMonate?' · alle '+g.pruefMonate+' Monate':'')+'</td><td class="k">Letzte / nächste Prüfung</td><td>'+dd(g.pruefLetzte)+' / '+dd(g.pruefNaechste)+'</td></tr><tr><td class="k">Angelegt</td><td colspan="3">'+(g.angelegt?dt(g.angelegt):'–')+'</td></tr></table>'+
+    '<h2>Verlauf ('+hist.length+')</h2><table><tr><th style="width:24mm">Datum</th><th style="width:24mm">Art</th><th>Eintrag</th><th style="width:34mm">von</th></tr>'+hist.map(h=>'<tr><td>'+dt(h.t)+'</td><td>'+esc(histArt[h.art]||h.art)+'</td><td'+(h.art==='mangel'?' class="rot"':'')+'>'+esc(h.text||'')+((h.bilder||[]).length?'<div>'+h.bilder.map(b=>bilder[b]?'<img class="f" src="'+bilder[b]+'">':'').join('')+'</div>':'')+'</td><td>'+esc(h.von||'')+'</td></tr>').join('')+'</table>'+
+    (x.protokolle.length?'<h2>Prüfprotokolle ('+x.protokolle.length+')</h2><table><tr><th>Datum</th><th>Prüfliste</th><th>Ergebnis</th><th>Prüfer</th><th>Protokoll</th></tr>'+x.protokolle.map(p=>'<tr><td>'+dd(p.datum)+'</td><td>'+esc(p.liste||'')+'</td><td>'+(p.ok?'ohne Mängel':'<span class="rot">Mängel</span>')+'</td><td>'+esc(p.pruefer)+'</td><td class="klein">'+esc(p.id)+'</td></tr>').join('')+'</table>':'')+
+    (x.meldungen.length?'<h2>Meldungen aus der Fahrzeug-App ('+x.meldungen.length+')</h2><table><tr><th>Datum</th><th>Fahrzeug</th><th>Meldung</th><th>Erledigt</th></tr>'+x.meldungen.map(m=>'<tr><td>'+dt(m.t)+'</td><td>'+esc(m.fz)+(m.einsatzNr?'<div class="klein">Einsatz '+esc(m.einsatzNr)+'</div>':'')+'</td><td>'+esc(m.text||'')+(m.ausser?' <span class="rot">(außer Betrieb)</span>':'')+'</td><td>'+(m.erledigt?dt(m.erledigt.t)+' '+esc(m.erledigt.von||''):'offen')+'</td></tr>').join('')+'</table>':''));
+}
+/* 5 · Beladeplan nach Geräteraum */
+function gdbBeladeplan(vid){
+  const G=DB.gdb, f=G.fahrzeuge.find(x=>x.id===vid)||{}; const ger=gdbNichtAus().filter(g=>g.vid===vid);
+  const raeume=new Map(); ger.forEach(g=>{ const r=g.raum||'ohne Geräteraum'; if(!raeume.has(r)) raeume.set(r,[]); raeume.get(r).push(g); });
+  const ord=r=>{ const i=GDB_RAEUME.indexOf(r); return i<0?(r==='ohne Geräteraum'?999:500):i; };
+  const bst=f.bestand||{}; const bt=GDB_BESTAND.filter(([k])=>+bst[k]>0).map(([k,t,e])=>'<tr><td>'+esc(t)+'</td><td>'+(+bst[k]).toLocaleString('de-DE')+' '+e+'</td></tr>').join('');
+  gdbDruck('Beladeplan '+(f.funkrufname||''), '<h1>Beladeplan '+esc(f.funkrufname||'')+'</h1><div>'+esc([f.typ,f.wehr,f.kennzeichen,f.baujahr?'Baujahr '+f.baujahr:''].filter(Boolean).join(' · '))+'</div>'+
+    (bt?'<h2>Schläuche, Wasser, Schaum, AGT</h2><table>'+bt+'</table>':'')+
+    [...raeume.entries()].sort((a,b)=>ord(a[0])-ord(b[0])||a[0].localeCompare(b[0],'de',{numeric:true})).map(([r,l])=>'<h2>'+esc(r)+' <span class="klein">('+l.length+')</span></h2><table><tr><th style="width:8mm">✓</th><th>Gerät</th><th style="width:16mm">Anzahl</th><th style="width:28mm">Inv.-Nr.</th><th style="width:28mm">Nächste Prüfung</th></tr>'+l.sort((a,b)=>String(a.bez).localeCompare(b.bez,'de',{numeric:true})).map(g=>'<tr><td>☐</td><td>'+esc(g.bez)+(g.status!=='bereit'?' <span class="rot">('+esc(G.status[g.status]||g.status)+')</span>':'')+'</td><td>'+(+g.menge||1)+'</td><td>'+esc(g.inv||'')+'</td><td>'+(g.pruefNaechste?g.pruefNaechste.split('-').reverse().join('.'):'–')+'</td></tr>').join('')+'</table>').join('')+
+    '<p class="klein">Zum Abhaken bei der Beladungskontrolle. Geräteraum je Gerät unter „Stammdaten“ eintragen.</p>');
+}
+/* 1 · Prüfung im Stapel */
+function gdbStapelDlg(){
+  const G=DB.gdb; const S={liste:[], datum:gdbHeute(), pruefart:''};
+  const finde=t=>{ t=String(t||'').trim(); if(!t) return null; const id=gdbIdAus(t)||t; return gdbNichtAus().find(g=>g.id===id || (g.inv && g.inv.toLowerCase()===t.toLowerCase())) || null; };
+  const dazu=t=>{ const g=finde(t); if(!g){ toast('Kein Gerät zu „'+t+'“ gefunden'); return; } if(S.liste.some(x=>x.id===g.id)){ toast(g.bez+' ist schon in der Liste'); return; } S.liste.push({id:g.id, ergebnis:'ok', text:''}); zeichne(); toast('✓ '+g.bez); };
+  const zeichne=()=>{
+    const z=S.liste.map((x,i)=>{ const g=G.geraete.find(y=>y.id===x.id)||{}; return '<tr><td><b>'+esc(g.bez)+'</b><div class="hint">'+esc([g.inv?'Inv. '+g.inv:'', gdbFzName(g.vid), g.pruefArt].filter(Boolean).join(' · '))+'</div></td><td><select class="inp" data-se="'+i+'" style="width:auto"><option value="ok" '+(x.ergebnis==='ok'?'selected':'')+'>i. O.</option><option value="mangel" '+(x.ergebnis==='mangel'?'selected':'')+'>Mangel</option></select></td><td><input class="inp" data-st="'+i+'" value="'+esc(x.text)+'" placeholder="Bemerkung" data-nosave="1"></td><td><button type="button" class="btn small ghost" data-sx="'+i+'">✕</button></td></tr>'; }).join('');
+    openDlg('<div class="dlg-head"><h2>✅ Prüfung im Stapel</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Abbrechen</button></div><div class="dlg-body" style="display:grid;gap:10px">'+
+      '<p class="hint" style="margin:0">Etikett scannen oder Inventar-Nr. eingeben – jedes Gerät kommt mit „i. O.“ in die Liste. Mängel umstellen, am Ende einmal speichern: alle Prüfungen werden eingetragen und es entsteht ein Sammelprotokoll.</p>'+
+      '<div class="fgrid"><label class="f">Datum<input class="inp" type="date" id="spD" value="'+S.datum+'"></label><label class="f">Prüfart (optional)<input class="inp" id="spA" list="spAL" value="'+esc(S.pruefart)+'" data-nosave="1" placeholder="z. B. Jahresprüfung Leinen"><datalist id="spAL">'+(G.pruefarten||[]).map(x=>'<option value="'+esc(x.name)+'">').join('')+'</datalist></label><label class="f">Prüfer<input class="inp" id="spP" value="'+esc(S.pruefer||(G.konto&&G.konto.name)||'')+'" data-nosave="1"></label></div>'+
+      '<div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn primary" id="spScan">📷 Etikett scannen</button><input class="inp mono" id="spNr" placeholder="Inventar-Nr. + Enter" data-nosave="1" style="flex:1;min-width:160px"><button type="button" class="btn" id="spAdd">Hinzufügen</button></div>'+
+      '<table class="dbtab"><thead><tr><th>Gerät ('+S.liste.length+')</th><th>Ergebnis</th><th>Bemerkung</th><th></th></tr></thead><tbody>'+(z||'<tr><td colspan="4" class="hint">Noch kein Gerät.</td></tr>')+'</tbody></table>'+
+      '</div><div class="dlg-foot"><span class="hint">'+S.liste.filter(x=>x.ergebnis==='mangel').length+' mit Mangel</span><span class="spacer"></span><button type="button" class="btn primary" id="spOk" '+(S.liste.length?'':'disabled')+'>Alle '+S.liste.length+' Prüfungen speichern</button></div>');
+    const merke=()=>{ S.datum=$('#spD').value; S.pruefart=$('#spA').value; S.pruefer=$('#spP').value; };
+    document.querySelectorAll('[data-se]').forEach(x=>x.onchange=()=>{ merke(); S.liste[+x.dataset.se].ergebnis=x.value; zeichne(); });
+    document.querySelectorAll('[data-st]').forEach(x=>x.oninput=()=>{ S.liste[+x.dataset.st].text=x.value; });
+    document.querySelectorAll('[data-sx]').forEach(x=>x.onclick=()=>{ merke(); S.liste.splice(+x.dataset.sx,1); zeichne(); });
+    $('#spAdd').onclick=()=>{ merke(); dazu($('#spNr').value); };
+    $('#spNr').onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); merke(); dazu($('#spNr').value); } };
+    $('#spScan').onclick=()=>{ merke(); if(typeof qrScanDialog!=='function'){ toast('Scannen nicht verfügbar'); return; } qrScanDialog('Etikett scannen', 'Kamera auf das QR-Etikett des Geräts halten. Danach öffnet sich die Liste wieder – für das nächste Gerät erneut „Etikett scannen“.', t=>{ if(!finde(t)) return false; setTimeout(()=>{ zeichne(); dazu(t); }, 80); return true; }); };
+    $('#spOk').onclick=async()=>{ merke(); const body={datum:S.datum, pruefart:S.pruefart, pruefer:S.pruefer, eintraege:S.liste};
+      const r=await gdbSendenOderMerken('/gdb/stapel', body, 'Stapelprüfung ('+S.liste.length+' Geräte)'); if(!r) return;
+      closeDlg(); toast('Gespeichert: '+S.liste.length+' Prüfungen'); if(r.protokoll) gdbStapelDruck(r.protokoll); gdbNeuLaden(); };
+    setTimeout(()=>{ const n=$('#spNr'); if(n) n.focus(); }, 50);
+  };
+  zeichne();
+}
+function gdbStapelDruck(p){
+  const dd=d=>d?d.split('-').reverse().join('.'):'–';
+  gdbDruck('Sammelprotokoll '+dd(p.datum), '<h1>Sammelprotokoll Geräteprüfung</h1><table><tr><td class="k">Datum</td><td>'+dd(p.datum)+'</td><td class="k">Prüfart</td><td>'+esc(p.pruefart||'–')+'</td></tr><tr><td class="k">Prüfer</td><td>'+esc(p.pruefer)+'</td><td class="k">Geräte</td><td>'+p.zeilen.length+' (davon '+p.zeilen.filter(z=>z.ergebnis==='mangel').length+' mit Mangel)</td></tr></table>'+
+    '<table><tr><th>Gerät</th><th>Inv.-Nr.</th><th>Standort</th><th>Ergebnis</th><th>Bemerkung</th><th>Nächste Prüfung</th></tr>'+p.zeilen.map(z=>'<tr><td>'+esc(z.bez)+'</td><td>'+esc(z.inv)+'</td><td>'+esc(z.fz)+'</td><td'+(z.ergebnis==='mangel'?' class="rot">Mangel':'>i. O.')+'</td><td>'+esc(z.text||'')+'</td><td>'+dd(z.naechste)+'</td></tr>').join('')+'</table>'+
+    '<table><tr><td class="k">Unterschrift Prüfer</td><td style="height:18mm"></td></tr></table><p class="klein">Protokoll '+esc(p.id)+'</p>');
+}
+/* 15 · Offline: Prüfungen merken und später senden */
+const GDB_OFF_KEY='asue.gdbOffline';
+const gdbOffListe=()=>{ try{ return JSON.parse(localStorage.getItem(GDB_OFF_KEY)||'[]'); }catch(e){ return []; } };
+const gdbOffSetzen=l=>{ try{ localStorage.setItem(GDB_OFF_KEY, JSON.stringify(l)); }catch(e){} };
+async function gdbSendenOderMerken(pfad, body, was){
+  try{ return await dbApi('POST', pfad, body); }
+  catch(err){ if(err && err.status){ toast(err.message); return null; }
+    const l=gdbOffListe(); l.push({pfad, body, was, t:Date.now()}); gdbOffSetzen(l); toast('📴 Keine Verbindung – „'+was+'“ ist gespeichert und wird automatisch nachgesendet.'); try{ renderDb(); }catch(e){} return {offline:true}; }
+}
+let gdbOffLaeuft=false;
+async function gdbOffSenden(){
+  if(gdbOffLaeuft || !DB.token) return; const l=gdbOffListe(); if(!l.length) return; gdbOffLaeuft=true; let n=0;
+  try{ while(true){ const a=gdbOffListe(); if(!a.length) break; const x=a[0]; try{ await dbApi('POST', x.pfad, x.body); n++; }catch(err){ if(err && err.status){ toast('Nachsenden abgelehnt: '+x.was+' – '+err.message); } else break; } gdbOffSetzen(gdbOffListe().slice(1)); } }
+  finally{ gdbOffLaeuft=false; }
+  if(n){ toast('📶 '+n+' gespeicherte Prüfung(en) nachgesendet'); try{ gdbNeuLaden(); }catch(e){} }
+}
+addEventListener('online', ()=>gdbOffSenden()); setInterval(()=>{ if(navigator.onLine!==false) gdbOffSenden(); }, 60000);
+function gdbOffBanner(){ const l=gdbOffListe(); return l.length?'<div class="calcbox" style="border-color:var(--amber)">📴 '+l.length+' Prüfung(en) ohne Verbindung gespeichert – werden automatisch gesendet, sobald der Pi erreichbar ist. <button type="button" class="btn small" data-gdb="offsend">Jetzt senden</button></div>':''; }
+/* 10 · Lager Verbrauchsmaterial */
+function glagerHTML(){
+  const G=DB.gdb; if(!G) return '<div class="panel hint">Gerätedatenbank nicht abrufbar.</div>';
+  const wehren=G.konto.wehren; const w=wehren.includes(DB.glw)?DB.glw:wehren[0]; DB.glw=w; const l=(G.lager||{})[w]||[];
+  const knapp=l.filter(x=>+x.bestand<+x.mindest);
+  return '<div class="panel" style="display:grid;gap:10px"><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><b style="font-size:18px">📦 Lager Verbrauchsmaterial</b>'+(wehren.length>1?'<select class="inp" id="glW" style="width:auto">'+wehren.map(x=>'<option '+(x===w?'selected':'')+'>'+esc(x)+'</option>').join('')+'</select>':'<span class="hint">Ortswehr '+esc(w)+'</span>')+'<span class="spacer"></span><button type="button" class="btn primary" data-gl="neu">+ Material</button></div>'+
+    (knapp.length?'<div class="calcbox" style="border-color:var(--red)">⚠ Unter Mindestbestand – nachbestellen: '+knapp.map(x=>'<b>'+esc(x.name)+'</b> ('+x.bestand+' / '+x.mindest+' '+esc(x.einheit)+')').join(', ')+'</div>':'')+
+    (l.length?'<table class="dbtab"><thead><tr><th>Material</th><th>Bestand</th><th>Mindestens</th><th></th></tr></thead><tbody>'+l.map(x=>'<tr'+(+x.bestand<+x.mindest?' style="background:var(--red-soft)"':'')+'><td><b>'+esc(x.name)+'</b><div class="hint">zuletzt '+new Date(x.t).toLocaleDateString('de-DE')+' · '+esc(x.von||'')+'</div></td><td style="white-space:nowrap"><button type="button" class="btn small" data-gl="minus" data-id="'+esc(x.id)+'">−</button> <b style="display:inline-block;min-width:3.5em;text-align:center">'+x.bestand+'</b> <button type="button" class="btn small" data-gl="plus" data-id="'+esc(x.id)+'">+</button> <span class="hint">'+esc(x.einheit)+'</span></td><td>'+x.mindest+' '+esc(x.einheit)+'</td><td><button type="button" class="btn small ghost" data-gl="bearb" data-id="'+esc(x.id)+'">Bearbeiten</button></td></tr>').join('')+'</tbody></table>'
+      :'<div class="hint">Noch kein Material erfasst. Vorschläge: Ölbindemittel (Sack), Schaummittel (Kanister), Einweghandschuhe (Packung), Absperrband (Rolle), Verbandmaterial.</div>')+
+    '<p class="hint" style="margin:0">Nur Mengen – keine Preise. Was unter den Mindestbestand fällt, steht im Wochenüberblick und in der Übersicht für den Gemeindebrandmeister.</p></div>';
+}
+function glagerDlg(x0){
+  const w=DB.glw; const x=x0||{name:'', einheit:'Stück', bestand:0, mindest:0};
+  openDlg('<div class="dlg-head"><h2>'+(x0?'Material bearbeiten':'+ Material')+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body"><div class="fgrid"><label class="f">Bezeichnung<input class="inp" id="glN" value="'+esc(x.name)+'" list="glNL" data-nosave="1"><datalist id="glNL">'+['Ölbindemittel','Schaummittel','Einweghandschuhe','Absperrband','Verbandmaterial','Rettungsdecken','Batterien','Kraftstoff Aggregate','Kabelbinder','Müllsäcke'].map(n=>'<option value="'+n+'">').join('')+'</datalist></label><label class="f">Einheit<input class="inp" id="glE" value="'+esc(x.einheit)+'" list="glEL" data-nosave="1"><datalist id="glEL">'+['Stück','Sack','Kanister','Liter','Packung','Rolle','Karton'].map(n=>'<option value="'+n+'">').join('')+'</datalist></label><label class="f">Bestand<input class="inp" type="number" min="0" step="0.5" id="glB" value="'+x.bestand+'"></label><label class="f">Mindestbestand<input class="inp" type="number" min="0" step="0.5" id="glM" value="'+x.mindest+'"></label></div></div>'+
+    '<div class="dlg-foot">'+(x0?'<button type="button" class="btn danger" id="glDel">Löschen</button>':'')+'<span class="spacer"></span><button type="button" class="btn primary" id="glOk">Speichern</button></div>');
+  $('#glOk').onclick=async()=>{ try{ const r=await dbApi('POST','/gdb/lager',{wehr:w, aktion:'setzen', id:x0&&x0.id, name:$('#glN').value, einheit:$('#glE').value, bestand:$('#glB').value, mindest:$('#glM').value}); DB.gdb.lager[w]=r.lager; closeDlg(); renderDb(); }catch(e){ toast(e.message); } };
+  const d=$('#glDel'); if(d) d.onclick=async()=>{ if(!confirm('„'+x0.name+'“ löschen?')) return; try{ const r=await dbApi('POST','/gdb/lager',{wehr:w, aktion:'loeschen', id:x0.id}); DB.gdb.lager[w]=r.lager; closeDlg(); renderDb(); }catch(e){ toast(e.message); } };
+}
+/* Übersicht für den Gemeindebrandmeister */
+async function guebLaden(){ try{ DB.gueb=await dbApi('GET','/gdb/uebersicht'); }catch(e){ DB.gueb={fehler:e.message}; } if(DB.sub==='guebers') renderDb(); }
+function guebInhalt(druck){
+  const U=DB.gueb; if(!U) return '<div class="panel">Übersicht wird geladen …</div>'; if(U.fehler) return '<div class="err">'+esc(U.fehler)+'</div>';
+  const sumB={}; let fzN=0, rot=0, gelb=0, ger=0, nb=0, ueb=0, f30=0;
+  U.wehren.forEach(w=>{ fzN+=w.fahrzeuge.length; w.fahrzeuge.forEach(f=>{ if(f.ampel.farbe==='rot') rot++; else if(f.ampel.farbe==='gelb') gelb++; }); ger+=w.material.geraete; nb+=w.material.nichtBereit; ueb+=w.material.ueberfaellig; f30+=w.material.faellig30; Object.entries(w.bestand).forEach(([k,n])=>sumB[k]=(sumB[k]||0)+n); });
+  const bName=Object.fromEntries(U.bestandNamen); const einh=k=>(k==='wasser'||k==='schaum')?' l':'';
+  const fmtB=b=>U.bestandNamen.filter(([k])=>+b[k]>0).map(([k,t])=>t.replace(/ \(.*\)/,'')+': '+(+b[k]).toLocaleString('de-DE')+einh(k)).join(' · ')||'–';
+  const amp=a=>({gruen:'🟢',gelb:'🟡',rot:'🔴'}[a.farbe]);
+  const dd=d=>d?d.split('-').reverse().join('.'):'–';
+  const kopf='<div class="dbsum"><span><b>'+U.wehren.length+'</b> Ortswehren</span><span><b>'+fzN+'</b> Fahrzeuge</span><span class="nein"><b>'+rot+'</b> 🔴</span><span class="bald"><b>'+gelb+'</b> 🟡</span><span><b>'+ger+'</b> Geräte</span><span class="nein"><b>'+nb+'</b> nicht einsatzbereit</span><span class="nein"><b>'+ueb+'</b> Prüfung überfällig</span><span class="bald"><b>'+f30+'</b> Prüfung in 30 Tagen</span></div>'+
+    '<div class="hint" style="margin:6px 0 10px"><b>Gemeinde gesamt:</b> '+esc(fmtB(sumB))+'</div>';
+  const teil=U.wehren.map(w=>'<div class="'+(druck?'':'panel ')+'gu-w"><h3 style="margin:0 0 6px">'+esc(w.wehr)+' <span class="hint">· '+w.fahrzeuge.length+' Fahrzeuge · '+w.material.geraete+' Geräte'+(w.schaeden?' · <span style="color:var(--red)">'+w.schaeden+' offene Meldungen</span>':'')+'</span></h3>'+
+    (w.fahrzeuge.length?'<table class="dbtab"><thead><tr><th></th><th>Fahrzeug</th><th>Baujahr</th><th>Nächste Frist</th><th>Beladung</th><th>Hinweise</th></tr></thead><tbody>'+w.fahrzeuge.map(f=>'<tr><td>'+amp(f.ampel)+'</td><td><b>'+esc(f.funkrufname)+'</b><div class="hint">'+esc([f.typ,f.kennzeichen].filter(Boolean).join(' · '))+(f.status==='6'?' · <b style="color:var(--red)">Status 6</b>':'')+'</div></td><td style="white-space:nowrap">'+(f.baujahr?f.baujahr+' <span class="hint">('+f.alter+' J.)</span>':'<span class="hint">–</span>')+'</td><td>'+(f.naechsteFrist?esc(f.naechsteFrist.name)+' '+dd(f.naechsteFrist.bis):'–')+'</td><td class="hint">'+esc(fmtB(f.bestand))+'</td><td class="hint">'+esc(f.ampel.gruende.slice(0,3).join(' · ')||'–')+(f.ampel.gruende.length>3?' …':'')+'</td></tr>').join('')+'</tbody></table>':'<div class="hint">Keine Fahrzeuge.</div>')+
+    '<div class="gu-mat"><span>🧰 <b>'+w.material.geraete+'</b> Geräte ('+w.material.zusatz+' Zusatz, '+w.material.standard+' Standard, '+w.material.lager+' im Lager)</span><span'+(w.material.nichtBereit?' class="nein"':'')+'><b>'+w.material.nichtBereit+'</b> nicht einsatzbereit'+(w.material.fehlt?' (davon '+w.material.fehlt+' fehlen)':'')+'</span><span'+(w.material.ueberfaellig?' class="nein"':'')+'><b>'+w.material.ueberfaellig+'</b> Prüfung überfällig</span><span><b>'+w.material.faellig30+'</b> Prüfung in 30 Tagen</span>'+(w.material.ausgeliehen?'<span><b>'+w.material.ausgeliehen+'</b> ausgeliehen</span>':'')+(w.material.ausgesondert?'<span><b>'+w.material.ausgesondert+'</b> dieses Jahr ausgesondert</span>':'')+'</div>'+
+    (w.lagerKnapp.length?'<div class="hint" style="color:var(--red)">📦 Unter Mindestbestand: '+w.lagerKnapp.map(x=>esc(x.name)+' ('+x.bestand+'/'+x.mindest+' '+esc(x.einheit)+')').join(', ')+'</div>':'')+
+    '</div>').join('');
+  return kopf+teil;
+}
+function guebHTML(){
+  return '<div class="row" style="gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap"><b style="font-size:18px">🏛 Übersicht Fahrzeuge und Material</b><span class="hint">für den Gemeindebrandmeister'+(DB.gueb&&DB.gueb.t?' · Stand '+new Date(DB.gueb.t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'')+'</span><span class="spacer"></span><button type="button" class="btn" data-gu="neu">↻ Aktualisieren</button><button type="button" class="btn primary" data-gu="druck">🖨 Drucken / PDF</button><button type="button" class="btn" data-gu="jahr">📊 Jahresbericht</button></div>'+
+    '<div class="hint" style="margin-bottom:8px">🟢 einsatzbereit · 🟡 Prüfung oder Frist bald fällig / überfällig · 🔴 Gerät defekt oder fehlt, Fahrzeug außer Dienst oder Frist überschritten</div>'+guebInhalt(false);
+}
+
 function gdbDlg(g0){
   const G=DB.gdb, neu=!g0, g=g0?JSON.parse(JSON.stringify(g0)):{bez:'', inv:'', kat:'', menge:1, hersteller:'', typ:'', serien:'', wehr:G.konto.wehren[0]||'', vid:DB.gfz&&DB.gfz!=='_lager'?DB.gfz:'', pruefArt:'', pruefMonate:12, pruefNaechste:'', notiz:'', status:'bereit', historie:[]};
   const fzOpt=(w,sel)=>'<option value="">Lager / ohne Fahrzeug</option>'+G.fahrzeuge.filter(f=>!w||f.wehr===w).map(f=>'<option value="'+esc(f.id)+'" '+(f.id===sel?'selected':'')+'>'+esc(f.funkrufname+' '+f.typ)+'</option>').join('');
   const histArt={angelegt:'➕', pruefung:'✅', mangel:'⚠', reparatur:'🔧', status:'●', umsetzen:'⇄', notiz:'✎'};
   openDlg('<div class="dlg-head"><h2>'+(neu?'Gerät anlegen':esc(g.bez))+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body" style="display:grid;gap:12px">'+
-    (neu?'':'<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><span class="dbst '+(GDB_ST_CLS[g.status]||'')+'" style="font-size:15px">'+esc(G.status[g.status])+'</span><span class="hint">'+esc(gdbFzName(g.vid))+(g.pruefLetzte?' · zuletzt geprüft '+dDe(g.pruefLetzte):'')+'</span></div>'+
-      '<div class="panel" style="display:grid;gap:8px"><b>Prüfung eintragen</b><div class="row" style="gap:8px;flex-wrap:wrap"><label class="f">Datum<input class="inp" type="date" id="gpD" value="'+gdbHeute()+'"></label><label class="f">Ergebnis<select class="inp" id="gpE"><option value="ok">ohne Mängel</option><option value="mangel">Mangel</option></select></label><label class="f" style="flex:1;min-width:180px">Bemerkung<input class="inp" id="gpT" data-nosave="1" placeholder="z. B. Sichtprüfung, Funktionsprüfung"></label></div><div class="row"><button type="button" class="btn primary" data-ga="pruefung">✅ Prüfung speichern</button><button type="button" class="btn" data-ga="protokoll">📝 Mit Prüfprotokoll + Unterschrift</button><span class="hint">'+(g.pruefMonate?'nächste Prüfung wird auf + '+g.pruefMonate+' Monate gesetzt':'ohne Intervall – nächste Prüfung unten von Hand setzen')+'</span></div></div>'+
-      '<div class="panel" style="display:grid;gap:8px"><b>Zustand und Standort</b><label class="f">Text (Mangel, Reparatur, Notiz)<input class="inp" id="gaT" data-nosave="1" placeholder="z. B. Hydraulikschlauch undicht"></label>'+
-        '<div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn" data-ga="mangel">⚠ Mangel melden (defekt)</button><button type="button" class="btn" data-ga="reparatur">🔧 Repariert – einsatzbereit</button><select class="inp" id="gaSt" style="width:auto">'+Object.entries(G.status).map(([k,t])=>'<option value="'+k+'" '+(k===g.status?'selected':'')+'>'+esc(t)+'</option>').join('')+'</select><button type="button" class="btn" data-ga="status">Zustand setzen</button><button type="button" class="btn ghost" data-ga="notiz">✎ Notiz</button></div>'+
+    (neu?'':(g.ausgesondert?'<div class="calcbox" style="border-color:var(--red)">🗄 <b>Ausgesondert</b> am '+dDe(g.ausgesondert.d)+' – '+esc(g.ausgesondert.grund)+' ('+esc(g.ausgesondert.von||'')+'). Das Gerät steht nur noch im Archiv.</div>':'')+'<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><span class="dbst '+(GDB_ST_CLS[g.status]||'')+'" style="font-size:15px">'+esc(G.status[g.status])+'</span><span class="hint">'+esc(gdbFzName(g.vid))+(g.pruefLetzte?' · zuletzt geprüft '+dDe(g.pruefLetzte):'')+'</span></div>'+
+      '<div class="gd-tabs" role="tablist">'+[['pruef','✅ Prüfen'],['mangel','⚠ Mangel · Zustand'],['ort','⇄ Standort · Verleih'],['stamm','📋 Stammdaten'],['verlauf','🕘 Verlauf ('+(g.historie||[]).length+')']].map(([k,t])=>'<button type="button" role="tab" data-gtab="'+k+'">'+t+'</button>').join('')+'</div>'+
+      '<div class="panel gd-pane" data-pane="pruef" style="display:grid;gap:8px"><b>Prüfung eintragen</b><div class="row" style="gap:8px;flex-wrap:wrap"><label class="f">Datum<input class="inp" type="date" id="gpD" value="'+gdbHeute()+'"></label><label class="f">Ergebnis<select class="inp" id="gpE"><option value="ok">ohne Mängel</option><option value="mangel">Mangel</option></select></label><label class="f" style="flex:1;min-width:180px">Bemerkung<input class="inp" id="gpT" data-nosave="1" placeholder="z. B. Sichtprüfung, Funktionsprüfung"></label></div><div class="row"><button type="button" class="btn primary" data-ga="pruefung">✅ Prüfung speichern</button><button type="button" class="btn" data-ga="protokoll">📝 Mit Prüfprotokoll + Unterschrift</button><span class="hint">'+(g.pruefMonate?'nächste Prüfung wird auf + '+g.pruefMonate+' Monate gesetzt':'ohne Intervall – nächste Prüfung unten von Hand setzen')+'</span></div></div>'+
+      '<div class="panel gd-pane" data-pane="mangel" style="display:grid;gap:8px"><b>Mangel und Zustand</b><label class="f">Text (Mangel, Reparatur, Notiz, Grund der Aussonderung)<input class="inp" id="gaT" data-nosave="1" placeholder="z. B. Hydraulikschlauch undicht"></label>'+
+        '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end"><label class="f" style="flex:0 0 auto">Mangel beheben bis (optional)<input class="inp" type="date" id="gaFr" value="'+esc((g.mangelFrist||{}).bis||'')+'"></label><label class="btn" style="cursor:pointer">📷 Foto zum Mangel<input type="file" accept="image/*" capture="environment" id="gaFoto" multiple hidden></label><span class="hint" id="gaFotoN"></span></div>'+
+        (g.mangelFrist&&g.status!=='bereit'?'<div class="hint" style="color:'+(g.mangelFrist.bis<gdbHeute()?'var(--red)':'var(--ink-2)')+'">⏰ Mangel beheben bis '+dDe(g.mangelFrist.bis)+' – '+esc(g.mangelFrist.text)+'</div>':'')+
+        '<div class="row" style="gap:6px;flex-wrap:wrap"><button type="button" class="btn" data-ga="mangel">⚠ Mangel melden (defekt)</button><button type="button" class="btn" data-ga="fehlt">📦 Fehlt</button><button type="button" class="btn" data-ga="reparatur">🔧 Repariert – einsatzbereit</button><select class="inp" id="gaSt" style="width:auto">'+Object.entries(G.status).map(([k,t])=>'<option value="'+k+'" '+(k===g.status?'selected':'')+'>'+esc(t)+'</option>').join('')+'</select><button type="button" class="btn" data-ga="status">Zustand setzen</button><button type="button" class="btn ghost" data-ga="notiz">✎ Notiz</button></div>'+
+        '<div class="gd-rep"><b>🔧 Reparatur</b>'+(g.reparatur&&g.status!=='bereit'?' <span class="dbst '+(gdbRepLang(g)?'nein':'bald')+'">'+esc(GDB_REP[g.reparatur.stufe]||'')+(g.reparatur.werkstatt?' · '+esc(g.reparatur.werkstatt):'')+' seit '+new Date(g.reparatur.seit).toLocaleDateString('de-DE')+(g.reparatur.bis?' · zurück bis '+dDe(g.reparatur.bis):'')+(gdbRepLang(g)?' – zu lange weg!':'')+'</span>':'')+
+          '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><select class="inp" id="gaRs" style="width:auto">'+Object.entries(GDB_REP).map(([k,t])=>'<option value="'+k+'" '+((g.reparatur||{}).stufe===k?'selected':'')+'>'+esc(t)+'</option>').join('')+'</select><input class="inp" id="gaRw" data-nosave="1" placeholder="Werkstatt / Firma" value="'+esc((g.reparatur||{}).werkstatt||'')+'" style="flex:1;min-width:150px"><label class="f" style="flex:0 0 auto">zurück bis<input class="inp" type="date" id="gaRb" value="'+esc((g.reparatur||{}).bis||'')+'"></label><button type="button" class="btn" data-ga="repstufe">Stufe setzen</button></div><div class="hint">Zurück und in Ordnung: „🔧 Repariert – einsatzbereit“. Ohne Datum gibt es nach 4 Wochen einen Hinweis.</div></div>'+
+        '</div><div class="panel gd-pane" data-pane="ort" style="display:grid;gap:8px"><b>Standort und Verleih</b>'+
         '<div class="row" style="gap:6px;flex-wrap:wrap"><select class="inp" id="gaFz" style="width:auto">'+fzOpt('', g.vid)+'</select><button type="button" class="btn" data-ga="umsetzen">⇄ Umsetzen</button></div>'+
         (g.ausgeliehen?'<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center"><span class="dbst bald">⇢ ausgeliehen an '+esc(g.ausgeliehen.an)+' seit '+new Date(g.ausgeliehen.seit).toLocaleDateString('de-DE')+(g.ausgeliehen.bis?' bis '+dDe(g.ausgeliehen.bis):'')+'</span><button type="button" class="btn" data-ga="rueckgabe">⇠ Zurück erhalten</button></div>'
           :'<div class="row" style="gap:6px;flex-wrap:wrap"><input class="inp" id="gaAn" list="gaAnL" data-nosave="1" placeholder="Ausleihen an (z. B. Ortswehr Grießem)" style="flex:1;min-width:180px"><datalist id="gaAnL">'+(G.alleWehren||G.konto.wehren).map(w=>'<option value="Ortswehr '+esc(w)+'">').join('')+'</datalist><input class="inp" type="date" id="gaBis" style="width:auto" title="voraussichtlich zurück"><button type="button" class="btn" data-ga="ausleihen">⇢ Ausleihen</button></div>')+'</div>')+
-    '<details '+(neu?'open':'')+'><summary><b>Stammdaten und Prüffrist</b></summary><div class="fgrid" style="margin-top:8px">'+
-      '<label class="f">Bezeichnung<input class="inp" id="gB" value="'+esc(g.bez)+'" data-nosave="1"></label><label class="f">Inventar-Nr.<input class="inp mono" id="gI" value="'+esc(g.inv||'')+'" data-nosave="1"></label>'+
+    '<div class="gd-pane" data-pane="stamm"><b>Stammdaten und Prüffrist</b><div class="fgrid" style="margin-top:8px">'+
+      (neu&&(G.vorlagen||[]).length?'<label class="f" style="grid-column:1/-1">★ Aus Vorlage<select class="inp" id="gVo"><option value="">– ohne Vorlage –</option>'+G.vorlagen.map((v,i)=>'<option value="'+i+'">'+esc(v.name)+'</option>').join('')+'</select></label>':'')+
+      '<label class="f">Bezeichnung <span class="hint">(einheitlicher Begriff)</span><input class="inp" id="gB" list="gBL" value="'+esc(g.bez)+'" data-nosave="1" autocomplete="off"><datalist id="gBL">'+(G.begriffe||[]).map(x=>'<option value="'+esc(x.name)+'">').join('')+'</datalist></label><label class="f">Inventar-Nr.<input class="inp mono" id="gI" value="'+esc(g.inv||'')+'" data-nosave="1"></label>'+
       '<label class="f">Kategorie<input class="inp" id="gK" list="gdbKats" value="'+esc(g.kat||'')+'" data-nosave="1"><datalist id="gdbKats">'+G.kategorien.map(k=>'<option value="'+esc(k)+'">').join('')+'</datalist></label><label class="f">Anzahl<input class="inp" type="number" min="1" id="gM" value="'+(+g.menge||1)+'"></label>'+
       '<label class="f">Hersteller<input class="inp" id="gH" value="'+esc(g.hersteller||'')+'" data-nosave="1"></label><label class="f">Typ<input class="inp" id="gT" value="'+esc(g.typ||'')+'" data-nosave="1"></label><label class="f">Serien-Nr.<input class="inp mono" id="gS" value="'+esc(g.serien||'')+'" data-nosave="1"></label>'+
+      '<label class="f">Geräteraum<input class="inp" id="gR" list="gRL" value="'+esc(g.raum||'')+'" placeholder="z. B. G1, G3, Dach, Heck" data-nosave="1"><datalist id="gRL">'+[...new Set([...GDB_RAEUME, ...(G.raeume||[])])].map(r=>'<option value="'+esc(r)+'">').join('')+'</datalist></label>'+
       '<label class="f">Ortswehr<select class="inp" id="gW">'+G.konto.wehren.map(w=>'<option '+(w===g.wehr?'selected':'')+'>'+esc(w)+'</option>').join('')+'</select></label><label class="f">Fahrzeug<select class="inp" id="gF">'+fzOpt(g.wehr, g.vid)+'</select></label>'+
-      '<label class="f">Prüfart<input class="inp" id="gPA" list="gPAL" value="'+esc(g.pruefArt||'')+'" placeholder="aus der Liste wählen oder frei eintragen" data-nosave="1"><datalist id="gPAL">'+(G.pruefarten||[]).map(x=>'<option value="'+esc(x.name)+'">'+(x.monate?x.monate+' Monate':'ohne festes Intervall')+'</option>').join('')+'</datalist></label><label class="f">Intervall<select class="inp" id="gPM">'+[[0,'keins'],[1,'monatlich'],[3,'vierteljährlich'],[6,'halbjährlich'],[12,'jährlich'],[24,'alle 2 Jahre'],[36,'alle 3 Jahre'],[60,'alle 5 Jahre']].map(([v,l])=>'<option value="'+v+'" '+(+g.pruefMonate===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label><label class="f">Nächste Prüfung<input class="inp" type="date" id="gPN" value="'+esc(g.pruefNaechste||'')+'"></label>'+
+      '<label class="f">Prüfart<input class="inp" id="gPA" list="gPAL" value="'+esc(g.pruefArt||'')+'" placeholder="aus der Liste wählen oder frei eintragen" data-nosave="1"><datalist id="gPAL">'+(G.pruefarten||[]).map(x=>'<option value="'+esc(x.name)+'">'+(x.monate?x.monate+' Monate':'ohne festes Intervall')+'</option>').join('')+'</datalist></label><label class="f">Intervall<select class="inp" id="gPM">'+[[0,'keins'],[1,'monatlich'],[3,'vierteljährlich'],[6,'halbjährlich'],[12,'jährlich'],[24,'alle 2 Jahre'],[36,'alle 3 Jahre'],[60,'alle 5 Jahre']].map(([v,l])=>'<option value="'+v+'" '+(+g.pruefMonate===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label><label class="f">Nächste Prüfung<input class="inp" type="date" id="gPN" value="'+esc(g.pruefNaechste||'')+'"></label><label class="f">Haltbar bis <span class="hint">(z. B. Verbandkasten, Schaummittel, Batterien, Filter)</span><input class="inp" type="date" id="gHb" value="'+esc(g.haltbar||'')+'"></label>'+
       '<div class="f" style="grid-column:1/-1">Ausstattung<div class="row" style="gap:14px;flex-wrap:wrap;margin-top:4px"><label class="chk"><input type="radio" name="gAu" value="standard" '+((g.ausst||'zusatz')==='standard'?'checked':'')+'> <b>Standardausrüstung</b> <span class="hint">(z. B. Feuerwehrleinen, Handlampen – nur hier in der Gerätedatenbank)</span></label><label class="chk"><input type="radio" name="gAu" value="zusatz" '+((g.ausst||'zusatz')==='zusatz'?'checked':'')+'> <b>Zusatzausstattung</b> <span class="hint">(kann im Einsatz gebraucht werden – erscheint in der Einsatzverwaltung als Ausrüstung)</span></label></div></div>'+
-      '<label class="f" style="grid-column:1/-1">Notiz<input class="inp" id="gN" value="'+esc(g.notiz||'')+'" data-nosave="1"></label></div><div class="row" style="margin-top:8px"><button type="button" class="btn primary" data-ga="speichern">Stammdaten speichern</button></div></details>'+
-    (neu?'':'<details><summary><b>Verlauf</b> <span class="hint">('+(g.historie||[]).length+')</span></summary><div style="display:grid;gap:4px;margin-top:8px">'+(g.historie||[]).map(x=>'<div class="hint" style="color:var(--ink)"><span style="display:inline-block;width:1.4em">'+(histArt[x.art]||'·')+'</span>'+new Date(x.t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+' – '+esc(x.text)+' <span class="hint">('+esc(x.von||'')+')</span>'+(x.prot?' <button type="button" class="btn small" data-ga="prot" data-prot="'+esc(x.prot)+'">📄 Protokoll</button>':'')+'</div>').join('')+'</div></details>')+
-    '</div><div class="dlg-foot">'+(neu?'':'<button type="button" class="btn danger" data-ga="del">Löschen</button><button type="button" class="btn" data-ga="qr">QR-Etikett</button>')+'<span class="spacer"></span></div>');
+      '<label class="f" style="grid-column:1/-1">Notiz<input class="inp" id="gN" value="'+esc(g.notiz||'')+'" data-nosave="1"></label></div><div class="row" style="margin-top:8px"><button type="button" class="btn primary" data-ga="speichern">Stammdaten speichern</button><button type="button" class="btn ghost" data-ga="alsvorlage" title="Bezeichnung, Kategorie, Prüfart, Intervall und Ausstattung als Vorlage für neue Geräte merken">★ Als Vorlage speichern</button></div></div>'+
+    (neu?'':'<div class="gd-pane" data-pane="verlauf"><div style="display:grid;gap:4px;margin-top:8px">'+((g.historie||[]).length?'':'<span class="hint">Noch keine Einträge.</span>')+(g.historie||[]).map(x=>'<div class="hint" style="color:var(--ink)"><span style="display:inline-block;width:1.4em">'+(histArt[x.art]||'·')+'</span>'+new Date(x.t).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+' – '+esc(x.text)+' <span class="hint">('+esc(x.von||'')+')</span>'+((x.bilder||[]).length?'<div class="row" style="gap:6px;margin:4px 0 0 1.4em">'+x.bilder.map(b=>'<img data-gbild="'+esc(b)+'" alt="Foto" style="height:70px;border-radius:6px;border:1px solid var(--line)">').join('')+'</div>':'')+(x.stapel?' <button type="button" class="btn small" data-ga="stapelprot" data-st="'+esc(x.stapel)+'">📄 Sammelprotokoll</button>':'')+(x.prot?' <button type="button" class="btn small" data-ga="prot" data-prot="'+esc(x.prot)+'">📄 Protokoll</button>':'')+'</div>').join('')+'</div></div>')+
+    '</div><div class="dlg-foot">'+(neu?'':'<button type="button" class="btn danger" data-ga="del">Löschen</button>'+(g.ausgesondert?'<button type="button" class="btn" data-ga="wiederaufnehmen">↩ Wieder aufnehmen</button>':'<button type="button" class="btn" data-ga="aussondern" title="Grund im Textfeld oben eintragen">🗄 Aussondern</button>')+'<button type="button" class="btn" data-ga="qr">QR-Etikett</button><button type="button" class="btn" data-ga="lebenslauf">📄 Lebenslauf</button><button type="button" class="btn" data-ga="nachweis">📄 Prüfnachweis</button>')+'<span class="spacer"></span></div>');
+  const zeigTab=t=>{ if(!neu) DB.gdTab=t; dlg.querySelectorAll('.gd-pane').forEach(p=>{ p.hidden = !neu && p.dataset.pane!==t; }); dlg.querySelectorAll('[data-gtab]').forEach(x=>{ x.classList.toggle('active', x.dataset.gtab===t); x.setAttribute('aria-selected', x.dataset.gtab===t); }); };
+  zeigTab(neu?'stamm':(DB.gdTab||'pruef'));
+  const vo=$('#gVo'); if(vo) vo.onchange=()=>{ const v=(G.vorlagen||[])[+vo.value]; if(!v) return; $('#gB').value=v.bez||v.name; $('#gK').value=v.kat||''; $('#gPA').value=v.pruefArt||''; const sel=$('#gPM'); if(![...sel.options].some(o=>+o.value===+v.pruefMonate)){ const o=document.createElement('option'); o.value=v.pruefMonate; o.textContent='alle '+v.pruefMonate+' Monate'; sel.appendChild(o); } sel.value=String(+v.pruefMonate||0); if(v.hersteller) $('#gH').value=v.hersteller; if(v.typ) $('#gT').value=v.typ; const r=document.querySelector('input[name=gAu][value="'+(v.ausst||'standard')+'"]'); if(r) r.checked=true; if(v.haltbarMonate){ const d=new Date(); d.setMonth(d.getMonth()+v.haltbarMonate); $('#gHb').value=d.toISOString().slice(0,10); } if(v.pruefMonate && !$('#gPN').value){ const d=new Date(); d.setMonth(d.getMonth()+(+v.pruefMonate)); $('#gPN').value=d.toISOString().slice(0,10); } toast('Vorlage übernommen – bitte Inventar-Nr. und Fahrzeug ergänzen'); }; dlg.querySelectorAll('[data-gtab]').forEach(x=>x.onclick=()=>zeigTab(x.dataset.gtab));
   const wSel=$('#gW'); wSel.onchange=()=>{ $('#gF').innerHTML=fzOpt(wSel.value, ''); };
+  const fo=$('#gaFoto'); if(fo) fo.onchange=()=>{ $('#gaFotoN').textContent=fo.files.length?fo.files.length+' Foto(s) – mit „Mangel melden“ speichern':''; };
+  dlg.querySelectorAll('img[data-gbild]').forEach(async im=>{ const u=await gdbBildDataUrl(im.dataset.gbild); if(u){ im.src=u; im.style.cursor='zoom-in'; im.onclick=()=>{ const w=window.open('', '_blank'); if(w){ w.document.write('<img src="'+u+'" style="max-width:100%">'); } }; } });
   const paI=$('#gPA'); if(paI) paI.addEventListener('change', ()=>{ const x=(G.pruefarten||[]).find(y=>y.name===paI.value); const sel=$('#gPM'); if(!x||!sel) return; if(![...sel.options].some(o=>+o.value===x.monate)){ const o=document.createElement('option'); o.value=x.monate; o.textContent='alle '+x.monate+' Monate'; sel.appendChild(o); } sel.value=String(x.monate); toast(x.monate?'Intervall '+x.monate+' Monate übernommen':'Prüfart ohne festes Intervall'); });
   dlg.onclick=async e=>{
     const b=e.target.closest('[data-ga]'); if(!b) return; const a=b.dataset.ga;
     try{
       if(a==='protokoll'){ dlg.onclick=null; gdbProtokollDlg(g0); return; }
       if(a==='prot'){ gdbProtokollZeigen(b.dataset.prot); return; }
+      if(a==='lebenslauf'){ gdbLebenslauf(g0.id); return; }
+      if(a==='nachweis'){ gdbPruefnachweis(g0.id); return; }
+      if(a==='alsvorlage'){ const name=prompt('Name der Vorlage:', $('#gB').value); if(!name) return; await dbApi('POST','/gdb/vorlagen',{name, bez:$('#gB').value, kat:$('#gK').value, pruefArt:$('#gPA').value, pruefMonate:$('#gPM').value, ausst:(document.querySelector('input[name=gAu]:checked')||{}).value||'zusatz', hersteller:$('#gH').value, typ:$('#gT').value, haltbarMonate:$('#gHb').value?Math.max(0,Math.round((new Date($('#gHb').value)-new Date())/(30.4*864e5))):0}); toast('Vorlage „'+name+'“ gespeichert'); gdbNeuLaden(); return; }
+      if(a==='stapelprot'){ try{ gdbStapelDruck(await dbApi('GET','/gdb/stapel/'+encodeURIComponent(b.dataset.st))); }catch(err){ toast(err.message); } return; }
       if(a==='qr'){ dlg.onclick=null; dbQrDlg(gdbLinkQR(g0), g0.bez, [g0.inv?'Inv. '+g0.inv:'', gdbFzName(g0.vid), g0.wehr].filter(Boolean).join(' · ')); return; }
       if(a==='del'){ if(!confirm('Gerät „'+g0.bez+'“ löschen? Besser: Zustand „außer Dienst“, dann bleibt der Verlauf erhalten.')) return; await dbApi('DELETE','/gdb/geraet/'+g0.id); dlg.onclick=null; closeDlg(); toast('Gelöscht'); gdbNeuLaden(); return; }
-      if(a==='speichern'){ const r=await dbApi('POST','/gdb/geraet',{id:g0&&g0.id, bez:$('#gB').value, inv:$('#gI').value, kat:$('#gK').value, menge:$('#gM').value, hersteller:$('#gH').value, typ:$('#gT').value, serien:$('#gS').value, wehr:$('#gW').value, vid:$('#gF').value, pruefArt:$('#gPA').value, pruefMonate:$('#gPM').value, pruefNaechste:$('#gPN').value, notiz:$('#gN').value, ausst:(document.querySelector('input[name=gAu]:checked')||{}).value||'zusatz'});
+      if(a==='speichern'){ let begriffNeu=false; const sp=async trotzdem=>{ try{ return await dbApi('POST','/gdb/geraet',{trotzdem, begriffNeu, id:g0&&g0.id, bez:$('#gB').value, inv:$('#gI').value, kat:$('#gK').value, menge:$('#gM').value, hersteller:$('#gH').value, typ:$('#gT').value, serien:$('#gS').value, wehr:$('#gW').value, vid:$('#gF').value, pruefArt:$('#gPA').value, pruefMonate:$('#gPM').value, pruefNaechste:$('#gPN').value, notiz:$('#gN').value, raum:$('#gR').value, haltbar:$('#gHb').value, ausst:(document.querySelector('input[name=gAu]:checked')||{}).value||'zusatz'}); }catch(err){ if(err.status===409 && err.code==='begriff'){ const v=(err.data&&err.data.vorschlaege)||[];
+            if(v.length && confirm('🔤 Einheitliche Begriffe\n\n'+err.message+'\n\nVorschlag: „'+v[0]+'“'+(v.length>1?'\n(weitere: '+v.slice(1).join(', ')+')':'')+'\n\nOK = „'+v[0]+'“ verwenden\nAbbrechen = andere Möglichkeiten')){ $('#gB').value=v[0]; return sp(trotzdem); }
+            if(confirm('„'+$('#gB').value+'“ als neuen einheitlichen Begriff für alle Ortswehren aufnehmen?\n\nBitte nur, wenn es das Gerät wirklich noch nicht gibt – sonst einen Begriff aus der Liste wählen (Feld „Bezeichnung“ antippen).')){ begriffNeu=true; return sp(trotzdem); }
+            $('#gB').focus(); return null; }
+          if(err.status===409 && err.code==='dublette' && !trotzdem){ if(confirm('⚠ Mögliche Dublette\n\n'+err.message+'\n\nTrotzdem speichern?')) return sp(true); return null; } throw err; } };
+        const r=await sp(false); if(!r) return;
         toast('Gespeichert'); await gdbNeuLaden(); const n=DB.gdb.geraete.find(x=>x.id===r.geraet.id); if(n) gdbDlg(n); return; }
       const body={id:g0.id, aktion:a};
       if(a==='pruefung'){ body.datum=$('#gpD').value; body.ergebnis=$('#gpE').value; body.text=$('#gpT').value; }
       else body.text=$('#gaT').value;
       if(a==='status') body.status=$('#gaSt').value;
       if(a==='umsetzen') body.vid=$('#gaFz').value;
+      if(a==='repstufe'){ body.stufe=$('#gaRs').value; body.werkstatt=$('#gaRw').value; body.bis=$('#gaRb').value; }
       if(a==='ausleihen'){ body.an=$('#gaAn').value; body.bis=$('#gaBis').value; }
-      await dbApi('POST','/gdb/aktion', body);
-      toast({pruefung:'Prüfung eingetragen', mangel:'Mangel gemeldet – Gerät ist am Fahrzeug als nicht verfügbar markiert', ausleihen:'Ausgeliehen – am Fahrzeug als nicht verfügbar markiert', rueckgabe:'Zurück – wieder verfügbar', reparatur:'Wieder einsatzbereit', status:'Zustand gesetzt', umsetzen:'Umgesetzt', notiz:'Notiz gespeichert'}[a]||'Gespeichert');
+      if(a==='mangel'){ body.frist=$('#gaFr').value; const fi=$('#gaFoto'); body.bilder=[]; for(const f of [...((fi&&fi.files)||[])].slice(0,3)){ try{ const bl=await gdbVerkleinern(f, 1600, 0.8); body.bilder.push({typ:'image/jpeg', daten:await new Promise(ok=>{ const r=new FileReader(); r.onload=()=>ok(String(r.result).split(',')[1]); r.readAsDataURL(bl); })}); }catch(err){} } }
+      if(a==='aussondern'){ if(!body.text){ zeigTab('mangel'); toast('Bitte im Reiter „Mangel · Zustand“ den Grund der Aussonderung eintragen (z. B. „Ablegereife erreicht“).'); $('#gaT').focus(); return; } if(!confirm('„'+g0.bez+'“ aussondern? Es verschwindet aus allen Listen und bleibt im Archiv (Zustand „ausgesondert“).')) return; }
+      if(a==='pruefung'){ const r=await gdbSendenOderMerken('/gdb/aktion', body, 'Prüfung '+g0.bez); if(!r) return; if(r.offline){ closeDlg(); return; } }
+      else await dbApi('POST','/gdb/aktion', body);
+      toast({aussondern:'Ausgesondert – steht jetzt im Archiv', wiederaufnehmen:'Wieder aufgenommen', fehlt:'Als fehlend markiert – am Fahrzeug nicht verfügbar', pruefung:'Prüfung eingetragen', mangel:'Mangel gemeldet – Gerät ist am Fahrzeug als nicht verfügbar markiert', ausleihen:'Ausgeliehen – am Fahrzeug als nicht verfügbar markiert', rueckgabe:'Zurück – wieder verfügbar', reparatur:'Wieder einsatzbereit', repstufe:'Reparaturstand gespeichert', status:'Zustand gesetzt', umsetzen:'Umgesetzt', notiz:'Notiz gespeichert'}[a]||'Gespeichert');
       await gdbNeuLaden(); const n=DB.gdb.geraete.find(x=>x.id===g0.id); if(n) gdbDlg(n);
     }catch(err){ toast(err.message); }
   };
@@ -3665,8 +4026,10 @@ async function gdbFbDlg(vid, jahr){
 function gdbFzAusHTML(f){
   const G=DB.gdb, a=(G.fzAusser||[]).filter(y=>y.vid===f.id), s6=(G.status6||[]).includes(f.id);
   const bst=f.bestand||{}, bt=GDB_BESTAND.filter(([k])=>+bst[k]>0).map(([k,t,e])=>(k==='wasser'||k==='schaum')?t+' '+(+bst[k]).toLocaleString('de-DE')+' l':bst[k]+' '+t).join(' · ');
-  return '<span style="float:right;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">'+(f.fz?'<button type="button" class="btn small ghost" data-gdb="bestand" data-id="'+esc(f.id)+'" title="'+esc(bt||'noch nicht erfasst')+'">🧯 Schläuche · Wasser · AGT'+(bt?'':' <span class="hint">(fehlt)</span>')+'</button><button type="button" class="btn small ghost" data-gdb="fb" data-id="'+esc(f.id)+'">🚗 Fahrtenbuch &amp; Fristen</button>':'')+(s6?'<span class="dbst nein">Status 6</span>':'')+a.map(y=>'<span class="dbst nein" title="'+esc(y.von||'')+'">außer Dienst: '+esc(y.grund)+(y.bis?' bis '+dDe(y.bis):'')+'</span>').join('')+
-    (a.length?'<button type="button" class="btn small" data-gdb="fzan" data-id="'+esc(f.id)+'">Wieder im Dienst</button>':'<button type="button" class="btn small ghost" data-gdb="fzaus" data-id="'+esc(f.id)+'">Fahrzeug außer Dienst …</button>')+'</span>';
+  const st=(s6?'<span class="dbst nein">Status 6</span>':'')+a.map(y=>'<span class="dbst nein" title="'+esc(y.von||'')+'">außer Dienst: '+esc(y.grund)+(y.bis?' bis '+dDe(y.bis):'')+'</span>').join('');
+  /* ab 5.21: Fahrzeug-Aktionen im „⋯“-Menü */
+  return '<span class="gd-fzr">'+st+'<details class="gd-fzmenue"><summary class="btn small ghost" title="Aktionen zum Fahrzeug" aria-label="Aktionen zum Fahrzeug">⋯</summary><div class="gd-pop">'+(f.fz?'<button type="button" class="btn small ghost" data-gdb="plan" data-id="'+esc(f.id)+'">🗺 Beladeplan</button><button type="button" class="btn small ghost" data-gdb="bestand" data-id="'+esc(f.id)+'" title="'+esc(bt||'noch nicht erfasst')+'">🧯 Schläuche · Wasser · AGT'+(bt?'':' <span class="hint">(fehlt)</span>')+'</button><button type="button" class="btn small ghost" data-gdb="fb" data-id="'+esc(f.id)+'">🚗 Fahrtenbuch &amp; Fristen</button><button type="button" class="btn small ghost" data-gdb="fzpruef" data-id="'+esc(f.id)+'">✅ Prüfen am Fahrzeug</button><button type="button" class="btn small ghost" data-gdb="fzqr" data-id="'+esc(f.id)+'">▦ QR-Code fürs Fahrzeug</button>':'')+
+    (a.length?'<button type="button" class="btn small" data-gdb="fzan" data-id="'+esc(f.id)+'">Wieder im Dienst</button>':'<button type="button" class="btn small ghost" data-gdb="fzaus" data-id="'+esc(f.id)+'">Fahrzeug außer Dienst …</button>')+'</div></details></span>';
 }
 function gdbListenDlg(){
   const G=DB.gdb; let w=G.konto.wehren[0]||'';
@@ -3695,9 +4058,32 @@ function gdbScan(){
     }catch(e){ toast(e.message||'Foto nicht lesbar'); } };
   fi.click();
 }
+document.addEventListener('click', async e=>{
+  const gl=e.target.closest('[data-gl]'); if(gl){ const w=DB.glw, l=(DB.gdb.lager||{})[w]||[]; const x=l.find(y=>y.id===gl.dataset.id);
+    if(gl.dataset.gl==='neu') glagerDlg(null); else if(gl.dataset.gl==='bearb') glagerDlg(x);
+    else { try{ const r=await dbApi('POST','/gdb/lager',{wehr:w, aktion:'buchen', id:gl.dataset.id, delta:gl.dataset.gl==='plus'?1:-1}); DB.gdb.lager[w]=r.lager; renderDb(); }catch(err){ toast(err.message); } } return; }
+  const gu=e.target.closest('[data-gu]'); if(gu){ if(gu.dataset.gu==='jahr'){ gdbJahresbericht(); return; } if(gu.dataset.gu==='neu') guebLaden(); else gdbDruck('Übersicht Fahrzeuge und Material', '<h1>Übersicht Fahrzeuge und Material</h1><div class="klein">Stand '+new Date((DB.gueb||{}).t||Date.now()).toLocaleString('de-DE')+' · 🟢 einsatzbereit · 🟡 Hinweise · 🔴 nicht vollständig einsatzbereit</div>'+guebInhalt(true).replace(/class="dbtab"/g,'')); return; }
+  const k=e.target.closest('[data-gk]'); if(!k) return;
+  if(k.dataset.gk==='kopie'){ const t=($('#gkLink')||{}).value||''; try{ await navigator.clipboard.writeText(t); toast('Link kopiert'); }catch(err){ const i=$('#gkLink'); if(i){ i.select(); document.execCommand('copy'); toast('Link kopiert'); } } }
+  if(k.dataset.gk==='neu'){ if(!confirm('Neuen Kalender-Link erzeugen? Der alte Link funktioniert dann nicht mehr – bereits eingerichtete Abos müssen neu eingerichtet werden.')) return; try{ const r=await dbApi('POST','/gdb/kalender/neu',{wehr:DB.gkal.wehr}); DB.gkal.links=r.links; renderDb(); toast('Neuer Link erzeugt'); }catch(err){ toast(err.message); } }
+});
 document.addEventListener('click', e=>{
   const b=e.target.closest('[data-gdb]'); if(!b || !$('#view-db') || $('#view-db').hidden) return;
   const a=b.dataset.gdb;
+  if(a==='fzzu'){ if(e.target.closest('details,button,a,input,select')) return; const id=b.dataset.id, l=gdbAufGet(), i=l.indexOf(id); if(i<0) l.push(id); else l.splice(i,1); try{ localStorage.setItem('asue.gdbAuf', JSON.stringify(l)); }catch(x){}
+    const p=b.closest('.gd-fz'); if(p){ const on=!p.classList.contains('auf'); p.classList.toggle('auf', on); b.setAttribute('aria-expanded', on); const pf=b.querySelector('.gd-pfeil'); if(pf) pf.textContent=on?'▾':'▸'; } return; }
+  if(a==='fweg'){ DB.gfz=''; DB.gst=''; DB.gau=''; DB.gfaellig=false; DB.gnb=false; DB.gleih=false; DB.ghb=false; DB.grep=false; renderDb(); return; }
+  if(a==='fzqr'){ const f=DB.gdb.fahrzeuge.find(x=>x.id===b.dataset.id); if(f) dbQrDlg(gdbFzLinkQR(f.id), f.funkrufname, 'Geräteliste und Ampel · '+[f.typ,f.wehr].filter(Boolean).join(' · ')); return; }
+  if(a==='fzpruef'){ gdbRaumPruefDlg(b.dataset.id); return; }
+  if(a==='raumpruef'){ gdbRaumPruefDlg(DB.gfz&&DB.gfz!=='_lager'?DB.gfz:''); return; }
+  if(a==='woist'){ gdbWoIstDlg(); return; }
+  if(a==='vorlagen'){ gdbVorlagenDlg(); return; }
+  if(a==='begriffe'){ gdbBegriffeDlg(); return; }
+  if(a==='jahr'){ gdbJahresbericht(); return; }
+  if(a==='monat'){ gdbMonatsliste(false); return; }
+  if(a==='monatmail'){ gdbMonatsliste(true); return; }
+  if(a==='tz'){ const f=b.dataset.f; if(f==='meld'){ DB.gmOffen=true; renderDb(); const m=$('#gdbMeldD'); if(m) m.scrollIntoView({behavior:'smooth', block:'start'}); return; }
+    DB.gfz=''; DB.gst=''; DB.gau=''; DB.gfaellig=f==='faellig'; DB.gnb=f==='nb'; DB.gleih=f==='leih'; DB.ghb=f==='hb'; DB.grep=f==='rep'; DB.gq=''; renderDb(); return; }
   if(a==='neu') gdbDlg(null);
   if(a==='auf'){ const g=DB.gdb.geraete.find(x=>x.id===b.dataset.id); if(g) gdbDlg(g); }
   if(a==='scan') gdbScan();
@@ -3709,6 +4095,9 @@ document.addEventListener('click', e=>{
   if(a==='listen') gdbListenDlg();
   if(a==='excel') dbExcelDlg('gdb');
   if(a==='fzan'){ dbApi('POST','/gdb/fzstatus',{vid:b.dataset.id, aus:false}).then(()=>{ toast('Wieder im Dienst'); gdbNeuLaden(); }).catch(err=>toast(err.message)); }
+  if(a==='stapel'){ gdbStapelDlg(); return; }
+  if(a==='plan'){ gdbBeladeplan(b.dataset.id); return; }
+  if(a==='offsend'){ gdbOffSenden(); return; }
   if(a==='bestand'){ const f=DB.gdb.fahrzeuge.find(x=>x.id===b.dataset.id)||{}; const bst=f.bestand||{};
     openDlg('<div class="dlg-head"><h2>🧯 Schläuche, Wasser, Schaum, AGT – '+esc(f.funkrufname||'')+'</h2><button type="button" class="btn small ghost" data-close tabindex="-1">Schließen</button></div><div class="dlg-body" style="display:grid;gap:10px"><p class="hint" style="margin:0">Anzahl bzw. Menge auf dem Fahrzeug. Die Werte erscheinen in der Einsatzverwaltung als Ausrüstung und zählen beim Stichwort-Abgleich (z. B. „2.400 l Wasser“), im Pendelverkehr und in der Ausrüstungssuche. Leer oder 0 = nicht vorhanden.</p><div class="fgrid">'+
       GDB_BESTAND.map(([k,t,e])=>'<label class="f">'+esc(t)+' <span class="hint">('+e+')</span><input class="inp" type="number" min="0" max="99999" inputmode="numeric" id="gbs_'+k+'" value="'+(+bst[k]>0?+bst[k]:'')+'" data-nosave="1"></label>').join('')+
@@ -3719,7 +4108,10 @@ document.addEventListener('click', e=>{
   if(a==='druck') dbDrucken(gdbGefiltert().map(g=>({text:gdbLinkQR(g), l:g.bez, s:[g.inv?'Inv. '+g.inv:'', gdbFzName(g.vid)].filter(Boolean).join(' · ')})));
 });
 document.addEventListener('input', e=>{ if(e.target.id==='gdbQ'){ DB.gq=e.target.value; const pos=e.target.selectionStart; renderDb(); const n=$('#gdbQ'); if(n){ n.focus(); n.setSelectionRange(pos,pos); } } });
-document.addEventListener('change', e=>{ const id=e.target.id; if(id==='gdbFz'){ DB.gfz=e.target.value; renderDb(); } if(id==='gdbSt'){ DB.gst=e.target.value; renderDb(); } if(id==='gdbFa'){ DB.gfaellig=e.target.checked; renderDb(); } if(id==='gdbAu'){ DB.gau=e.target.value; renderDb(); } });
+function gdbAufGet(){ try{ const l=JSON.parse(localStorage.getItem('asue.gdbAuf')||'[]'); return Array.isArray(l)?l:[]; }catch(e){ return []; } }
+document.addEventListener('toggle', e=>{ const id=e.target && e.target.id; if(id==='gdbMeldD') DB.gmOffen=e.target.open; if(id==='gdbFiltD') DB.gfOffen=e.target.open; }, true);
+document.addEventListener('click', e=>{ document.querySelectorAll('details.gd-fzmenue[open]').forEach(d=>{ if(!d.contains(e.target)) d.open=false; }); });
+document.addEventListener('change', e=>{ const id=e.target.id; if(id==='gdbFz'){ DB.gfz=e.target.value; renderDb(); } if(id==='gdbSt'){ DB.gst=e.target.value; renderDb(); } if(id==='gdbFa'){ DB.gfaellig=e.target.checked; renderDb(); } if(id==='gdbAu'){ DB.gau=e.target.value; renderDb(); } if(id==='gkW'){ gkalLaden(e.target.value); } if(id==='glW'){ DB.glw=e.target.value; renderDb(); } if(id==='gkF'){ DB.gkal.filter=e.target.value; renderDb(); } });
 /* ---------- ab 5.3: Gerätetausch / zur Prüfung – jede Feuerwehr, ohne Gerätewart-Anmeldung ---------- */
 const TAU = { liste:null, fehler:'', filter:'offen', laden:false, markiert:'' };
 const TAU_ART = {geraet:'PA', flasche:'Flasche', la:'LA', maske:'Maske'};
@@ -3845,6 +4237,12 @@ function renderDb(){
     inhalt=nwHTML();
   } else if(DB.sub==='gdb'){
     inhalt=gdbHTML();
+  } else if(DB.sub==='gkal'){
+    inhalt=gkalHTML();
+  } else if(DB.sub==='glager'){
+    inhalt=glagerHTML();
+  } else if(DB.sub==='guebers'){
+    inhalt=guebHTML();
   } else if(DB.sub==='bereit'){
     // ab 4.2: Einsatzbereitschaft auf einen Blick je Ortswehr
     const heute=new Date().toISOString().slice(0,10);
@@ -3899,7 +4297,7 @@ function renderDb(){
   v.innerHTML='<div class="toolbar"><h2>'+(dbHat('atemschutz')&&dbHat('geraete')?'Datenbank':dbHat('geraete')?'Gerätedatenbank':'Atemschutz-Datenbank')+'</h2><span class="spacer"></span><span class="hint">'+esc(k.name)+' · '+esc(k.wehren.join(', '))+'</span>'+(window.DB_SEITE&&DB_INSTALL.prompt?'<button type="button" class="btn small" data-db="install">📲 Als App installieren</button>':'')+'<button type="button" class="btn small'+(DB.push&&DB.push.hier?' primary':'')+'" data-db="push">🔔 Benachrichtigungen</button><button type="button" class="btn small" data-db="kw">Kennwort ändern</button><button type="button" class="btn small" data-db="ab">Abmelden</button></div>'+(DB.pushOffen?dbPushPanel():'')+
     (tage<=14?'<div class="calcbox">Ihr Kennwort läuft in '+Math.max(0,tage)+' Tag'+(tage===1?'':'en')+' ab – bitte rechtzeitig ändern (alle 4 Monate).</div>':'')+
     (!d.mailAktiv?'<div class="hint" style="margin:6px 0">Hinweis: Der Mailversand der Einsatzverwaltung ist nicht eingerichtet – Erinnerungen vor Ablauf kommen erst, wenn er eingerichtet ist.</div>':!k.mail?'<div class="hint" style="margin:6px 0">Für Ihren Zugang ist keine E-Mail-Adresse hinterlegt – Erinnerungen vor Ablauf bitte beim Administrator eintragen lassen.</div>':'')+
-    '<div class="row" style="margin:8px 0">'+(dbHat('atemschutz')?subBtn('bereit','Einsatzbereitschaft')+subBtn('personen','Personen')+subBtn('geraete','Atemschutzgeräte')+subBtn('nachweis','Einsatznachweis')+subBtn('pflege','Gerätepflege'+(DB.pflege?' ('+DB.pflege.nutzungen.filter(n=>n.status==='offen').length+')':''))+subBtn('auswertung','📊 Jahresauswertung'):'')+(dbHat('geraete')?subBtn('gdb','🧰 Gerätedatenbank'+(DB.gdb?' ('+DB.gdb.geraete.length+')':'')):'')+(dbHat('atemschutz')?subBtn('qr','QR-Codes'):'')+'</div>'+inhalt;
+    '<div class="row" style="margin:8px 0">'+(dbHat('atemschutz')?subBtn('bereit','Einsatzbereitschaft')+subBtn('personen','Personen')+subBtn('geraete','Atemschutzgeräte')+subBtn('nachweis','Einsatznachweis')+subBtn('pflege','Gerätepflege'+(DB.pflege?' ('+DB.pflege.nutzungen.filter(n=>n.status==='offen').length+')':''))+subBtn('auswertung','📊 Jahresauswertung'):'')+(dbHat('geraete')?subBtn('gdb','🧰 Gerätedatenbank'+(DB.gdb?' ('+DB.gdb.geraete.length+')':''))+subBtn('gkal','📅 Kalender')+subBtn('glager','📦 Lager')+subBtn('guebers','🏛 Übersicht'):'')+(dbHat('atemschutz')?subBtn('qr','QR-Codes'):'')+'</div>'+inhalt;
   document.querySelectorAll('img[data-smbild]').forEach(async im=>{ if(im.src) return; try{ const r=await fetch(dbBase()+'/gdb/bild/'+encodeURIComponent(im.dataset.smbild), {headers:{'X-AGW-Token':DB.token}}); if(!r.ok) return; const u=URL.createObjectURL(await r.blob()); im.src=u; im.onclick=()=>window.open(u,'_blank'); }catch(e){} });
   const q=$('#dbQ'); if(q) q.oninput=()=>{ DB.q=q.value; const pos=q.selectionStart; renderDb(); const n=$('#dbQ'); if(n){ n.focus(); n.setSelectionRange(pos,pos); } };
 }
@@ -4070,7 +4468,7 @@ document.addEventListener('click', async e=>{
   }
   if(a==='ab'){ try{ await dbApi('POST','/agw/abmelden'); }catch(err){} dbTokenSetzen(''); DB.daten=null; if(document.body.dataset.dbnur) dbNurBeenden(); else renderDb(); }
   if(a==='zurueck') dbNurBeenden();
-  if(a==='sub'){ DB.sub=b.dataset.v; renderDb(); if(DB.sub==='gdb') gdbNeuLaden(); if(DB.sub==='nachweis') nwLaden(); if(DB.sub==='auswertung') agwAuswertungLaden(); if(DB.sub==='pflege'||DB.sub==='geraete') dbApi('GET','/agw/pflege').then(x=>{ DB.pflege=x; renderDb(); }).catch(()=>{}); }
+  if(a==='sub'){ DB.sub=b.dataset.v; renderDb(); if(DB.sub==='gdb') gdbNeuLaden(); if(DB.sub==='gkal') gkalLaden(); if(DB.sub==='guebers') guebLaden(); if(DB.sub==='glager' && !DB.gdb) gdbNeuLaden(); if(DB.sub==='nachweis') nwLaden(); if(DB.sub==='auswertung') agwAuswertungLaden(); if(DB.sub==='pflege'||DB.sub==='geraete') dbApi('GET','/agw/pflege').then(x=>{ DB.pflege=x; renderDb(); }).catch(()=>{}); }
   if(a==='gtermine'){ dbTermineDlg(); }
   if(a==='pffilter'){ DB.pfFilter=b.dataset.v; renderDb(); }
   if(a==='pfakt'){ dbPflegeAktion([b.dataset.id], b.dataset.a); }
